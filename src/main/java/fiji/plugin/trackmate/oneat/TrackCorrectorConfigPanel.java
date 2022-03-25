@@ -66,7 +66,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 
 					File oneatfile = new File(csvfile.getSelectedFile().getPath());
 
-					
+					TrackCorrectorRunner.run(settings, model, oneatfile);
 
 		
 				}

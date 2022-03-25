@@ -10,8 +10,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.scijava.Context;
+import org.scijava.app.StatusService;
+import org.scijava.log.LogService;
+import org.scijava.options.OptionsService;
+
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
+import fiji.plugin.trackmate.util.TMUtils;
 import net.imglib2.Localizable;
 import net.imglib2.Point;
 import net.imglib2.RealPoint;
@@ -21,14 +27,16 @@ import net.imglib2.util.ValuePair;
 public class TrackCorrectorRunner {
 
 
+	private final static Context context = TMUtils.getContext();
 	
-	
-	public static Pair<DivisionSpotCollection, HashMap<Integer, ArrayList<DivisionSpot>>> LoadOneat(final Settings settings, final Model model, final File oneatfile) {
+	public static Pair<DivisionSpotCollection, HashMap<Integer, ArrayList<DivisionSpot>>> run(final Settings settings, final Model model, final File oneatfile) {
 		
 		String line = "";
 		String cvsSplitBy = ",";
 		int count = 0;
-		
+		final LogService logService = context.getService( LogService.class );
+		final StatusService statusService = context.getService( StatusService.class );
+		final OptionsService optionService = context.getService( OptionsService.class );
         ArrayList<Oneatobject> DivisionSpots = new ArrayList<Oneatobject>();	
         HashMap<Integer, ArrayList<Oneatobject>> DivisionMap = new HashMap<Integer, ArrayList<Oneatobject>>();
 		try (BufferedReader br = new BufferedReader(new FileReader(oneatfile))) {
