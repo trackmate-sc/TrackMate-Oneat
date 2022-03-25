@@ -42,13 +42,13 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	}
 
 	@Override
-	public TrackCorrector create(SpotCollection spots, DivisionSpotCollection specialspots,
-			Map<String, Object> settings) {
+	public TrackCorrector create(SpotCollection spots, DivisionSpotCollection specialspots, Settings settings, Model model,
+			Map<String, Object> mapsettings) {
 		
 		
-		  File oneatfile = (File) settings.get(DivisionFile);
+		  File oneatfile = (File) mapsettings.get(DivisionFile);
 		
-		  return new OneatCorrector(oneatfile);
+		  return new OneatCorrector(oneatfile, settings, model);
 	}
 
 	@Override

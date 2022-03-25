@@ -42,7 +42,7 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 *            the settings map configuring the tracker.
 		 * @return a new {@link SpotTracker} instance.
 		 */
-		public TrackCorrector create( final SpotCollection spots, final DivisionSpotCollection specialspots, final Map< String, Object > settings );
+		public TrackCorrector create( final SpotCollection spots, final DivisionSpotCollection specialspots, Settings settings, Model model, final Map< String, Object > mapsettings );
 
 		/**
 		 * Returns a new GUI panel able to configure the settings suitable for the
