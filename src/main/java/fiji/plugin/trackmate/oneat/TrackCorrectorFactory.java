@@ -5,6 +5,7 @@ import java.util.Map;
 import org.jdom2.Element;
 
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMateModule;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
@@ -51,7 +52,7 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 *            the model that will be modified by the target tracker.
 		 * @return a new configuration panel.
 		 */
-		public ConfigurationPanel getTrackCorrectorConfigurationPanel( final Model model );
+		public ConfigurationPanel getTrackCorrectorConfigurationPanel(final Settings settings, final Model model );
 
 		/**
 		 * Marshalls a settings map to a JDom element, ready for saving to XML. The
@@ -128,5 +129,5 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 * 
 		 * @return a new instance of this tracker factory.
 		 */
-		public SpotTrackerFactory copy();
+		public TrackCorrectorFactory copy();
 	}

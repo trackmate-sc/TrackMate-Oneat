@@ -1,5 +1,7 @@
 package fiji.plugin.trackmate.oneat;
 
+import java.io.File;
+
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
@@ -7,6 +9,20 @@ import fiji.plugin.trackmate.Logger;
 
 public class OneatCorrector implements TrackCorrector {
 
+	
+	
+	private final File oneatfile;
+	
+	public OneatCorrector(final File oneatfile) {
+		
+		
+		this.oneatfile = oneatfile;
+		
+	}
+	
+	
+	
+	
 	@Override
 	public SimpleWeightedGraph<DivisionSpot, DefaultWeightedEdge> getResult() {
 		// TODO Auto-generated method stub

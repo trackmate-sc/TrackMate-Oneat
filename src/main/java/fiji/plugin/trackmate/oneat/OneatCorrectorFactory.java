@@ -8,9 +8,9 @@ import javax.swing.ImageIcon;
 import org.jdom2.Element;
 
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
-import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 
 public class OneatCorrectorFactory implements TrackCorrectorFactory {
 
@@ -48,14 +48,13 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		
 		  File oneatfile = (File) settings.get(DivisionFile);
 		
-		// TODO Auto-generated method stub
-		return null;
+		  return new OneatCorrector(oneatfile);
 	}
 
 	@Override
-	public ConfigurationPanel getTrackCorrectorConfigurationPanel(Model model) {
-		// TODO Auto-generated method stub
-		return null;
+	public ConfigurationPanel getTrackCorrectorConfigurationPanel(Settings settings, Model model) {
+		
+		return new TrackCorrectorConfigPanel(settings, model);
 	}
 
 	@Override
@@ -95,9 +94,11 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	}
 
 	@Override
-	public SpotTrackerFactory copy() {
+	public TrackCorrectorFactory copy() {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	
 
 }
