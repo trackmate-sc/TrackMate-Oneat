@@ -19,13 +19,18 @@ import net.imglib2.type.numeric.RealType;
  * Interface for track corrector factories that need to process all the tracks at
  * once. They return new tracks.
  * 
- * @author Varun Kapôor
+ * @author Varun Kapoor
  *
  * @param <T>
  */
 public interface TrackCorrectorFactory extends TrackMateModule
  {
 
+	
+	
+	   public static final String DivisionFile = "Division_File";
+	
+	
 		/**
 		 * Instantiates and returns a new {@link SpotTracker} configured to operate
 		 * on the specified {@link SpotCollection}, using the specified settins map.

@@ -1,5 +1,7 @@
 package fiji.plugin.trackmate.oneat;
 
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -17,12 +19,13 @@ import javax.swing.filechooser.FileFilter;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
+import static fiji.plugin.trackmate.oneat.TrackCorrectorFactory.DivisionFile;
 import net.imglib2.Point;
 
 public class TrackCorrectorConfigPanel extends ConfigurationPanel
 {
 	private static final long serialVersionUID = 1L;
-
+    private static File oneatfile;
 
 	public TrackCorrectorConfigPanel( final Settings settings, final Model model )
 	{
@@ -60,13 +63,10 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 				csvfile.setDialogTitle(" Cell CSV file");
 				csvfile.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				csvfile.setFileFilter(csvfilter);
-				int count = 0;
 
 				if (csvfile.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
 
-					File oneatfile = new File(csvfile.getSelectedFile().getPath());
-
-					TrackCorrectorRunner.run(settings, model, oneatfile);
+					oneatfile = new File(csvfile.getSelectedFile().getPath());
 
 		
 				}
@@ -87,6 +87,10 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 	public Map< String, Object > getSettings()
 	{
 		final Map< String, Object > settings = new HashMap<>();
+		
+		settings.put( DivisionFile, oneatfile );
+		
+		
 		return settings;
 	}
 
