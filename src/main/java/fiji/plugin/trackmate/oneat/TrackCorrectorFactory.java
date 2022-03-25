@@ -28,7 +28,7 @@ public interface TrackCorrectorFactory extends TrackMateModule
 
 	
 	
-	   public static final String DivisionFile = "Division_File";
+	   
 	
 	
 		/**

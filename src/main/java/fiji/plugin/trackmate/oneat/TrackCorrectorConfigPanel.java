@@ -19,7 +19,7 @@ import javax.swing.filechooser.FileFilter;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
-import static fiji.plugin.trackmate.oneat.TrackCorrectorFactory.DivisionFile;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.DivisionFile;
 import net.imglib2.Point;
 
 public class TrackCorrectorConfigPanel extends ConfigurationPanel
@@ -60,7 +60,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 				};
 				
 				csvfile.setCurrentDirectory(new File(settings.imp.getOriginalFileInfo().directory));
-				csvfile.setDialogTitle(" Cell CSV file");
+				csvfile.setDialogTitle("Division Detection file");
 				csvfile.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				csvfile.setFileFilter(csvfilter);
 
