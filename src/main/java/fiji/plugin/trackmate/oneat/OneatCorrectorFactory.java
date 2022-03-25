@@ -3,10 +3,14 @@ package fiji.plugin.trackmate.oneat;
 import static fiji.plugin.trackmate.io.IOUtils.readDoubleAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.readStringAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.writeAttribute;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_GAP_CLOSING_MAX_FRAME_GAP;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_LINKING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.util.TMUtils.checkParameter;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
@@ -24,6 +28,8 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 
 	
 	public static final String DivisionFile = "Division_File";
+	private static final String DEFAULT_DivisionFile = null;
+	
 	private String errorMessage;
 	@Override
 	public String getInfoText() {
@@ -90,33 +96,47 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		final String oneatfile = ( String ) settings.get( DivisionFile );
 		final StringBuilder str = new StringBuilder();
 
-		str.append( String.format( "  - oneatr detection file: %.1f\n", oneatfile));
+		str.append( String.format( "  - oneat detection file: %.1f\n", oneatfile));
 
 		return str.toString();
 	}
 
 	@Override
 	public Map<String, Object> getDefaultSettings() {
-		// TODO Auto-generated method stub
-		return null;
+		final Map< String, Object > sm = new HashMap<>( 1 );
+		sm.put( DivisionFile, DEFAULT_DivisionFile );
+		
+		return sm;
 	}
 
 	@Override
 	public boolean checkSettingsValidity(Map<String, Object> settings) {
-		// TODO Auto-generated method stub
-		return false;
+		if ( null == settings )
+		{
+			errorMessage = "Settings map is null.\n";
+			return false;
+		}
+
+		boolean ok = true;
+		final StringBuilder str = new StringBuilder();
+
+		ok = ok & checkParameter( settings, DivisionFile, String.class, str );
+
+		if ( !ok )
+		{
+			errorMessage = str.toString();
+		}
+		return ok;
 	}
 
 	@Override
 	public String getErrorMessage() {
-		// TODO Auto-generated method stub
-		return null;
+		return errorMessage;
 	}
 
 	@Override
-	public TrackCorrectorFactory copy() {
-		// TODO Auto-generated method stub
-		return null;
+	public OneatCorrectorFactory copy() {
+		return new OneatCorrectorFactory();
 	}
 
 	
