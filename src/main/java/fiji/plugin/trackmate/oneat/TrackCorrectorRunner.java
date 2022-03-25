@@ -17,6 +17,8 @@ import org.scijava.options.OptionsService;
 
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.util.TMUtils;
 import net.imglib2.Localizable;
 import net.imglib2.Point;
@@ -29,7 +31,7 @@ public class TrackCorrectorRunner {
 
 	private final static Context context = TMUtils.getContext();
 	
-	public static Pair<DivisionSpotCollection, HashMap<Integer, ArrayList<DivisionSpot>>> run(final Settings settings, final Model model, final File oneatfile) {
+	public static Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>> run(final Settings settings, final Model model, final File oneatfile) {
 		
 		String line = "";
 		String cvsSplitBy = ",";
@@ -58,14 +60,14 @@ public class TrackCorrectorRunner {
 					double angle = Double.parseDouble(divisionspots[7]);
 					
 					RealPoint point = new RealPoint(X, Y, Z);
-					Oneatobject DivisionSpot = new Oneatobject(time, point, score, size, confidence, angle);
+					Oneatobject Spot = new Oneatobject(time, point, score, size, confidence, angle);
 					
 					if (DivisionMap.get(time) == null) {
 						DivisionSpots = new ArrayList<Oneatobject>();
 						DivisionMap.put(time, DivisionSpots);
 					} else
 						DivisionMap.put(time, DivisionSpots);
-					DivisionSpots.add(DivisionSpot);
+					DivisionSpots.add(Spot);
 				}
 				count = count + 1;
 			}
@@ -77,15 +79,15 @@ public class TrackCorrectorRunner {
 		
 		
 		// Parse each component.
-		HashMap<Integer, ArrayList<DivisionSpot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<DivisionSpot>>();
+		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
 		final Iterator<Entry<Integer, ArrayList<Oneatobject>>> iterator = DivisionMap.entrySet().iterator();
-		DivisionSpotCollection spots = new DivisionSpotCollection();
+		SpotCollection spots = new SpotCollection();
 		while (iterator.hasNext()) {
 			final Map.Entry<Integer, ArrayList<Oneatobject>> region = iterator.next();
 
 			int frame = region.getKey();
 			ArrayList<Oneatobject> currentcell = region.getValue();
-			ArrayList<DivisionSpot> currentspots = new ArrayList<DivisionSpot>();
+			ArrayList<Spot> currentspots = new ArrayList<Spot>();
 			for (Oneatobject cell : currentcell) {
 				final double x =  (cell.Location.getDoublePosition(0));
 				final double y =  (cell.Location.getDoublePosition(1));
@@ -98,7 +100,7 @@ public class TrackCorrectorRunner {
 				final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
 						: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
 
-				DivisionSpot currentspot = new DivisionSpot(x, y, z, radius, quality);
+				Spot currentspot = new Spot(x, y, z, radius, quality);
 				currentspots.add(currentspot);
 				spots.add(currentspot, frame);
 				DivisionSpotListFrame.put(frame, currentspots);
@@ -106,7 +108,7 @@ public class TrackCorrectorRunner {
 
 		}
 
-		return new ValuePair<DivisionSpotCollection, HashMap<Integer, ArrayList<DivisionSpot>>>(spots, DivisionSpotListFrame);
+		return new ValuePair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>(spots, DivisionSpotListFrame);
 	}
 	
 }

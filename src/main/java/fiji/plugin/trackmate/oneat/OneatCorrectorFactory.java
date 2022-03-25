@@ -1,12 +1,7 @@
 package fiji.plugin.trackmate.oneat;
 
-import static fiji.plugin.trackmate.io.IOUtils.readDoubleAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.readStringAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.writeAttribute;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_GAP_CLOSING_MAX_FRAME_GAP;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_LINKING_MAX_DISTANCE;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.util.TMUtils.checkParameter;
 
 import java.io.File;
@@ -28,7 +23,12 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 
 	
 	public static final String DivisionFile = "Division_File";
+	
 	private static final String DEFAULT_DivisionFile = null;
+	
+    public static final String ApoptosisFile = "Apoptosis_File";
+	
+	private static final String DEFAULT_ApoptosisFile = null;
 	
 	private String errorMessage;
 	@Override
@@ -56,13 +56,15 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	}
 
 	@Override
-	public TrackCorrector create(SpotCollection spots, DivisionSpotCollection specialspots, Settings settings, Model model,
+	public TrackCorrector create(SpotCollection spots, SpotCollection specialspots, Settings settings, Model model,
 			Map<String, Object> mapsettings) {
 		
 		
-		  File oneatfile = (File) mapsettings.get(DivisionFile);
+		  File oneatdivisionfile = (File) mapsettings.get(DivisionFile);
+		  
+		  File oneatapoptosisfile = (File) mapsettings.get(ApoptosisFile);
 		
-		  return new OneatCorrector(oneatfile, settings, model);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, settings, model);
 	}
 
 	@Override
