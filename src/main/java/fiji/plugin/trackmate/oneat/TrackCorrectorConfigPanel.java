@@ -20,7 +20,6 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.DivisionFile;
-import net.imglib2.Point;
 
 public class TrackCorrectorConfigPanel extends ConfigurationPanel
 {

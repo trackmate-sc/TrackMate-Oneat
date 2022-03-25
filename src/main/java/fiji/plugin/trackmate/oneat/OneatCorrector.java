@@ -64,9 +64,8 @@ public class OneatCorrector implements TrackCorrector {
 		divisionspots = result.getA();
 		divisionframespots = result.getB();
 		
-		
-		// TODO Auto-generated method stub
-		return false;
+
+		return true;
 	}
 
 	@Override
