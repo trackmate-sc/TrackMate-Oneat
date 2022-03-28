@@ -66,19 +66,13 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisspots = new SpotCollection();
 		apoptosisframespots = new HashMap<Integer, ArrayList<Spot>>();
 
-		if (oneatdivision != null) {
-			Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>> result = TrackCorrectorRunner.run(settings, model,
-					oneatdivision);
-			divisionspots = result.getA();
-			divisionframespots = result.getB();
-		}
-
-		if (oneatapoptosis != null) {
-			Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>> result = TrackCorrectorRunner.run(settings, model,
-					oneatapoptosis);
-			apoptosisspots = result.getA();
-			apoptosisframespots = result.getB();
-		}
+		Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner.run(settings, model,
+				oneatdivision, oneatapoptosis);
+		divisionspots = result.getA().getA();
+		divisionframespots = result.getA().getB();
+		
+		apoptosisspots = result.getB().getA();
+		apoptosisframespots = result.getB().getB();
 
 		return true;
 	}
