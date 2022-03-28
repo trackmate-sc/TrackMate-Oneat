@@ -20,8 +20,8 @@ import javax.swing.filechooser.FileFilter;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
-import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.DivisionFile;
-import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.ApoptosisFile;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.DIVISION_FILE;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.APOPTOSIS_FILE;
 
 public class TrackCorrectorConfigPanel extends ConfigurationPanel
 {

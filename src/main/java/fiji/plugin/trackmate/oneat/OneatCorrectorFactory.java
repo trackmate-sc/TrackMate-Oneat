@@ -1,6 +1,7 @@
 package fiji.plugin.trackmate.oneat;
 
 import static fiji.plugin.trackmate.io.IOUtils.readStringAttribute;
+import static fiji.plugin.trackmate.io.IOUtils.readIntegerAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.writeAttribute;
 import static fiji.plugin.trackmate.util.TMUtils.checkParameter;
 
@@ -22,13 +23,14 @@ import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 public class OneatCorrectorFactory implements TrackCorrectorFactory {
 
 	
-	public static final String DivisionFile = "Division_File";
+	public static final String DIVISION_FILE = "Division_File";
 	
-	private static final String DEFAULT_DivisionFile = null;
 	
-    public static final String ApoptosisFile = "Apoptosis_File";
+    public static final String APOPTOSIS_FILE = "Apoptosis_File";
+    
+    public static final String TRACKLET_LENGTH = "Min_Tracklet_Length";
 	
-	private static final String DEFAULT_ApoptosisFile = null;
+	public static final int DEFAULT_TRACKLET_LENGTH = 2; 
 	
 	private String errorMessage;
 	@Override
@@ -60,9 +62,9 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 			Map<String, Object> mapsettings) {
 		
 		
-		  File oneatdivisionfile = (File) mapsettings.get(DivisionFile);
+		  File oneatdivisionfile = (File) mapsettings.get(DIVISION_FILE);
 		  
-		  File oneatapoptosisfile = (File) mapsettings.get(ApoptosisFile);
+		  File oneatapoptosisfile = (File) mapsettings.get(APOPTOSIS_FILE);
 		
 		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, settings, model);
 	}
@@ -77,7 +79,9 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	public boolean marshall(Map<String, Object> settings, Element element) {
 		boolean ok = true;
 		final StringBuilder str = new StringBuilder();
-		ok = ok & writeAttribute( settings, element, DivisionFile, Double.class, str );
+		ok = ok & writeAttribute( settings, element, DIVISION_FILE, String.class, str );
+		ok = ok & writeAttribute( settings, element, APOPTOSIS_FILE, String.class, str );
+		ok = ok & writeAttribute( settings, element, TRACKLET_LENGTH, Integer.class, str );
 		return ok;
 	}
 
@@ -86,7 +90,9 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		settings.clear();
 		final StringBuilder errorHolder = new StringBuilder();
 		boolean ok = true;
-		ok = ok & readStringAttribute( element, settings, DivisionFile, errorHolder );
+		ok = ok & readStringAttribute( element, settings, DIVISION_FILE, errorHolder );
+		ok = ok & readStringAttribute( element, settings, APOPTOSIS_FILE, errorHolder );
+		ok = ok & readIntegerAttribute( element, settings, TRACKLET_LENGTH, errorHolder );
 		return ok;
 	}
 
@@ -95,18 +101,24 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	{
 		if ( !checkSettingsValidity( settings ) ) { return errorMessage; }
 
-		final String oneatfile = ( String ) settings.get( DivisionFile );
+		final String oneatdivisionfile = ( String ) settings.get( DIVISION_FILE );
+		
+		final String oneatapoptosisfile = ( String ) settings.get( APOPTOSIS_FILE );
+		
+		
 		final StringBuilder str = new StringBuilder();
 
-		str.append( String.format( "  - oneat detection file: %.1f\n", oneatfile));
-
+		str.append( String.format( "  - oneat division detection file: %.1f\n", oneatdivisionfile));
+		str.append( String.format( "  - oneat apoptosis detection file: %.1f\n", oneatapoptosisfile));
+		
+		
 		return str.toString();
 	}
 
 	@Override
 	public Map<String, Object> getDefaultSettings() {
 		final Map< String, Object > sm = new HashMap<>( 1 );
-		sm.put( DivisionFile, DEFAULT_DivisionFile );
+		sm.put( TRACKLET_LENGTH, DEFAULT_TRACKLET_LENGTH );
 		
 		return sm;
 	}
@@ -122,7 +134,11 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		boolean ok = true;
 		final StringBuilder str = new StringBuilder();
 
-		ok = ok & checkParameter( settings, DivisionFile, String.class, str );
+		ok = ok & checkParameter( settings, DIVISION_FILE, String.class, str );
+		
+		ok = ok & checkParameter( settings, APOPTOSIS_FILE, String.class, str );
+		
+		ok = ok & checkParameter( settings, TRACKLET_LENGTH, Integer.class, str );
 
 		if ( !ok )
 		{
