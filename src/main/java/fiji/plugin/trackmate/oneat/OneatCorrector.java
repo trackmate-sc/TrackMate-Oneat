@@ -85,10 +85,12 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisspots = result.getB().getA();
 		apoptosisframespots = result.getB().getB();
 		
+		//Get the track IDs of the spots detected by oneat to belong to dividing cells
 		if(divisionspots.keySet().size() > 0)
 			
 			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(settings, model, img, divisionframespots);
- 			
+ 		
+		// Ge tthe track IDs of the spots detected by oneat to belong to apoptotic cells
         if(apoptosisspots.keySet().size() > 0)
 			
 			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID(settings, model, img, apoptosisframespots);  		

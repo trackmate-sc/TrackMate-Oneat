@@ -33,7 +33,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
     private JButton Loaddivisioncsvbutton;
     private JButton Loadapoptosiscsvbutton;
     private  JFormattedTextField MinTracklet;
-	/** A default value for the {@value #KEY_LINKING_MAX_DISTANCE} parameter. */
+	/** A default value for the {@value #DEFAULT_KEY_TRACKLET_LENGTH} parameter. */
 	public static final double DEFAULT_KEY_TRACKLET_LENGTH = 2;
     
     
