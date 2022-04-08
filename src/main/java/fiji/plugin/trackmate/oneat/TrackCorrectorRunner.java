@@ -101,7 +101,7 @@ public class TrackCorrectorRunner {
 	
 	private static boolean isDividingTrack(final int spotID, final int trackID, final Model model) {
 		
-	   Boolean isDividing = null;
+	   Boolean isDividing = false;
 		
 		
 	   final Set<DefaultWeightedEdge> track = model.getTrackModel().trackEdges(trackID);
