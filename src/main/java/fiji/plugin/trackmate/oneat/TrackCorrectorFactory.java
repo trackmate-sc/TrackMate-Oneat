@@ -12,9 +12,11 @@ import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 import fiji.plugin.trackmate.tracking.SpotTracker;
 import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 import fiji.plugin.trackmate.tracking.TrackerKeys;
+import net.imagej.ImgPlus;
 import net.imglib2.Interval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.IntType;
 
 /**
  * Interface for track corrector factories that need to process all the tracks at
@@ -42,7 +44,7 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 *            the settings map configuring the tracker.
 		 * @return a new {@link SpotTracker} instance.
 		 */
-		public TrackCorrector create( final SpotCollection spots, final SpotCollection specialspots, Settings settings, Model model, final Map< String, Object > mapsettings );
+		public TrackCorrector create( final SpotCollection spots, final SpotCollection specialspots, ImgPlus< IntType > img, Settings settings, Model model, final Map< String, Object > mapsettings );
 
 		/**
 		 * Returns a new GUI panel able to configure the settings suitable for the

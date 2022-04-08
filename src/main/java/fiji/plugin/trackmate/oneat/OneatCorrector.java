@@ -12,6 +12,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
+import net.imagej.ImgPlus;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.util.Pair;
 
 public class OneatCorrector implements TrackCorrector {
@@ -31,14 +33,23 @@ public class OneatCorrector implements TrackCorrector {
 	private SpotCollection apoptosisspots;
 
 	private HashMap<Integer, ArrayList<Spot>> apoptosisframespots;
+	
+	private ArrayList<Integer> DivisionTrackIDs;
+	
+	private ArrayList<Integer> ApoptosisTrackIDs;
+	
+	private final ImgPlus<IntType> img;
+	
 
-	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final Settings settings,
+	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<IntType> img, final Settings settings,
 			final Model model) {
 
 		this.oneatdivision = oneatdivision;
 
 		this.oneatapoptosis = oneatapoptosis;
 
+		this.img = img;
+		
 		this.settings = settings;
 
 		this.model = model;
@@ -73,6 +84,14 @@ public class OneatCorrector implements TrackCorrector {
 		
 		apoptosisspots = result.getB().getA();
 		apoptosisframespots = result.getB().getB();
+		
+		if(divisionspots.keySet().size() > 0)
+			
+			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(settings, model, img, divisionframespots);
+ 			
+        if(apoptosisspots.keySet().size() > 0)
+			
+			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID(settings, model, img, apoptosisframespots);  		
 
 		return true;
 	}

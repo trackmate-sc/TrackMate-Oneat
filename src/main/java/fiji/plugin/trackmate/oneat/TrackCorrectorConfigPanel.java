@@ -15,6 +15,7 @@ import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.filechooser.FileFilter;
 
 import fiji.plugin.trackmate.Model;
@@ -28,17 +29,27 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 	private static final long serialVersionUID = 1L;
     private static File oneatdivisionfile;
     private static File oneatapoptosisfile;
+    public static final String KEY_TRACKLET_LENGTH = "TRACKLET_LENGTH";
+    private JButton Loaddivisioncsvbutton;
+    private JButton Loadapoptosiscsvbutton;
+    private  JFormattedTextField MinTracklet;
+	/** A default value for the {@value #KEY_LINKING_MAX_DISTANCE} parameter. */
+	public static final double DEFAULT_KEY_TRACKLET_LENGTH = 2;
+    
     
 	public TrackCorrectorConfigPanel( final Settings settings, final Model model )
 	{
 		setLayout( null );
 
 		
-		final JButton Loaddivisioncsvbutton = new JButton("Load Oneat division detections From CSV");
+		Loaddivisioncsvbutton = new JButton("Load Oneat division detections From CSV");
 		add(Loaddivisioncsvbutton);
 		
-		final JButton Loadapoptosiscsvbutton = new JButton("Load Oneat apoptosis detections From CSV");
+		Loadapoptosiscsvbutton = new JButton("Load Oneat apoptosis detections From CSV");
 		add(Loadapoptosiscsvbutton);
+		
+		MinTracklet = new JFormattedTextField(Integer.valueOf(2));
+		add(MinTracklet);
 		
 		Loaddivisioncsvbutton.addActionListener(new ActionListener() {
 
@@ -69,12 +80,9 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 				csvfile.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				csvfile.setFileFilter(csvfilter);
 
-				if (csvfile.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+				if (csvfile.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) 
 
 					oneatdivisionfile = new File(csvfile.getSelectedFile().getPath());
-
-		
-				}
 			}
 		
 		
@@ -109,12 +117,9 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 				csvfile.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				csvfile.setFileFilter(csvfilter);
 
-				if (csvfile.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+				if (csvfile.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) 
 
 					oneatapoptosisfile = new File(csvfile.getSelectedFile().getPath());
-
-		
-				}
 			}
 		
 		
@@ -126,6 +131,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 	@Override
 	public void setSettings( final Map< String, Object > settings )
 	{
+		MinTracklet.setValue(settings.get(KEY_TRACKLET_LENGTH));
 		
 	}
 
@@ -136,6 +142,8 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 		
 		settings.put( DIVISION_FILE, oneatdivisionfile );
 		settings.put( APOPTOSIS_FILE, oneatapoptosisfile );
+		settings.put(KEY_TRACKLET_LENGTH, ((Number) MinTracklet.getValue()).doubleValue());
+
 		
 		return settings;
 	}

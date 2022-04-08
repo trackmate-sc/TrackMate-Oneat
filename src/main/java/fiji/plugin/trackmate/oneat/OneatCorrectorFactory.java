@@ -18,6 +18,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
+import net.imagej.ImgPlus;
+import net.imglib2.type.numeric.integer.IntType;
 
 @Plugin( type = TrackCorrectorFactory.class )
 public class OneatCorrectorFactory implements TrackCorrectorFactory {
@@ -25,10 +27,11 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	
 	public static final String DIVISION_FILE = "Division_File";
 	
-	
     public static final String APOPTOSIS_FILE = "Apoptosis_File";
     
     public static final String TRACKLET_LENGTH = "Min_Tracklet_Length";
+    
+    protected ImgPlus< IntType > img;
 	
 	public static final int DEFAULT_TRACKLET_LENGTH = 2; 
 	
@@ -58,7 +61,7 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	}
 
 	@Override
-	public TrackCorrector create(SpotCollection spots, SpotCollection specialspots, Settings settings, Model model,
+	public TrackCorrector create(SpotCollection spots, SpotCollection specialspots, ImgPlus< IntType > img, Settings settings, Model model,
 			Map<String, Object> mapsettings) {
 		
 		
@@ -66,7 +69,7 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		  
 		  File oneatapoptosisfile = (File) mapsettings.get(APOPTOSIS_FILE);
 		
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, settings, model);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img, settings, model);
 	}
 
 	@Override
