@@ -20,16 +20,57 @@ import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.util.TMUtils;
-import net.imglib2.Localizable;
-import net.imglib2.Point;
+import net.imglib2.util.Util;
+import net.imagej.ImgPlus;
+import net.imagej.axis.Axes;
+import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
-public class TrackCorrectorRunner {
+public class  TrackCorrectorRunner  {
 
 
 	private final static Context context = TMUtils.getContext();
+	
+	
+	public static  ArrayList<Integer>  getSpotID (final ImgPlus< IntType > img, HashMap<Integer, ArrayList<Spot>> framespots ) {
+		
+		ArrayList<Integer> SpotIDList = new ArrayList<Integer>();
+		
+		int ndim = img.numDimensions();
+		RandomAccess<IntType> ranac = img.randomAccess();
+		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
+			
+	
+			int frame = framemap.getKey();
+			ArrayList<Spot> spotlist = framemap.getValue();
+		    	
+			for(Spot currentspots: spotlist) {
+				
+				long[] location = new long[ndim];
+				for(int d = 0; d < ndim; ++d) {
+					
+					location[d] = (long) currentspots.getDoublePosition(d);
+					
+				}
+				
+				ranac.setPosition(frame, img.dimensionIndex( Axes.TIME ));
+				ranac.setPosition(location);
+				// Get the label ID of the current interesting spot
+				int labelID = ranac.get().get();
+			}
+			
+			
+		}
+		
+		
+		return SpotIDList;
+	}
 	
 	public static Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(final Settings settings, final Model model, final File oneatdivisionfile, final File oneatapoptosisfile) {
 		
@@ -122,7 +163,7 @@ public class TrackCorrectorRunner {
 		
 		SpotCollection apoptosisspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> ApoptosisSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
-		if (oneatdivisionfile != null) {
+		if (oneatapoptosisfile != null) {
 		String line = "";
 		String cvsSplitBy = ",";
 		int count = 0;
@@ -133,18 +174,18 @@ public class TrackCorrectorRunner {
 			while ((line = br.readLine()) != null) {
 
 				// use comma as separator
-				String[] divisionspotsfile = line.split(cvsSplitBy);
+				String[] apoptosisspotsfile = line.split(cvsSplitBy);
 
 				if (count > 0) {
 
-					int time = Integer.parseInt(divisionspotsfile[0]);
-					double Z = Double.parseDouble(divisionspotsfile[1]);
-					double Y = Double.parseDouble(divisionspotsfile[2]);
-					double X = Double.parseDouble(divisionspotsfile[3]);
-					double score = Double.parseDouble(divisionspotsfile[4]);
-					double size = Double.parseDouble(divisionspotsfile[5]);
-					double confidence = Double.parseDouble(divisionspotsfile[6]);
-					double angle = Double.parseDouble(divisionspotsfile[7]);
+					int time = Integer.parseInt(apoptosisspotsfile[0]);
+					double Z = Double.parseDouble(apoptosisspotsfile[1]);
+					double Y = Double.parseDouble(apoptosisspotsfile[2]);
+					double X = Double.parseDouble(apoptosisspotsfile[3]);
+					double score = Double.parseDouble(apoptosisspotsfile[4]);
+					double size = Double.parseDouble(apoptosisspotsfile[5]);
+					double confidence = Double.parseDouble(apoptosisspotsfile[6]);
+					double angle = Double.parseDouble(apoptosisspotsfile[7]);
 					
 					RealPoint point = new RealPoint(X, Y, Z);
 					Oneatobject Spot = new Oneatobject(time, point, score, size, confidence, angle);
@@ -189,8 +230,8 @@ public class TrackCorrectorRunner {
 
 				Spot currentspot = new Spot(x, y, z, radius, quality);
 				currentspots.add(currentspot);
-				divisionspots.add(currentspot, frame);
-				DivisionSpotListFrame.put(frame, currentspots);
+				apoptosisspots.add(currentspot, frame);
+				ApoptosisSpotListFrame.put(frame, currentspots);
 			}
 
 		}
@@ -203,5 +244,9 @@ public class TrackCorrectorRunner {
 
 		return new ValuePair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>>(DivisionPair, ApoptosisPair);
 	}
+	
+	
+	
+	
 	
 }
