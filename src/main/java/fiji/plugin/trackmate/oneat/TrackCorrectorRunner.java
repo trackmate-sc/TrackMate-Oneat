@@ -36,12 +36,13 @@ public class TrackCorrectorRunner {
 
 	private final static Context context = TMUtils.getContext();
 
-	public static ArrayList<Integer> getSpotID(final Settings settings, final Model model, final ImgPlus<IntType> img,
+	public static ArrayList<Integer> getTrackID(final Settings settings, final Model model, final ImgPlus<IntType> img,
 			HashMap<Integer, ArrayList<Spot>> framespots) {
 
-		ArrayList<Integer> SpotIDList = new ArrayList<Integer>();
+		ArrayList<Integer> TrackIDList = new ArrayList<Integer>();
 		SpotCollection allspots = model.getSpots();
 
+		
 		int ndim = img.numDimensions();
 		RandomAccess<IntType> ranac = img.randomAccess();
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
@@ -76,14 +77,14 @@ public class TrackCorrectorRunner {
 					int spotlabelID = ranac.get().get();
 					
 					if (spotlabelID == labelID)
-						SpotIDList.add(spot.ID());
+						TrackIDList.add(model.getTrackModel().trackIDOf(spot));
 				}
 
 			}
 
 		}
 
-		return SpotIDList;
+		return TrackIDList;
 	}
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
