@@ -134,8 +134,8 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 	{
 		final Map< String, Object > settings = new HashMap<>();
 		
-		settings.put( DivisionFile, oneatdivisionfile );
-		settings.put( ApoptosisFile, oneatapoptosisfile );
+		settings.put( DIVISION_FILE, oneatdivisionfile );
+		settings.put( APOPTOSIS_FILE, oneatapoptosisfile );
 		
 		return settings;
 	}
