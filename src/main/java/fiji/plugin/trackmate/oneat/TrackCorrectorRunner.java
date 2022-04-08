@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
+import org.jgrapht.graph.DefaultWeightedEdge;
 import org.scijava.Context;
 import org.scijava.app.StatusService;
 import org.scijava.log.LogService;
@@ -37,7 +39,7 @@ public class TrackCorrectorRunner {
 	private final static Context context = TMUtils.getContext();
 
 	public static ArrayList<Integer> getTrackID(final Settings settings, final Model model, final ImgPlus<IntType> img,
-			HashMap<Integer, ArrayList<Spot>> framespots) {
+			HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision) {
 
 		ArrayList<Integer> TrackIDList = new ArrayList<Integer>();
 		SpotCollection allspots = model.getSpots();
@@ -76,8 +78,18 @@ public class TrackCorrectorRunner {
 					
 					int spotlabelID = ranac.get().get();
 					
-					if (spotlabelID == labelID)
-						TrackIDList.add(model.getTrackModel().trackIDOf(spot));
+					if (spotlabelID == labelID) {
+						
+						int spotID = spot.ID();
+						int trackID = model.getTrackModel().trackIDOf(spot);
+						Boolean isDividing = isDividingTrack(spotID,trackID,model);
+						if (checkdivision & isDividing == false)
+						TrackIDList.add(trackID);
+						if(checkdivision == false)
+						TrackIDList.add(trackID);			
+						
+						
+					}
 				}
 
 			}
@@ -86,6 +98,40 @@ public class TrackCorrectorRunner {
 
 		return TrackIDList;
 	}
+	
+	private static boolean isDividingTrack(final int spotID, final int trackID, final Model model) {
+		
+	   Boolean isDividing = null;
+		
+		
+	   final Set<DefaultWeightedEdge> track = model.getTrackModel().trackEdges(trackID);
+	  
+	   for (final DefaultWeightedEdge e : track) {
+           
+			Spot Spotbase = model.getTrackModel().getEdgeSource(e);
+			Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
+			int id = model.getTrackModel().trackIDOf(Spotbase);
+			
+			if (id == trackID) { 
+		    int SpotbaseID = Spotbase.ID();
+		    int SpottargeID = Spottarget.ID();
+		    
+		    ArrayList<Integer> TargetIDList = new ArrayList<Integer>();
+		    if (SpotbaseID == spotID) 
+		    	TargetIDList.add(SpottargeID);
+		    //Source of two targets is a split point, no further check is needed	
+		    if (TargetIDList.size() > 2) {
+		    	
+		    	isDividing = true;
+		    	break;
+		        	
+		    }
+			}
+	   }
+	   
+	   return isDividing;
+	}
+	
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
 			final Settings settings, final Model model, final File oneatdivisionfile, final File oneatapoptosisfile) {
