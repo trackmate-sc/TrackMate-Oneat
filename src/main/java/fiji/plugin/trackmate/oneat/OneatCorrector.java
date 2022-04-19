@@ -22,8 +22,12 @@ public class OneatCorrector implements TrackCorrector {
 
 	private final File oneatapoptosis;
 
-	private final Settings settings;
-
+    private final int mintrackletlength;
+    
+    private final int timegap;
+    
+    private final double sizeratio;
+	
 	private final Model model;
 
 	private SpotCollection divisionspots;
@@ -34,16 +38,21 @@ public class OneatCorrector implements TrackCorrector {
 
 	private HashMap<Integer, ArrayList<Spot>> apoptosisframespots;
 	
-	private ArrayList<Integer> DivisionTrackIDs;
+	private  ArrayList<Integer> DivisionTrackIDs;
 	
-	private ArrayList<Integer> ApoptosisTrackIDs;
+	private  ArrayList<Integer> ApoptosisTrackIDs;
 	
 	private final ImgPlus<IntType> img;
 	
 	
 	
 
-	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<IntType> img, final Settings settings,
+	public OneatCorrector(final File oneatdivision, 
+			final File oneatapoptosis, 
+			final ImgPlus<IntType> img, 
+			final int mintrackletlength,
+			final int timegap,
+			final double sizeratio,
 			final Model model) {
 
 		this.oneatdivision = oneatdivision;
@@ -52,7 +61,11 @@ public class OneatCorrector implements TrackCorrector {
 
 		this.img = img;
 		
-		this.settings = settings;
+		this.mintrackletlength = mintrackletlength;
+		
+		this.timegap = timegap;
+		
+		this.sizeratio = sizeratio;
 
 		this.model = model;
 
@@ -79,7 +92,7 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisspots = new SpotCollection();
 		apoptosisframespots = new HashMap<Integer, ArrayList<Spot>>();
 
-		Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner.run(settings, model,
+		Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner.run(img, model,
 				oneatdivision, oneatapoptosis);
 		divisionspots = result.getA().getA();
 		divisionframespots = result.getA().getB();
@@ -90,12 +103,12 @@ public class OneatCorrector implements TrackCorrector {
 		//Get the track IDs of the spots detected by oneat to belong to dividing cells
 		if(divisionspots.keySet().size() > 0)
 			
-			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(settings, model, img, divisionframespots, true);
+			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, true, timegap);
  		
 		// Ge tthe track IDs of the spots detected by oneat to belong to apoptotic cells
         if(apoptosisspots.keySet().size() > 0)
 			
-			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID(settings, model, img, apoptosisframespots, false);  		
+			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap);  		
 
 		return true;
 	}

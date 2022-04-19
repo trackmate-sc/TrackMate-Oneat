@@ -40,13 +40,12 @@ public class TrackCorrectorRunner {
 
 	private final static Context context = TMUtils.getContext();
 
-	public static ArrayList<Integer> getTrackID(final Map< String, Object > settings, final Model model, final ImgPlus<IntType> img,
-			HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision) {
+	public static ArrayList<Integer> getTrackID( final Model model, final ImgPlus<IntType> img,
+			HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision, final int timegap ) {
 
 		ArrayList<Integer> TrackIDList = new ArrayList<Integer>();
 		SpotCollection allspots = model.getSpots();
       
-		int N = settings.get; 
 		int ndim = img.numDimensions();
 		RandomAccess<IntType> ranac = img.randomAccess();
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
@@ -83,7 +82,7 @@ public class TrackCorrectorRunner {
 					if (spotlabelID == labelID) {
 						
 						int trackID = model.getTrackModel().trackIDOf(spot);
-						Pair<Boolean, Spot> isDividingTMspot = isDividingTrack(spot,trackID,N,model);
+						Pair<Boolean, Spot> isDividingTMspot = isDividingTrack(spot,trackID,timegap,model);
 						Boolean isDividing = isDividingTMspot.getA();
 						//If isDividing is true oneat does not need to correct the track else it has to correct the trackid
 						if (checkdivision & isDividing == false)
@@ -244,7 +243,7 @@ public class TrackCorrectorRunner {
 	
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
-			final Settings settings, final Model model, final File oneatdivisionfile, final File oneatapoptosisfile) {
+			final ImgPlus<IntType> img,  final Model model, final File oneatdivisionfile, final File oneatapoptosisfile) {
 
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
@@ -313,7 +312,7 @@ public class TrackCorrectorRunner {
 
 					double volume = cell.size;
 					double quality = cell.size;
-					int ndims = settings.imp.getNDimensions();
+					int ndims = img.numDimensions();
 
 					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
 							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
@@ -389,7 +388,7 @@ public class TrackCorrectorRunner {
 
 					double volume = cell.size;
 					double quality = cell.size;
-					int ndims = settings.imp.getNDimensions();
+					int ndims = img.numDimensions();
 
 					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
 							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);

@@ -23,24 +23,22 @@ import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.DIVISION_FILE;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.APOPTOSIS_FILE;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_TIME_GAP;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_SIZE_RATIO;
 
 public class TrackCorrectorConfigPanel extends ConfigurationPanel
 {
 	private static final long serialVersionUID = 1L;
     private static File oneatdivisionfile;
     private static File oneatapoptosisfile;
-    public static final String KEY_TRACKLET_LENGTH = "TRACKLET_LENGTH";
-    public static final String KEY_TIME_GAP = "TIME_GAP";
-    public static final String KEY_SIZE_RATIO = "SIZE_RATIO";
+
     private JButton Loaddivisioncsvbutton;
     private JButton Loadapoptosiscsvbutton;
     private  JFormattedTextField MinTracklet;
     private  JFormattedTextField TimeGap;
     private  JFormattedTextField MotherDaughterSizeRatio;
-	/** A default value for the {@value #DEFAULT_KEY_TRACKLET_LENGTH} parameter. */
-	public static final double DEFAULT_KEY_TRACKLET_LENGTH = 2;
-	public static final double DEFAULT_KEY_TIME_GAP = 10;
-	public static final double DEFAULT_SIZE_RATIO = 0.75;
+	
 	
 	public TrackCorrectorConfigPanel( final Settings settings, final Model model )
 	{
