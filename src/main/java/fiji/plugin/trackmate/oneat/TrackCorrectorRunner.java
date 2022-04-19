@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -130,6 +131,85 @@ public class TrackCorrectorRunner {
 	   }
 	   
 	   return isDividing;
+	}
+	
+	
+	private HashMap<Integer, ArrayList<Pair<Integer, Spot>>> getTMDividing(final Model model){
+		
+		
+		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspots = new HashMap<Integer, ArrayList<Pair<Integer, Spot>>>();
+		
+		for (final Integer trackID : model.getTrackModel().trackIDs(false)) {
+		
+		final Set<DefaultWeightedEdge> track = model.getTrackModel().trackEdges(trackID);
+
+		ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
+		ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
+		ArrayList<Integer> SourcesID = new ArrayList<Integer>();
+		ArrayList<Integer> TargetsID = new ArrayList<Integer>();
+
+		ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
+		ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
+		ArrayList<Pair<Integer, Spot>> Splits = new ArrayList<Pair<Integer, Spot>>();
+
+
+		for (final DefaultWeightedEdge e : track) {
+
+			Spot Spotbase = model.getTrackModel().getEdgeSource(e);
+			Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
+
+			Integer targetID = Spottarget.ID();
+			Integer sourceID = Spotbase.ID();
+			Sources.add(new ValuePair<Integer, Spot>(sourceID, Spotbase));
+			Targets.add(new ValuePair<Integer, Spot>(targetID, Spottarget));
+			SourcesID.add(sourceID);
+			TargetsID.add(targetID);
+
+		}
+		// find track ends
+		for (Pair<Integer, Spot> tid : Targets) {
+
+			if (!SourcesID.contains(tid.getA())) {
+
+				Ends.add(tid);
+
+			}
+
+		}
+
+		// find track starts
+		for (Pair<Integer, Spot> sid : Sources) {
+
+			if (!TargetsID.contains(sid.getA())) {
+
+				Starts.add(sid);
+
+			}
+
+		}
+
+		// find track splits
+		int scount = 0;
+		for (Pair<Integer, Spot> sid : Sources) {
+
+			for (Pair<Integer, Spot> dupsid : Sources) {
+
+				if (dupsid.getA().intValue() == sid.getA().intValue()) {
+					scount++;
+				}
+			}
+			if (scount > 1) {
+				Splits.add(sid);
+			}
+			scount = 0;
+		}
+		
+		Dividingspots.put(trackID, Splits);
+		
+		}
+		
+		return Dividingspots;
+		
 	}
 	
 
