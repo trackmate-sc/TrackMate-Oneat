@@ -40,6 +40,8 @@ public class OneatCorrector implements TrackCorrector {
 	
 	private final ImgPlus<IntType> img;
 	
+	
+	
 
 	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<IntType> img, final Settings settings,
 			final Model model) {

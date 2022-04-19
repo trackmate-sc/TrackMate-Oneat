@@ -29,7 +29,11 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	
     public static final String APOPTOSIS_FILE = "Apoptosis_File";
     
-    public static final String TRACKLET_LENGTH = "Min_Tracklet_Length";
+    public static final String KEY_TRACKLET_LENGTH = "TRACKLET_LENGTH";
+    
+    public static final String KEY_TIME_GAP = "TIME_GAP";
+    
+    public static final String KEY_SIZE_RATIO = "SIZE_RATIO";
     
     protected ImgPlus< IntType > img;
 	
