@@ -44,6 +44,7 @@ public class TrackCorrectorRunner {
 			HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision, final int timegap ) {
 
 		ArrayList<Integer> TrackIDList = new ArrayList<Integer>();
+		//Spots from trackmate
 		SpotCollection allspots = model.getSpots();
       
 		int ndim = img.numDimensions();
@@ -243,7 +244,7 @@ public class TrackCorrectorRunner {
 	
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
-			final ImgPlus<IntType> img,  final Model model, final File oneatdivisionfile, final File oneatapoptosisfile) {
+			final File oneatdivisionfile, final File oneatapoptosisfile, final int ndims) {
 
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
@@ -312,7 +313,6 @@ public class TrackCorrectorRunner {
 
 					double volume = cell.size;
 					double quality = cell.size;
-					int ndims = img.numDimensions();
 
 					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
 							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
@@ -388,7 +388,6 @@ public class TrackCorrectorRunner {
 
 					double volume = cell.size;
 					double quality = cell.size;
-					int ndims = img.numDimensions();
 
 					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
 							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
