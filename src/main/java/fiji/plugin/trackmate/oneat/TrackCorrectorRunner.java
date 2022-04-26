@@ -40,13 +40,13 @@ public class TrackCorrectorRunner {
 
 	private final static Context context = TMUtils.getContext();
 
-	public static ArrayList<Integer> getTrackID( final Model model, final ImgPlus<IntType> img,
-			HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision, final int timegap ) {
+	public static HashMap<Integer, ArrayList<Spot>> getTrackID(final Model model, final ImgPlus<IntType> img,
+			HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision, final int timegap) {
 
-		ArrayList<Integer> TrackIDList = new ArrayList<Integer>();
-		//Spots from trackmate
+		HashMap<Integer, ArrayList<Spot>> TrackIDspots = new HashMap<Integer, ArrayList<Spot>>();
+		// Spots from trackmate
 		SpotCollection allspots = model.getSpots();
-      
+
 		int ndim = img.numDimensions();
 		RandomAccess<IntType> ranac = img.randomAccess();
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
@@ -77,22 +77,51 @@ public class TrackCorrectorRunner {
 						currentlocation[d] = (long) spot.getDoublePosition(d);
 
 					ranac.setPosition(currentlocation);
-					
+
 					int spotlabelID = ranac.get().get();
-					
+
 					if (spotlabelID == labelID) {
-						
+
 						int trackID = model.getTrackModel().trackIDOf(spot);
-						Pair<Boolean, Spot> isDividingTMspot = isDividingTrack(spot,trackID,timegap,model);
+						Pair<Boolean, Spot> isDividingTMspot = isDividingTrack(spot, trackID, timegap, model);
 						Boolean isDividing = isDividingTMspot.getA();
-						//If isDividing is true oneat does not need to correct the track else it has to correct the trackid
-						if (checkdivision & isDividing == false)
-						TrackIDList.add(trackID);
-						//If it is an apoptosis event we currently do not have any function to check if TM trajectory has it so we add oneat given trackid
-						if(checkdivision == false)
-						TrackIDList.add(trackID);			
-						
-						
+						// If isDividing is true oneat does not need to correct the track else it has to
+						// correct the trackid
+						if (checkdivision & isDividing == false) {
+
+							if (TrackIDspots.containsKey(trackID)) {
+
+								ArrayList<Spot> trackspotlist = TrackIDspots.get(trackID);
+								trackspotlist.add(spot);
+								TrackIDspots.put(trackID, trackspotlist);
+							} else {
+
+								ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
+								trackspotlist.add(spot);
+								TrackIDspots.put(trackID, trackspotlist);
+
+							}
+
+						}
+						// If it is an apoptosis event we currently do not have any function to check if
+						// TM trajectory has it so we add oneat given trackid
+						if (checkdivision == false) {
+
+							if (TrackIDspots.containsKey(trackID)) {
+
+								ArrayList<Spot> trackspotlist = TrackIDspots.get(trackID);
+								trackspotlist.add(spot);
+								TrackIDspots.put(trackID, trackspotlist);
+							} else {
+
+								ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
+								trackspotlist.add(spot);
+								TrackIDspots.put(trackID, trackspotlist);
+
+							}
+
+						}
+
 					}
 				}
 
@@ -100,148 +129,143 @@ public class TrackCorrectorRunner {
 
 		}
 
-		return TrackIDList;
+		return TrackIDspots;
 	}
-	
-	private static Pair<Boolean, Spot> isDividingTrack(final Spot spot, final int trackID, final int N, final Model model) {
-		
-	   Boolean isDividing = false;
-	   HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspots = getTMDividing(model);	
-	   Spot closestSpot = null;
-	   final Set<DefaultWeightedEdge> track = model.getTrackModel().trackEdges(trackID);
-	  
-	   for (final DefaultWeightedEdge e : track) {
-           
-			Spot Spotbase = model.getTrackModel().getEdgeSource(e);
-			int id = model.getTrackModel().trackIDOf(Spotbase);
-			
-			if (id == trackID) { 
-				
-				
-				ArrayList<Pair<Integer, Spot>> Dividingspotlocations = Dividingspots.get(id);	
-				Pair<Double, Spot> closestspotpair = closestSpot(spot, Dividingspotlocations);
-				double closestdistance = closestspotpair.getA();
-				closestSpot = closestspotpair.getB();
-				// There could be a N frame gap at most between the TM detected dividing spot location and oneat found spot location
-				if (closestdistance < N) {
-					
-					isDividing = true;
-					break;
-				}
-		    
-		    
-			}
-	   }
-	   
-	   return new ValuePair<Boolean, Spot>(isDividing, closestSpot);
-	}
-	
-	
-	private static Pair<Double, Spot> closestSpot(final Spot targetspot, final ArrayList<Pair<Integer, Spot>> Dividingspotlocations) {
-		
-		double mintimeDistance = Double.MAX_VALUE;
-		Spot closestsourcespot = null;
-		
-		for (Pair<Integer, Spot> Dividingspot: Dividingspotlocations) {
-			
-			final Spot sourcespot = Dividingspot.getB();
-			
-			final double dist = sourcespot.diffTo(targetspot,FRAME);
-			
-			if(dist <= mintimeDistance) {
-				
-				mintimeDistance = dist;
-				closestsourcespot = sourcespot;
-			}
-			
-		}
-		
-		
-		Pair<Double, Spot> closestspotpair = new ValuePair<Double, Spot>(Math.abs(mintimeDistance), closestsourcespot);
-		
-		return closestspotpair;
-		
-	}
-	
-	
-	private static HashMap<Integer, ArrayList<Pair<Integer, Spot>>> getTMDividing(final Model model){
-		
-		
-		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspots = new HashMap<Integer, ArrayList<Pair<Integer, Spot>>>();
-		
-		for (final Integer trackID : model.getTrackModel().trackIDs(false)) {
-		
+
+	private static Pair<Boolean, Spot> isDividingTrack(final Spot spot, final int trackID, final int N,
+			final Model model) {
+
+		Boolean isDividing = false;
+		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspots = getTMDividing(model);
+		Spot closestSpot = null;
 		final Set<DefaultWeightedEdge> track = model.getTrackModel().trackEdges(trackID);
-
-		ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
-		ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
-		ArrayList<Integer> SourcesID = new ArrayList<Integer>();
-		ArrayList<Integer> TargetsID = new ArrayList<Integer>();
-
-		ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
-		ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
-		ArrayList<Pair<Integer, Spot>> Splits = new ArrayList<Pair<Integer, Spot>>();
-
 
 		for (final DefaultWeightedEdge e : track) {
 
 			Spot Spotbase = model.getTrackModel().getEdgeSource(e);
-			Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
+			int id = model.getTrackModel().trackIDOf(Spotbase);
 
-			Integer targetID = Spottarget.ID();
-			Integer sourceID = Spotbase.ID();
-			Sources.add(new ValuePair<Integer, Spot>(sourceID, Spotbase));
-			Targets.add(new ValuePair<Integer, Spot>(targetID, Spottarget));
-			SourcesID.add(sourceID);
-			TargetsID.add(targetID);
+			if (id == trackID) {
 
-		}
-		// find track ends
-		for (Pair<Integer, Spot> tid : Targets) {
+				ArrayList<Pair<Integer, Spot>> Dividingspotlocations = Dividingspots.get(id);
+				Pair<Double, Spot> closestspotpair = closestSpot(spot, Dividingspotlocations);
+				double closestdistance = closestspotpair.getA();
+				closestSpot = closestspotpair.getB();
+				// There could be a N frame gap at most between the TM detected dividing spot
+				// location and oneat found spot location
+				if (closestdistance < N) {
 
-			if (!SourcesID.contains(tid.getA())) {
-
-				Ends.add(tid);
-
-			}
-
-		}
-
-		// find track starts
-		for (Pair<Integer, Spot> sid : Sources) {
-
-			if (!TargetsID.contains(sid.getA())) {
-
-				Starts.add(sid);
-
-			}
-
-		}
-
-		// find track splits
-		int scount = 0;
-		for (Pair<Integer, Spot> sid : Sources) {
-
-			for (Pair<Integer, Spot> dupsid : Sources) {
-
-				if (dupsid.getA().intValue() == sid.getA().intValue()) {
-					scount++;
+					isDividing = true;
+					break;
 				}
+
 			}
-			if (scount > 1) {
-				Splits.add(sid);
-			}
-			scount = 0;
 		}
-		
-		Dividingspots.put(trackID, Splits);
-		
-		}
-		
-		return Dividingspots;
-		
+
+		return new ValuePair<Boolean, Spot>(isDividing, closestSpot);
 	}
-	
+
+	private static Pair<Double, Spot> closestSpot(final Spot targetspot,
+			final ArrayList<Pair<Integer, Spot>> Dividingspotlocations) {
+
+		double mintimeDistance = Double.MAX_VALUE;
+		Spot closestsourcespot = null;
+
+		for (Pair<Integer, Spot> Dividingspot : Dividingspotlocations) {
+
+			final Spot sourcespot = Dividingspot.getB();
+
+			final double dist = sourcespot.diffTo(targetspot, FRAME);
+
+			if (dist <= mintimeDistance) {
+
+				mintimeDistance = dist;
+				closestsourcespot = sourcespot;
+			}
+
+		}
+
+		Pair<Double, Spot> closestspotpair = new ValuePair<Double, Spot>(Math.abs(mintimeDistance), closestsourcespot);
+
+		return closestspotpair;
+
+	}
+
+	private static HashMap<Integer, ArrayList<Pair<Integer, Spot>>> getTMDividing(final Model model) {
+
+		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspots = new HashMap<Integer, ArrayList<Pair<Integer, Spot>>>();
+
+		for (final Integer trackID : model.getTrackModel().trackIDs(false)) {
+
+			final Set<DefaultWeightedEdge> track = model.getTrackModel().trackEdges(trackID);
+
+			ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Integer> SourcesID = new ArrayList<Integer>();
+			ArrayList<Integer> TargetsID = new ArrayList<Integer>();
+
+			ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Pair<Integer, Spot>> Splits = new ArrayList<Pair<Integer, Spot>>();
+
+			for (final DefaultWeightedEdge e : track) {
+
+				Spot Spotbase = model.getTrackModel().getEdgeSource(e);
+				Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
+
+				Integer targetID = Spottarget.ID();
+				Integer sourceID = Spotbase.ID();
+				Sources.add(new ValuePair<Integer, Spot>(sourceID, Spotbase));
+				Targets.add(new ValuePair<Integer, Spot>(targetID, Spottarget));
+				SourcesID.add(sourceID);
+				TargetsID.add(targetID);
+
+			}
+			// find track ends
+			for (Pair<Integer, Spot> tid : Targets) {
+
+				if (!SourcesID.contains(tid.getA())) {
+
+					Ends.add(tid);
+
+				}
+
+			}
+
+			// find track starts
+			for (Pair<Integer, Spot> sid : Sources) {
+
+				if (!TargetsID.contains(sid.getA())) {
+
+					Starts.add(sid);
+
+				}
+
+			}
+
+			// find track splits
+			int scount = 0;
+			for (Pair<Integer, Spot> sid : Sources) {
+
+				for (Pair<Integer, Spot> dupsid : Sources) {
+
+					if (dupsid.getA().intValue() == sid.getA().intValue()) {
+						scount++;
+					}
+				}
+				if (scount > 1) {
+					Splits.add(sid);
+				}
+				scount = 0;
+			}
+
+			Dividingspots.put(trackID, Splits);
+
+		}
+
+		return Dividingspots;
+
+	}
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
 			final File oneatdivisionfile, final File oneatapoptosisfile, final int ndims) {
@@ -249,9 +273,6 @@ public class TrackCorrectorRunner {
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
 
-		final LogService logService = context.getService(LogService.class);
-		final StatusService statusService = context.getService(StatusService.class);
-		final OptionsService optionService = context.getService(OptionsService.class);
 
 		if (oneatdivisionfile != null) {
 			String line = "";

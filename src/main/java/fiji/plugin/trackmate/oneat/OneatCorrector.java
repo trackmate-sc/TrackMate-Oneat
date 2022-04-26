@@ -38,9 +38,9 @@ public class OneatCorrector implements TrackCorrector {
 
 	private HashMap<Integer, ArrayList<Spot>> apoptosisframespots;
 	
-	private  ArrayList<Integer> DivisionTrackIDs;
+	private  HashMap<Integer, ArrayList<Spot>> DivisionTrackIDs;
 	
-	private  ArrayList<Integer> ApoptosisTrackIDs;
+	private  HashMap<Integer, ArrayList<Spot>> ApoptosisTrackIDs;
 	
 	private final ImgPlus<IntType> img;
 	
