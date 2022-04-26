@@ -74,7 +74,7 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	}
 
 	@Override
-	public TrackCorrector create(SpotCollection spots, SpotCollection specialspots, ImgPlus< IntType > img,  Model model,
+	public TrackCorrector create(  ImgPlus< IntType > img,  Model model,
 			Map<String, Object> settings) {
 		
 		
