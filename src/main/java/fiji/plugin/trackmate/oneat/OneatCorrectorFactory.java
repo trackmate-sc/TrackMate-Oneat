@@ -91,7 +91,7 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		  double linkingdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
 				  
 		
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img, mintrackletlength, timegap, sizeratio, linkingdistance, model);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img, mintrackletlength, timegap, sizeratio, linkingdistance, model, settings);
 	}
 
 	@Override

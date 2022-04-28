@@ -3,6 +3,7 @@ package fiji.plugin.trackmate.oneat;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -40,12 +41,13 @@ public class OneatCorrector implements TrackCorrector {
 
 	private HashMap<Integer, ArrayList<Spot>> apoptosisframespots;
 	
-	private  HashMap<Integer, ArrayList<Spot>> DivisionTrackIDs;
+	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> DivisionTrackIDs;
 	
-	private  HashMap<Integer, ArrayList<Spot>> ApoptosisTrackIDs;
+	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> ApoptosisTrackIDs;
 	
 	private final ImgPlus<IntType> img;
 	
+	private final Map<String, Object> settings;
 	
 	
 
@@ -57,7 +59,8 @@ public class OneatCorrector implements TrackCorrector {
 			final int timegap,
 			final double sizeratio,
 			final double linkingdistance,
-			final Model model) {
+			final Model model,
+			Map<String, Object> settings) {
 
 		this.oneatdivision = oneatdivision;
 
@@ -74,6 +77,8 @@ public class OneatCorrector implements TrackCorrector {
 		this.linkingdistance = linkingdistance;
 
 		this.model = model;
+		
+		this.settings = settings;
 
 	}
 
@@ -108,14 +113,20 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisframespots = result.getB().getB();
 		
 		//Get the track IDs of the spots detected by oneat to belong to dividing cells
-		if(divisionspots.keySet().size() > 0)
+		if(divisionspots.keySet().size() > 0) {
 			
 			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, true, timegap);
+			
+			SimpleWeightedGraph<Spot, DefaultWeightedEdge> divisiongraph = TrackCorrectorRunner.getDividingTracks(model, DivisionTrackIDs, settings, ndims); 	
+			
+		}
  		
 		// Ge the track IDs of the spots detected by oneat to belong to apoptotic cells
-        if(apoptosisspots.keySet().size() > 0)
+        if(apoptosisspots.keySet().size() > 0) {
 			
-			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap);  		
+			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap); 
+			SimpleWeightedGraph<Spot, DefaultWeightedEdge> apoptosisgraph = TrackCorrectorRunner.getApoptosisTracks(model, DivisionTrackIDs, settings, ndims);
+        }
 
 		return true;
 	}
