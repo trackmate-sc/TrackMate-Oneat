@@ -34,99 +34,92 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
-import static  fiji.plugin.trackmate.Spot.POSITION_X;
-import static  fiji.plugin.trackmate.Spot.POSITION_Y;
-import static  fiji.plugin.trackmate.Spot.POSITION_Z;
-import static  fiji.plugin.trackmate.Spot.FRAME;
-import static  fiji.plugin.trackmate.Spot.RADIUS;
-import static  fiji.plugin.trackmate.Spot.QUALITY;
+import static fiji.plugin.trackmate.Spot.POSITION_X;
+import static fiji.plugin.trackmate.Spot.POSITION_Y;
+import static fiji.plugin.trackmate.Spot.POSITION_Z;
+import static fiji.plugin.trackmate.Spot.FRAME;
+import static fiji.plugin.trackmate.Spot.RADIUS;
+import static fiji.plugin.trackmate.Spot.QUALITY;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_SIZE_RATIO;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_LINKING_MAX_DISTANCE;
-
 
 public class TrackCorrectorRunner {
 
 	private final static Context context = TMUtils.getContext();
-	
-	
-	
-	
-	public static void getClosestTracks(final Model model, HashMap<Integer, ArrayList<Spot>> TrackIDspots, Map<String, Object> settings,  final int ndim ) {
-		
+
+	public static void getClosestTracks(final Model model, HashMap<Integer, ArrayList<Spot>> TrackIDspots,
+			Map<String, Object> settings, final int ndim) {
+
 		SpotCollection allspots = model.getSpots();
 		double motherdaughtersize = (double) settings.get(KEY_SIZE_RATIO);
-		double searchdistance =  (double) settings.get(KEY_LINKING_MAX_DISTANCE);
-		for(Map.Entry<Integer, ArrayList<Spot>> trackidspots : TrackIDspots.entrySet()  ) {
-			
+		double searchdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
+		for (Map.Entry<Integer, ArrayList<Spot>> trackidspots : TrackIDspots.entrySet()) {
+
 			int trackID = trackidspots.getKey();
 			ArrayList<Spot> trackspots = trackidspots.getValue();
 			Boolean acceptFirstdaughter = false;
 			Boolean acceptseconddaughter = false;
-			for (Spot currentspot: trackspots) {
-				
+			for (Spot currentspot : trackspots) {
+
 				// Get the location of spot in current frame
 				int currentframe = currentspot.getFeature(FRAME).intValue();
 				double mothersize = currentspot.getFeature(QUALITY);
 				long[] location = new long[ndim];
 				for (int d = 0; d < ndim; ++d)
 					location[d] = (long) currentspot.getDoublePosition(d);
-				
-				    // Get spots in the next frame
-				    Iterable<Spot> spotsIt = allspots.iterable(currentframe + 1, false);
-				
-				    // Get the closest trackmate spot in the next frame
-					Pair<Double, Spot> firstclosestspot = closestnextframeSpot(currentspot, spotsIt);
-					double firstclosestdistance = firstclosestspot.getA();
-					
-					double firstdaughtersize = firstclosestspot.getB().getFeature(QUALITY);
-					
-					
-					if (mothersize/firstdaughtersize <= motherdaughtersize){
-						
+
+				// Get spots in the next frame
+				Iterable<Spot> spotsIt = allspots.iterable(currentframe + 1, false);
+
+				// Get the closest trackmate spot in the next frame
+
+				Pair<Double, Spot> firstclosestspot = closestnextframeSpot(currentspot, spotsIt);
+				double firstclosestdistance = firstclosestspot.getA();
+
+				double firstdaughtersize = firstclosestspot.getB().getFeature(QUALITY);
+
+				do {
+					if (mothersize / firstdaughtersize <= motherdaughtersize && acceptFirstdaughter == false
+							&& firstclosestdistance <= searchdistance)
+
 						acceptFirstdaughter = true;
-						
-					}
-					//Now remove that spot from the iterable
-					spotsIt =  removespot(spotsIt, firstclosestspot.getB());
-					//Get the second closest trackmate spot in the next frame
+
+					// Now remove that spot from the iterable
+					spotsIt = removespot(spotsIt, firstclosestspot.getB());
+					// Get the second closest trackmate spot in the next frame
 					Pair<Double, Spot> secondclosestspot = closestnextframeSpot(currentspot, spotsIt);
 					double secondclosestdistance = secondclosestspot.getA();
 					double seconddaughtersize = secondclosestspot.getB().getFeature(QUALITY);
-					
-					
-					if (mothersize/seconddaughtersize <= motherdaughtersize){
-											
+
+					if (mothersize / seconddaughtersize <= motherdaughtersize && acceptseconddaughter == false
+							&& secondclosestdistance <= searchdistance)
+
 						acceptseconddaughter = true;
-											
-						}
-									
-				
-			
+
+				} while (acceptFirstdaughter && acceptseconddaughter);
+
 			}
 		}
-		
+
 	}
-	
-	
+
 	private static Iterable<Spot> removespot(Iterable<Spot> spotsIt, Spot removespot) {
-		
-		
+
 		Iterator<Spot> spots = spotsIt.iterator();
 		Set<Spot> removespots = new HashSet<Spot>();
-		while(spots.hasNext()) {
-			
-			
+		while (spots.hasNext()) {
+
 			Spot currentspot = spots.next();
-			
-			if(currentspot.equals(removespot))
+
+			if (currentspot.equals(removespot))
 				spots.remove();
 			removespots.add(currentspot);
 		}
-		
+
 		return removespots;
-		
+
 	}
-	
+
 	public static HashMap<Integer, ArrayList<Spot>> getTrackID(final Model model, final ImgPlus<IntType> img,
 			HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision, final int timegap) {
 
@@ -277,10 +270,8 @@ public class TrackCorrectorRunner {
 		return closestspotpair;
 
 	}
-	
-	
-	private static Pair<Double, Spot> closestnextframeSpot(final Spot currentspot,
-			final Iterable<Spot> nextspot) {
+
+	private static Pair<Double, Spot> closestnextframeSpot(final Spot currentspot, final Iterable<Spot> nextspot) {
 
 		double mintimeDistance = Double.MAX_VALUE;
 		Spot closestsourcespot = null;
@@ -298,7 +289,6 @@ public class TrackCorrectorRunner {
 			}
 
 		}
-		
 
 		Pair<Double, Spot> closestspotpair = new ValuePair<Double, Spot>(Math.abs(mintimeDistance), closestsourcespot);
 
@@ -388,7 +378,6 @@ public class TrackCorrectorRunner {
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
 
-
 		if (oneatdivisionfile != null) {
 			String line = "";
 			String cvsSplitBy = ",";
@@ -454,15 +443,14 @@ public class TrackCorrectorRunner {
 							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
 
 					Spot currentspot = new Spot(x, y, z, radius, quality);
-					//Put spot features so we can get it back by feature name
-					currentspot.putFeature(POSITION_X, Double.valueOf( x ) );
-					currentspot.putFeature(POSITION_Y, Double.valueOf( y ) );
-					currentspot.putFeature(POSITION_Z, Double.valueOf( x ) );
-					currentspot.putFeature(FRAME, Double.valueOf( frame ) );
-					currentspot.putFeature(RADIUS, Double.valueOf( radius ) );
-					currentspot.putFeature(QUALITY, Double.valueOf( radius ) );
-					
-					
+					// Put spot features so we can get it back by feature name
+					currentspot.putFeature(POSITION_X, Double.valueOf(x));
+					currentspot.putFeature(POSITION_Y, Double.valueOf(y));
+					currentspot.putFeature(POSITION_Z, Double.valueOf(x));
+					currentspot.putFeature(FRAME, Double.valueOf(frame));
+					currentspot.putFeature(RADIUS, Double.valueOf(radius));
+					currentspot.putFeature(QUALITY, Double.valueOf(radius));
+
 					currentspots.add(currentspot);
 					divisionspots.add(currentspot, frame);
 					DivisionSpotListFrame.put(frame, currentspots);
@@ -538,12 +526,12 @@ public class TrackCorrectorRunner {
 							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
 
 					Spot currentspot = new Spot(x, y, z, radius, quality);
-					currentspot.putFeature(POSITION_X, Double.valueOf( x ) );
-					currentspot.putFeature(POSITION_Y, Double.valueOf( y ) );
-					currentspot.putFeature(POSITION_Z, Double.valueOf( x ) );
-					currentspot.putFeature(FRAME, Double.valueOf( frame ) );
-					currentspot.putFeature(RADIUS, Double.valueOf( radius ) );
-					currentspot.putFeature(QUALITY, Double.valueOf( radius ) );
+					currentspot.putFeature(POSITION_X, Double.valueOf(x));
+					currentspot.putFeature(POSITION_Y, Double.valueOf(y));
+					currentspot.putFeature(POSITION_Z, Double.valueOf(x));
+					currentspot.putFeature(FRAME, Double.valueOf(frame));
+					currentspot.putFeature(RADIUS, Double.valueOf(radius));
+					currentspot.putFeature(QUALITY, Double.valueOf(radius));
 					currentspots.add(currentspot);
 					apoptosisspots.add(currentspot, frame);
 					ApoptosisSpotListFrame.put(frame, currentspots);
