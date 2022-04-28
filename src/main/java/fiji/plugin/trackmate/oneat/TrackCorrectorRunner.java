@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.traverse.GraphIterator;
 import org.scijava.Context;
 import org.scijava.app.StatusService;
 import org.scijava.log.LogService;
@@ -71,18 +72,26 @@ public class TrackCorrectorRunner {
 				// Get spots in the next frame
 				Iterable<Spot> spotsIt = allspots.iterable(currentframe + 1, false);
 
-				// Get the closest trackmate spot in the next frame
-
-				Pair<Double, Spot> firstclosestspot = closestnextframeSpot(currentspot, spotsIt);
-				double firstclosestdistance = firstclosestspot.getA();
-
-				double firstdaughtersize = firstclosestspot.getB().getFeature(QUALITY);
+				Spot firstdaughter = null;
+				Spot seconddaughter = null;
+				
 
 				do {
+					
+					// Get the closest trackmate spot in the next frame
+
+					Pair<Double, Spot> firstclosestspot = closestnextframeSpot(currentspot, spotsIt);
+					double firstclosestdistance = firstclosestspot.getA();
+
+					double firstdaughtersize = firstclosestspot.getB().getFeature(QUALITY);
+					
 					if (mothersize / firstdaughtersize <= motherdaughtersize && acceptFirstdaughter == false
-							&& firstclosestdistance <= searchdistance)
+							&& firstclosestdistance <= searchdistance) {
 
 						acceptFirstdaughter = true;
+					    firstdaughter = firstclosestspot.getB();
+					
+					}
 
 					// Now remove that spot from the iterable
 					spotsIt = removespot(spotsIt, firstclosestspot.getB());
@@ -92,11 +101,29 @@ public class TrackCorrectorRunner {
 					double seconddaughtersize = secondclosestspot.getB().getFeature(QUALITY);
 
 					if (mothersize / seconddaughtersize <= motherdaughtersize && acceptseconddaughter == false
-							&& secondclosestdistance <= searchdistance)
+							&& secondclosestdistance <= searchdistance) {
 
 						acceptseconddaughter = true;
+					    seconddaughter = secondclosestspot.getB();	
+						
+					}
 
-				} while (acceptFirstdaughter && acceptseconddaughter);
+				} while (!acceptFirstdaughter && !acceptseconddaughter || spotsIt.iterator().hasNext());
+				
+				if(acceptFirstdaughter && acceptseconddaughter ) {
+					
+					
+					//If we are in here we have found the closest two spots to create links to, now we get their track ID
+					
+					// Get the forward track of the first daughter
+					GraphIterator<Spot, DefaultWeightedEdge> firstdaughtertrack = model.getTrackModel().getDepthFirstIterator(firstdaughter, true);
+					
+					// Get the forward track of the second daughter
+					GraphIterator<Spot, DefaultWeightedEdge> seconddaughtertrack = model.getTrackModel().getDepthFirstIterator(seconddaughter, true);
+					
+				}
+				
+				
 
 			}
 		}
