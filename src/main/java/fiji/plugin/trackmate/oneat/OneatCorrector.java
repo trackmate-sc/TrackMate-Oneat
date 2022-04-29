@@ -105,25 +105,34 @@ public class OneatCorrector implements TrackCorrector {
         int ndims = img.numDimensions();
 		Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner.run(
 				oneatdivision, oneatapoptosis, ndims);
-		//Oneat found spots
+		//Oneat found spots for mitosis
 		divisionspots = result.getA().getA();
 		divisionframespots = result.getA().getB();
 		
+		//Oneat found spots for apoptosis
 		apoptosisspots = result.getB().getA();
 		apoptosisframespots = result.getB().getB();
 		
-		//Get the track IDs of the spots detected by oneat to belong to dividing cells
+		//We have to regerenate the graph and tracks after correction
 		if(divisionspots.keySet().size() > 0) 
 			
 			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, true, timegap);
-		
 		
         if(apoptosisspots.keySet().size() > 0) 
 			
 			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap); 
 			
+        
+        
 			SimpleWeightedGraph<Spot, DefaultWeightedEdge> correctedgraph = TrackCorrectorRunner.getCorrectedTracks(model, DivisionTrackIDs, ApoptosisTrackIDs, settings, ndims); 	
 			
+			model.beginUpdate();
+			
+			
+			model.setTracks(correctedgraph, false);
+			
+			
+			model.endUpdate();
 		
  		
 
