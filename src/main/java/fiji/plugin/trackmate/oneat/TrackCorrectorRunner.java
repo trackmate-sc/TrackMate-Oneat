@@ -51,35 +51,46 @@ public class TrackCorrectorRunner {
 	private final static Context context = TMUtils.getContext();
 
 	
-	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getApoptosisTracks(final Model model, HashMap<Integer, Pair<ArrayList<Spot>, Spot>> TrackIDspots,
-			Map<String, Object> settings, final int ndim) {
-		
-		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
-		
-		
-		
-		
-		return graph;
-	}
 	
-	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getDividingTracks(final Model model, HashMap<Integer, Pair<ArrayList<Spot>, Spot>> TrackIDspots,
-			Map<String, Object> settings, final int ndim) {
+	
+	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model, HashMap<Integer, Pair<ArrayList<Spot>, Spot>> Mitosisspots,
+			HashMap<Integer, Pair<ArrayList<Spot>, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim) {
 
-
+		
+		//Get the trackmodel and spots in the default tracking result and start to create a new graph
+        TrackModel trackmodel = model.getTrackModel();
 		SpotCollection allspots = model.getSpots();
-		model.beginUpdate();
-		TrackModel trackmodel = model.getTrackModel();
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+		
+		
 		double motherdaughtersize = (double) settings.get(KEY_SIZE_RATIO);
 		double searchdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
-		for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> trackidspots : TrackIDspots.entrySet()) {
-
-			// Clear the track from the trackmodel 
+		Set<Integer> AlltrackIDs = trackmodel.trackIDs(false);
+		
+		Set<Integer> MitosisIDs = new HashSet<Integer>();
+		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
+		
+		
+		//Lets take care of apoptosis
+		for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> trackidspots : Apoptosisspots.entrySet()) {
+			
+			// Get the current trackID
 			int trackID = trackidspots.getKey();
-			trackmodel.trackSpots(trackID).clear();
-
 			Spot startingspot = trackidspots.getValue().getB();
 			Pair<ArrayList<Spot>, Spot> trackspots = trackidspots.getValue();
+			
+			
+			
+		}
+		// Lets take care of mitosis
+		for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> trackidspots : Mitosisspots.entrySet()) {
+
+			// Get the current trackID
+			int trackID = trackidspots.getKey();
+			Spot startingspot = trackidspots.getValue().getB();
+			Pair<ArrayList<Spot>, Spot> trackspots = trackidspots.getValue();
+			
+			
 			Boolean acceptFirstdaughter = false;
 			Boolean acceptSeconddaughter = false;
 			for (Spot motherspot : trackspots.getA()) {
@@ -133,59 +144,73 @@ public class TrackCorrectorRunner {
 
 				if (acceptFirstdaughter && acceptSeconddaughter) {
 
+					// We have to get rid of this trackID and the trackID of the daughters
+					MitosisIDs.add(trackID);
+					trackmodel.trackSpots(trackID).clear();
+					int firstdaughtertrackID = trackmodel.trackIDOf(firstdaughter);
+					
+					
+					int seconddaughtertrackID = trackmodel.trackIDOf(seconddaughter);
+					
+					
+					
 					// If we are in here we have found the closest two spots to create links to, now
 					// we get their track ID
 
 					// Get the backward track of the mother from { #startingspot}
 
-					GraphIterator<Spot, DefaultWeightedEdge> startmothertrack = trackmodel
-							.getDepthFirstIterator(startingspot, true);
-
+					Set<DefaultWeightedEdge> startmothertrack = trackmodel.trackEdges(trackID);
+					for ( final DefaultWeightedEdge edge : startmothertrack )
+					{
+						final Spot source = graph.getEdgeSource( edge );
+						if(source!=motherspot) {
+						final Spot target = graph.getEdgeTarget( edge );
+						final DefaultWeightedEdge newedge = graph.addEdge(source, target);
+						graph.setEdgeWeight(newedge, -1);
+						}
+					}
+					
 					// Get the forward track of the first daughter
-					GraphIterator<Spot, DefaultWeightedEdge> firstdaughtertrack = trackmodel
-							.getDepthFirstIterator(firstdaughter, true);
+					Set<DefaultWeightedEdge> firstdaughtertrack = trackmodel.trackEdges(firstdaughtertrackID);
 
 					// Get the forward track of the second daughter
-					GraphIterator<Spot, DefaultWeightedEdge> seconddaughtertrack = trackmodel
-							.getDepthFirstIterator(seconddaughter, true);
-
-					Spot source = startingspot;
-					while (startmothertrack.hasNext()) {
-
-						Spot target = startmothertrack.next();
-
-						if (target == motherspot)
-							break;
-						graph.addVertex(source);
-						graph.addVertex(target);
-						final DefaultWeightedEdge edge = graph.addEdge(source, target);
-						graph.setEdgeWeight(edge, -1);
-						source = target;
-
+					Set<DefaultWeightedEdge> seconddaughtertrack = trackmodel.trackEdges(seconddaughtertrackID);
+             
+					for ( final DefaultWeightedEdge edge : firstdaughtertrack )
+					{
+						final Spot source = graph.getEdgeSource( edge );
+						
+						final Spot target = graph.getEdgeTarget( edge );
+						if(target!=firstdaughter) {
+						final DefaultWeightedEdge newedge = graph.addEdge(source, target);
+						graph.setEdgeWeight(newedge, -1);
+						}
 					}
-
-					source = motherspot;
-					while (firstdaughtertrack.hasNext()) {
-
-						Spot target = firstdaughtertrack.next();
-						graph.addVertex(source);
-						graph.addVertex(target);
-						final DefaultWeightedEdge edge = graph.addEdge(source, target);
-						graph.setEdgeWeight(edge, -1);
-						source = target;
-
+					
+					
+					for ( final DefaultWeightedEdge edge : seconddaughtertrack )
+					{
+						final Spot source = graph.getEdgeSource( edge );
+						
+						final Spot target = graph.getEdgeTarget( edge );
+						if(target!=seconddaughter) {
+						final DefaultWeightedEdge newedge = graph.addEdge(source, target);
+						graph.setEdgeWeight(newedge, -1);
+						}
 					}
-					source = motherspot;
-					while (seconddaughtertrack.hasNext()) {
-
-						Spot target = seconddaughtertrack.next();
-						graph.addVertex(source);
-						graph.addVertex(target);
-						final DefaultWeightedEdge edge = graph.addEdge(source, target);
-						graph.setEdgeWeight(edge, -1);
-						source = target;
-
-					}
+					
+					
+					trackmodel.trackSpots(firstdaughtertrackID).clear();
+					trackmodel.trackSpots(seconddaughtertrackID).clear();
+					
+					
+					final DefaultWeightedEdge firstdaughteredge = graph.addEdge(motherspot, firstdaughter);
+					graph.setEdgeWeight(firstdaughteredge, -1);
+					
+					final DefaultWeightedEdge seconddaughteredge = graph.addEdge(motherspot, seconddaughter);
+					graph.setEdgeWeight(seconddaughteredge, -1);
+					
+					
 
 				}
 
@@ -217,7 +242,7 @@ public class TrackCorrectorRunner {
 			final ImgPlus<IntType> img, HashMap<Integer, ArrayList<Spot>> framespots, final boolean checkdivision,
 			final int timegap) {
 
-		HashMap<Integer, ArrayList<Spot>> TrackIDspots = new HashMap<Integer, ArrayList<Spot>>();
+		HashMap<Integer, ArrayList<Spot>> Mitosisspots = new HashMap<Integer, ArrayList<Spot>>();
 		HashMap<Integer, Pair<ArrayList<Spot>, Spot>> TrackIDstartspots = new HashMap<Integer, Pair<ArrayList<Spot>, Spot>>();
 		// Spots from trackmate
 		SpotCollection allspots = model.getSpots();
@@ -267,18 +292,18 @@ public class TrackCorrectorRunner {
 
 							Spot startspot = isDividingTMspot.getB().getA();
 
-							if (TrackIDspots.containsKey(trackID)) {
+							if (Mitosisspots.containsKey(trackID)) {
 
-								ArrayList<Spot> trackspotlist = TrackIDspots.get(trackID);
+								ArrayList<Spot> trackspotlist = Mitosisspots.get(trackID);
 								trackspotlist.add(spot);
-								TrackIDspots.put(trackID, trackspotlist);
+								Mitosisspots.put(trackID, trackspotlist);
 								Pair<ArrayList<Spot>, Spot> pairlist = new ValuePair<ArrayList<Spot>, Spot>(trackspotlist,startspot);
 								TrackIDstartspots.put(trackID, pairlist);
 							} else {
 
 								ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
 								trackspotlist.add(spot);
-								TrackIDspots.put(trackID, trackspotlist);
+								Mitosisspots.put(trackID, trackspotlist);
 								Pair<ArrayList<Spot>, Spot> pairlist = new ValuePair<ArrayList<Spot>, Spot>(trackspotlist,startspot);
 								TrackIDstartspots.put(trackID, pairlist);
 							}
@@ -289,18 +314,18 @@ public class TrackCorrectorRunner {
 						if (checkdivision == false) {
 
 							Spot startspot = isDividingTMspot.getB().getA();
-							if (TrackIDspots.containsKey(trackID)) {
+							if (Mitosisspots.containsKey(trackID)) {
 
-								ArrayList<Spot> trackspotlist = TrackIDspots.get(trackID);
+								ArrayList<Spot> trackspotlist = Mitosisspots.get(trackID);
 								trackspotlist.add(spot);
-								TrackIDspots.put(trackID, trackspotlist);
+								Mitosisspots.put(trackID, trackspotlist);
 								Pair<ArrayList<Spot>, Spot> pairlist = new ValuePair<ArrayList<Spot>, Spot>(trackspotlist,startspot);
 								TrackIDstartspots.put(trackID, pairlist);
 							} else {
 
 								ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
 								trackspotlist.add(spot);
-								TrackIDspots.put(trackID, trackspotlist);
+								Mitosisspots.put(trackID, trackspotlist);
 								Pair<ArrayList<Spot>, Spot> pairlist = new ValuePair<ArrayList<Spot>, Spot>(trackspotlist,startspot);
 								TrackIDstartspots.put(trackID, pairlist);
 							}

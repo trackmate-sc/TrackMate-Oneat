@@ -113,20 +113,19 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisframespots = result.getB().getB();
 		
 		//Get the track IDs of the spots detected by oneat to belong to dividing cells
-		if(divisionspots.keySet().size() > 0) {
+		if(divisionspots.keySet().size() > 0) 
 			
 			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, true, timegap);
-			
-			SimpleWeightedGraph<Spot, DefaultWeightedEdge> divisiongraph = TrackCorrectorRunner.getDividingTracks(model, DivisionTrackIDs, settings, ndims); 	
-			
-		}
- 		
-		// Ge the track IDs of the spots detected by oneat to belong to apoptotic cells
-        if(apoptosisspots.keySet().size() > 0) {
+		
+		
+        if(apoptosisspots.keySet().size() > 0) 
 			
 			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap); 
-			SimpleWeightedGraph<Spot, DefaultWeightedEdge> apoptosisgraph = TrackCorrectorRunner.getApoptosisTracks(model, DivisionTrackIDs, settings, ndims);
-        }
+			
+			SimpleWeightedGraph<Spot, DefaultWeightedEdge> divisiongraph = TrackCorrectorRunner.getCorrectedTracks(model, DivisionTrackIDs, ApoptosisTrackIDs, settings, ndims); 	
+			
+		
+ 		
 
 		return true;
 	}
