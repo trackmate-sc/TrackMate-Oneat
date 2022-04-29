@@ -39,6 +39,10 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 
     public static final String KEY_LINKING_MAX_DISTANCE = "MAX_LINKING_DISTANCE";
     
+    public static final String KEY_CREATE_LINKS = "CREATE_LINKS";
+    
+    public static final String KEY_BREAK_LINKS = "BREAK_LINKS";
+    
     protected ImgPlus< IntType > img;
 	
 	/** A default value for the {@value #DEFAULT_KEY_TRACKLET_LENGTH} parameter. */
@@ -90,8 +94,11 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		  
 		  double linkingdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
 				  
+		  final boolean createlinks = ( boolean ) settings.get( KEY_CREATE_LINKS );
+		  
+		  final boolean breaklinks = ( boolean ) settings.get( KEY_BREAK_LINKS );
 		
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img, mintrackletlength, timegap, sizeratio, linkingdistance, model, settings);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img, mintrackletlength, timegap, sizeratio, linkingdistance, createlinks, breaklinks, model, settings);
 	}
 
 	@Override

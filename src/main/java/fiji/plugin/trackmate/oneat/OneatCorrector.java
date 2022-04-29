@@ -32,6 +32,10 @@ public class OneatCorrector implements TrackCorrector {
     private final double linkingdistance;
 	
 	private final Model model;
+	
+	private final boolean createlinks;
+	
+	private final boolean breaklinks;
 
 	private SpotCollection divisionspots;
 
@@ -59,7 +63,8 @@ public class OneatCorrector implements TrackCorrector {
 			final int timegap,
 			final double sizeratio,
 			final double linkingdistance,
-			final Model model,
+			final boolean createlinks, 
+			final boolean breaklinks, final Model model,
 			Map<String, Object> settings) {
 
 		this.oneatdivision = oneatdivision;
@@ -76,6 +81,10 @@ public class OneatCorrector implements TrackCorrector {
 		
 		this.linkingdistance = linkingdistance;
 
+		this.createlinks = createlinks;
+		
+		this.breaklinks = breaklinks;
+		
 		this.model = model;
 		
 		this.settings = settings;
