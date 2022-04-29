@@ -14,15 +14,13 @@ public class OneatAttempt {
 
 	public static void main( final String[] args ) throws IOException, InterruptedException
 	{
-		ImageJ.main( args );
 
 		JFrame frame = new JFrame("");
 
-		new ImageJ();
 
 
 		TrackCorrectorConfigPanel panel = new TrackCorrectorConfigPanel(null, null);
-
+        panel.setVisible(true);;
 		frame.getContentPane().add(panel, "Center");
 		frame.setSize(panel.getPreferredSize());
 		

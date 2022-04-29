@@ -21,6 +21,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
@@ -33,6 +34,7 @@ import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 import fiji.plugin.trackmate.util.TMUtils;
 import ij.ImageJ;
+import ij.plugin.PlugIn;
 
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.DIVISION_FILE;
 import static fiji.plugin.trackmate.gui.Fonts.SMALL_FONT;
@@ -43,7 +45,7 @@ import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_SIZE_RATIO;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 
-public class TrackCorrectorConfigPanel extends ConfigurationPanel
+public class TrackCorrectorConfigPanel extends ConfigurationPanel 
 {
 	private static final long serialVersionUID = 1L;
     private static File oneatdivisionfile;
@@ -57,7 +59,6 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
     
     private JCheckBox CreateNewLinks;
     private JCheckBox BreakCurrentLinks;
-	
 	
 	public TrackCorrectorConfigPanel( final Settings settings, final Model model )
 	{
@@ -160,6 +161,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 		gbcChckbxBreakCurrentLinks.gridy = 16;
 		add( CreateNewLinks, gbcChckbxBreakCurrentLinks );
 		
+		
 		Loaddivisioncsvbutton.addActionListener(new ActionListener() {
 
 			@Override
@@ -194,7 +196,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 					oneatdivisionfile = new File(csvfile.getSelectedFile().getPath());
 			}
 		
-		
+	
 	});
 		
 		Loadapoptosiscsvbutton.addActionListener(new ActionListener() {
@@ -234,7 +236,6 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 		
 	});
 		
-		
 	}
 
 	@Override
@@ -266,6 +267,8 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 	@Override
 	public void clean()
 	{}
+
+
 	
 	
 	
