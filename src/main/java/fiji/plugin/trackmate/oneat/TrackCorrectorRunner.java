@@ -66,7 +66,6 @@ public class TrackCorrectorRunner {
 		double motherdaughtersize = (double) settings.get(KEY_SIZE_RATIO);
 		double searchdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
 		Set<Integer> AlltrackIDs = trackmodel.trackIDs(false);
-		
 		Set<Integer> MitosisIDs = new HashSet<Integer>();
 		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
 		
@@ -76,9 +75,24 @@ public class TrackCorrectorRunner {
 			
 			// Get the current trackID
 			int trackID = trackidspots.getKey();
-			Spot startingspot = trackidspots.getValue().getB();
 			Pair<ArrayList<Spot>, Spot> trackspots = trackidspots.getValue();
+			ApoptosisIDs.add(trackID);
 			
+			// Apoptosis cell can not be source of an edge
+			for (Spot killerspot : trackspots.getA()) {
+				
+				Set<DefaultWeightedEdge> killertrack = trackmodel.trackEdges(trackID);
+				for ( final DefaultWeightedEdge edge : killertrack )
+				{
+					final Spot source = graph.getEdgeSource( edge );
+					if(source!=killerspot) {
+					final Spot target = graph.getEdgeTarget( edge );
+					final DefaultWeightedEdge newedge = graph.addEdge(source, target);
+					graph.setEdgeWeight(newedge, -1);
+					}
+				}
+				
+			}
 			
 			
 		}
@@ -87,7 +101,6 @@ public class TrackCorrectorRunner {
 
 			// Get the current trackID
 			int trackID = trackidspots.getKey();
-			Spot startingspot = trackidspots.getValue().getB();
 			Pair<ArrayList<Spot>, Spot> trackspots = trackidspots.getValue();
 			
 			
@@ -148,8 +161,6 @@ public class TrackCorrectorRunner {
 					MitosisIDs.add(trackID);
 					trackmodel.trackSpots(trackID).clear();
 					int firstdaughtertrackID = trackmodel.trackIDOf(firstdaughter);
-					
-					
 					int seconddaughtertrackID = trackmodel.trackIDOf(seconddaughter);
 					
 					
@@ -176,6 +187,7 @@ public class TrackCorrectorRunner {
 					// Get the forward track of the second daughter
 					Set<DefaultWeightedEdge> seconddaughtertrack = trackmodel.trackEdges(seconddaughtertrackID);
              
+					// Mitosis daughters have to break previous connections so can not be target of a spot
 					for ( final DefaultWeightedEdge edge : firstdaughtertrack )
 					{
 						final Spot source = graph.getEdgeSource( edge );
@@ -203,7 +215,7 @@ public class TrackCorrectorRunner {
 					trackmodel.trackSpots(firstdaughtertrackID).clear();
 					trackmodel.trackSpots(seconddaughtertrackID).clear();
 					
-					
+					// Establish the connection between the split spot and daughters
 					final DefaultWeightedEdge firstdaughteredge = graph.addEdge(motherspot, firstdaughter);
 					graph.setEdgeWeight(firstdaughteredge, -1);
 					
@@ -216,6 +228,30 @@ public class TrackCorrectorRunner {
 
 			}
 		}
+		
+		//Lets take care of no event tracks
+		AlltrackIDs.removeAll(ApoptosisIDs);
+		AlltrackIDs.removeAll(MitosisIDs);
+		
+		for (int trackID : AlltrackIDs) {
+			
+				// Nothing special here just mantaining the normal links found
+				Set<DefaultWeightedEdge> normaltracks = trackmodel.trackEdges(trackID);
+				for ( final DefaultWeightedEdge edge : normaltracks )
+				{
+					final Spot source = graph.getEdgeSource( edge );
+					final Spot target = graph.getEdgeTarget( edge );
+					final DefaultWeightedEdge newedge = graph.addEdge(source, target);
+					graph.setEdgeWeight(newedge, -1);
+					
+				}
+				
+			
+			
+			
+		}
+		
+		
 		
 		return graph;
 

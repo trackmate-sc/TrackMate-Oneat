@@ -122,7 +122,7 @@ public class OneatCorrector implements TrackCorrector {
 			
 			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap); 
 			
-			SimpleWeightedGraph<Spot, DefaultWeightedEdge> divisiongraph = TrackCorrectorRunner.getCorrectedTracks(model, DivisionTrackIDs, ApoptosisTrackIDs, settings, ndims); 	
+			SimpleWeightedGraph<Spot, DefaultWeightedEdge> correctedgraph = TrackCorrectorRunner.getCorrectedTracks(model, DivisionTrackIDs, ApoptosisTrackIDs, settings, ndims); 	
 			
 		
  		
