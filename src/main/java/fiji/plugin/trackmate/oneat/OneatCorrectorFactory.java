@@ -20,10 +20,14 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
+import fiji.plugin.trackmate.trackcorrection.TrackCorrector;
+import fiji.plugin.trackmate.trackcorrection.TrackCorrectorFactory;
+import fiji.plugin.trackmate.trackcorrection.oneat.OneatCorrector;
+import fiji.plugin.trackmate.trackcorrection.oneat.TrackCorrectorConfigPanel;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.IntType;
 
-@Plugin( type = TrackCorrectorFactory.class )
+@Plugin( type = TrackCorrectorFactory.class, visible = true )
 public class OneatCorrectorFactory implements TrackCorrectorFactory {
 
 	
@@ -54,13 +58,34 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	public static final boolean DEFAULT_CREATE_LINKS = true;
 	public static final boolean DEFAULT_BREAK_LINKS = false;
 	
+	public static final String THIS_TRACK_CORRECTOR = "Oneat_Corrector";
+
+	public static final String THIS_NAME = "Oneat Corrector";
+
+	public static final String THIS_INFO_TEXT = "<html>"
+			+ "This is the corrector based on oneat, a CNN + LSTM based action classification network <br>"
+			+ " </html>";
+
+	@Override
+	public String getKey()
+	{
+		return THIS_TRACK_CORRECTOR;
+	}
+
+	@Override
+	public String getName()
+	{
+		return THIS_NAME;
+	}
+
+	@Override
+	public String getInfoText()
+	{
+		return THIS_INFO_TEXT;
+	}
 	
 	private String errorMessage;
-	@Override
-	public String getInfoText() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 	@Override
 	public ImageIcon getIcon() {
@@ -68,17 +93,7 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		return null;
 	}
 
-	@Override
-	public String getKey() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 	@Override
 	public TrackCorrector create(  ImgPlus< IntType > img,  Model model,
@@ -235,6 +250,5 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		return new OneatCorrectorFactory();
 	}
 
-	
 
 }
