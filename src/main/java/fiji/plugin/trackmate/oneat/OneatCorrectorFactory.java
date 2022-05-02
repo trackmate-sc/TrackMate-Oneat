@@ -3,6 +3,7 @@ package fiji.plugin.trackmate.oneat;
 import static fiji.plugin.trackmate.io.IOUtils.readStringAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.readIntegerAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.readDoubleAttribute;
+import static fiji.plugin.trackmate.io.IOUtils.readBooleanAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.writeAttribute;
 import static fiji.plugin.trackmate.util.TMUtils.checkParameter;
 
@@ -50,6 +51,8 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	public static final double DEFAULT_KEY_TIME_GAP = 10;
 	public static final double DEFAULT_SIZE_RATIO = 0.75;
 	public static final double DEFAULT_LINKING_DISTANCE = 75;
+	public static final boolean DEFAULT_CREATE_LINKS = true;
+	public static final boolean DEFAULT_BREAK_LINKS = false;
 	
 	
 	private String errorMessage;
@@ -117,6 +120,9 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		ok = ok & writeAttribute( settings, element, KEY_TIME_GAP, Integer.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_SIZE_RATIO, Double.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_LINKING_MAX_DISTANCE, Double.class, str );
+		ok = ok & writeAttribute( settings, element, KEY_CREATE_LINKS, Boolean.class, str );
+		ok = ok & writeAttribute( settings, element, KEY_BREAK_LINKS, Boolean.class, str );
+		
 		return ok;
 	}
 
@@ -131,6 +137,8 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		ok = ok & readIntegerAttribute( element, settings, KEY_TIME_GAP, errorHolder );
 		ok = ok & readDoubleAttribute( element, settings, KEY_SIZE_RATIO, errorHolder );
 		ok = ok & readDoubleAttribute( element, settings, KEY_LINKING_MAX_DISTANCE, errorHolder );
+		ok = ok & readBooleanAttribute( element, settings, KEY_CREATE_LINKS, errorHolder );
+		ok = ok & readBooleanAttribute( element, settings, KEY_BREAK_LINKS, errorHolder );
 		return ok;
 	}
 
@@ -151,6 +159,10 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		
 		final String linkingdistance = (String) settings.get(KEY_LINKING_MAX_DISTANCE);
 		
+		final String createlinks = (String) settings.get(KEY_CREATE_LINKS);
+		
+		final String breaklinks  = (String) settings.get(KEY_BREAK_LINKS);
+		
 		final StringBuilder str = new StringBuilder();
 
 		str.append( String.format( "  - oneat division detection file: %.1f\n", oneatdivisionfile));
@@ -159,17 +171,22 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		str.append( String.format( "  - Time Gap between Oneat and TM division: %.1f\n", timegap));
 		str.append( String.format( "  - Size ratio between mother and daughter cells: %.1f\n", sizeratio));
 		str.append( String.format( "  - Max linking distance to consider for making links: %.1f\n", linkingdistance));
+		str.append( String.format( "  -Create new links: %.1f\n", createlinks));
+		str.append( String.format( "  - Breal links: %.1f\n", breaklinks));
+		
 		
 		return str.toString();
 	}
 
 	@Override
 	public Map<String, Object> getDefaultSettings() {
-		final Map< String, Object > sm = new HashMap<>( 3 );
+		final Map< String, Object > sm = new HashMap<>( 6 );
 		sm.put( KEY_TRACKLET_LENGTH, DEFAULT_KEY_TRACKLET_LENGTH );
 		sm.put( KEY_TIME_GAP, DEFAULT_KEY_TIME_GAP );
 		sm.put( KEY_SIZE_RATIO, DEFAULT_SIZE_RATIO );
 		sm.put( KEY_LINKING_MAX_DISTANCE, DEFAULT_LINKING_DISTANCE );
+		sm.put(KEY_BREAK_LINKS, DEFAULT_BREAK_LINKS);
+		sm.put(KEY_CREATE_LINKS, DEFAULT_CREATE_LINKS);
 		return sm;
 	}
 
@@ -195,6 +212,10 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 		ok = ok & checkParameter( settings, KEY_SIZE_RATIO, Double.class, str );
 		
 		ok = ok & checkParameter( settings, KEY_LINKING_MAX_DISTANCE, Double.class, str );
+		
+        ok = ok & checkParameter( settings, KEY_CREATE_LINKS, Boolean.class, str );
+		
+		ok = ok & checkParameter( settings, KEY_BREAK_LINKS, Boolean.class, str );
 		
 
 		if ( !ok )
