@@ -45,6 +45,8 @@ import static fiji.plugin.trackmate.Spot.RADIUS;
 import static fiji.plugin.trackmate.Spot.QUALITY;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_SIZE_RATIO;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_LINKING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
+import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 
 public class TrackCorrectorRunner {
 
@@ -65,6 +67,8 @@ public class TrackCorrectorRunner {
 		
 		double motherdaughtersize = (double) settings.get(KEY_SIZE_RATIO);
 		double searchdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
+		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
+		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
 		Set<Integer> AlltrackIDs = trackmodel.trackIDs(false);
 		Set<Integer> MitosisIDs = new HashSet<Integer>();
 		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
@@ -96,6 +100,8 @@ public class TrackCorrectorRunner {
 			
 			
 		}
+		
+		if(createlinks) {
 		// Lets take care of mitosis
 		for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> trackidspots : Mitosisspots.entrySet()) {
 
@@ -227,6 +233,7 @@ public class TrackCorrectorRunner {
 				}
 
 			}
+		}
 		}
 		
 		//Lets take care of no event tracks

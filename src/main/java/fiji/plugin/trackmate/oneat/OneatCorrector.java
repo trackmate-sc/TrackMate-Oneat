@@ -45,9 +45,9 @@ public class OneatCorrector implements TrackCorrector {
 
 	private HashMap<Integer, ArrayList<Spot>> apoptosisframespots;
 	
-	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> DivisionTrackIDs;
+	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> Mitossisspots;
 	
-	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> ApoptosisTrackIDs;
+	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> Apoptosisspots;
 	
 	private final ImgPlus<IntType> img;
 	
@@ -123,17 +123,44 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisframespots = result.getB().getB();
 		
 		//We have to regerenate the graph and tracks after correction
-		if(divisionspots.keySet().size() > 0) 
+		if(divisionspots.keySet().size() > 0) {
 			
-			DivisionTrackIDs = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, true, timegap);
+			// This object contains the track ID and a list of split points and the root of the lineage tree
+			Mitossisspots = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, true, timegap);
+			
+			
+			// To be safe let us sort the split points in ascending order of frame
+			
+			for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> dividingTrack: Mitossisspots.entrySet()) {
+				
+				
+				ArrayList<Spot> splitpoints = dividingTrack.getValue().getA();
+				
+				splitpoints.sort(Spot.frameComparator);
+				
+			}
+			
+		}
 		
-        if(apoptosisspots.keySet().size() > 0) 
+        if(apoptosisspots.keySet().size() > 0) {
 			
-			ApoptosisTrackIDs = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap); 
+        	// This object contains the track ID and a list of single object with the apoptotic spot where the track has to terminate and the root of the lineage tree
+			Apoptosisspots = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap); 
 			
+			// To be safe let us sort the dead points in ascending order of frame
+			
+			for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> dyingTrack: Apoptosisspots.entrySet()) {
+				
+				
+			ArrayList<Spot> deadpoints = dyingTrack.getValue().getA();
+			
+			deadpoints.sort(Spot.frameComparator);
+			
+        }
         
+        }
         
-			SimpleWeightedGraph<Spot, DefaultWeightedEdge> correctedgraph = TrackCorrectorRunner.getCorrectedTracks(model, DivisionTrackIDs, ApoptosisTrackIDs, settings, ndims); 	
+			SimpleWeightedGraph<Spot, DefaultWeightedEdge> correctedgraph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims); 	
 			
 			model.beginUpdate();
 			
