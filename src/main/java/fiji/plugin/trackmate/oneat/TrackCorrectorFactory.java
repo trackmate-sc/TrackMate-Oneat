@@ -2,6 +2,8 @@ package fiji.plugin.trackmate.oneat;
 
 import java.util.Map;
 
+import javax.swing.JPanel;
+
 import org.jdom2.Element;
 
 import fiji.plugin.trackmate.Model;
@@ -54,7 +56,7 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 *            the model that will be modified by the target tracker.
 		 * @return a new configuration panel.
 		 */
-		public ConfigurationPanel getTrackCorrectorConfigurationPanel(final Settings settings, final Model model );
+		public JPanel getTrackCorrectorConfigurationPanel(final Settings settings, final Model model );
 
 		/**
 		 * Marshalls a settings map to a JDom element, ready for saving to XML. The

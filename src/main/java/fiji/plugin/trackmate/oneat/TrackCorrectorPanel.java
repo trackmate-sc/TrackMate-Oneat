@@ -23,6 +23,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
 
@@ -45,7 +46,7 @@ import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_SIZE_RATIO;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
 import static fiji.plugin.trackmate.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 
-public class TrackCorrectorConfigPanel extends ConfigurationPanel 
+public class TrackCorrectorPanel extends JPanel 
 {
 	private static final long serialVersionUID = 1L;
     private static File oneatdivisionfile;
@@ -60,7 +61,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
     private JCheckBox CreateNewLinks;
     private JCheckBox BreakCurrentLinks;
 	
-	public TrackCorrectorConfigPanel( final Settings settings, final Model model )
+	public TrackCorrectorPanel( final Settings settings, final Model model )
 	{
 		
 		final GridBagLayout gridBagLayout = new GridBagLayout();
@@ -161,7 +162,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 		gbcChckbxBreakCurrentLinks.gridy = 16;
 		add( CreateNewLinks, gbcChckbxBreakCurrentLinks );
 		
-		
+	
 		Loaddivisioncsvbutton.addActionListener(new ActionListener() {
 
 			@Override
@@ -238,7 +239,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 		
 	}
 
-	@Override
+	
 	public void setSettings( final Map< String, Object > settings )
 	{
 		MinTracklet.setValue(settings.get(KEY_TRACKLET_LENGTH));
@@ -248,7 +249,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 		BreakCurrentLinks.setSelected( ( boolean ) settings.get( KEY_BREAK_LINKS ) );
 	}
 
-	@Override
+	
 	public Map< String, Object > getSettings()
 	{
 		final Map< String, Object > settings = new HashMap<>();
@@ -264,9 +265,7 @@ public class TrackCorrectorConfigPanel extends ConfigurationPanel
 		return settings;
 	}
 
-	@Override
-	public void clean()
-	{}
+
 
 
 	

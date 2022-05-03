@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
+import javax.swing.JPanel;
 
 import org.jdom2.Element;
 import org.scijava.plugin.Plugin;
@@ -20,10 +21,6 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
-import fiji.plugin.trackmate.trackcorrection.TrackCorrector;
-import fiji.plugin.trackmate.trackcorrection.TrackCorrectorFactory;
-import fiji.plugin.trackmate.trackcorrection.oneat.OneatCorrector;
-import fiji.plugin.trackmate.trackcorrection.oneat.TrackCorrectorConfigPanel;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.IntType;
 
@@ -120,9 +117,9 @@ public class OneatCorrectorFactory implements TrackCorrectorFactory {
 	}
 
 	@Override
-	public ConfigurationPanel getTrackCorrectorConfigurationPanel(Settings settings, Model model) {
+	public JPanel getTrackCorrectorConfigurationPanel(Settings settings, Model model) {
 		
-		return new TrackCorrectorConfigPanel(settings, model);
+		return new TrackCorrectorPanel(settings, model);
 	}
 
 	@Override
