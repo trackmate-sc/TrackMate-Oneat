@@ -7,6 +7,7 @@ import javax.swing.JPanel;
 
 import org.jdom2.Element;
 
+import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
@@ -29,11 +30,12 @@ import net.imglib2.type.numeric.integer.IntType;
  *
  * @param <T>
  */
-public interface  TrackCorrectorFactory < T extends RealType< T > & NativeType< T > > extends TrackMateModule
+public interface  TrackCorrectorFactory  extends TrackMateModule
  {
 
 	
 	
+	   
 	
 	
 		/**
@@ -46,7 +48,7 @@ public interface  TrackCorrectorFactory < T extends RealType< T > & NativeType< 
 		 *            the settings map configuring the tracker.
 		 * @return a new {@link SpotTracker} instance.
 		 */
-		public TrackCorrector create(  ImgPlus< T > img,  Model model, final Map< String, Object > settings );
+		public TrackCorrector create(  ImgPlus< IntType > img,  Model model, final Map< String, Object > settings, final Logger logger );
 
 		/**
 		 * Returns a new GUI panel able to configure the settings suitable for the
@@ -57,7 +59,7 @@ public interface  TrackCorrectorFactory < T extends RealType< T > & NativeType< 
 		 * @return a new configuration panel.
 		 */
 		public JPanel getTrackCorrectorConfigurationPanel(final Settings settings, final Model model, int detchannel, int sizeratio, double linkdist, int deltat,
-				int tracklet, boolean createlinks, boolean breaklinks );
+				int tracklet);
 
 		/**
 		 * Marshalls a settings map to a JDom element, ready for saving to XML. The

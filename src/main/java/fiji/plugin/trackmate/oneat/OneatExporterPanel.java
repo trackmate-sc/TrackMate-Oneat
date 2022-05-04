@@ -9,6 +9,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -39,13 +41,13 @@ public class OneatExporterPanel extends JPanel {
 	private static File oneatdivisionfile;
 	private  static File oneatapoptosisfile;
 
-	private  int detchannel;
-	private  double sizeratio;
-	private double linkdist;
-	private  int deltat;
-	private  int tracklet;
-	private boolean createlinks;
-	private boolean breaklinks;
+	private  int detchannel = 1;
+	private  double sizeratio = 0.75;
+	private double linkdist = 50;
+	private  int deltat = 10;
+	private  int tracklet = 2;
+	private boolean createlinks = true;
+	private boolean breaklinks = false;
 	
 	private JButton Loaddivisioncsvbutton;
 	private JButton Loadapoptosiscsvbutton;
@@ -58,16 +60,9 @@ public class OneatExporterPanel extends JPanel {
 	private JCheckBox CreateNewLinks;
 	private JCheckBox BreakCurrentLinks;
 	
-	public OneatExporterPanel(final Settings settings, final Model model, final int detchannel, final double sizeratio, final double linkdist, final int deltat,
-			final int tracklet, final boolean createlinks, final boolean breaklinks) {
+	public OneatExporterPanel(final Settings settings, final Model model) {
 
-		this.detchannel = detchannel;
-		this.sizeratio = sizeratio;
-		this.linkdist = linkdist;
-		this.deltat = deltat;
-		this.tracklet = tracklet;
-		this.createlinks = createlinks;
-		this.breaklinks = breaklinks;
+		
 		
 		
 		
@@ -96,7 +91,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		DetectionChannel = new JFormattedTextField();
-		DetectionChannel.setValue(0);
+		DetectionChannel.setValue(detchannel);
 		DetectionChannel.setColumns( 4 );
 		DetectionChannel.setFont(new Font("Arial", Font.PLAIN, 10));
 		add(DetectionChannel, gbc);
@@ -108,7 +103,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx++;
 		
 		MinTracklet = new JFormattedTextField();
-		MinTracklet.setValue(2);
+		MinTracklet.setValue(tracklet);
 		MinTracklet.setColumns( 4 );
 		MinTracklet.setFont(new Font("Arial", Font.PLAIN, 10));
 		add(MinTracklet, gbc);
@@ -122,7 +117,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		TimeGap = new JFormattedTextField();
-		TimeGap.setValue(10);
+		TimeGap.setValue(deltat);
 		TimeGap.setColumns( 4 );
 		TimeGap.setFont(new Font("Arial", Font.PLAIN, 10));
 		add(TimeGap, gbc);
@@ -134,7 +129,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx++;
 		
 		MotherDaughterSizeRatio = new JFormattedTextField();
-		MotherDaughterSizeRatio.setValue(0.75);
+		MotherDaughterSizeRatio.setValue(sizeratio);
 		MotherDaughterSizeRatio.setFont(new Font("Arial", Font.PLAIN, 10));
 		MotherDaughterSizeRatio.setColumns(4);
 		add(MotherDaughterSizeRatio, gbc);
@@ -146,7 +141,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx++;
 		
 		MotherDaughterLinkDist = new JFormattedTextField();
-		MotherDaughterLinkDist.setValue(50);
+		MotherDaughterLinkDist.setValue(linkdist);
 		MotherDaughterLinkDist.setFont(new Font("Arial", Font.PLAIN, 10));
 		MotherDaughterLinkDist.setColumns(4);
 		add(MotherDaughterLinkDist, gbc);
@@ -154,12 +149,14 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx--;
 		
 		CreateNewLinks = new JCheckBox("Create new mitosis events (Verified by oneat, missed by TM) ");
+		CreateNewLinks.setSelected(createlinks);
 		CreateNewLinks.setHorizontalTextPosition(SwingConstants.LEFT);
 		CreateNewLinks.setFont(SMALL_FONT);
 		add(CreateNewLinks, gbc);
 		gbc.gridx++;
 
 		BreakCurrentLinks = new JCheckBox("Break current mitosis events (Labelled by TM, Unverfied by oneat ) ");
+		BreakCurrentLinks.setSelected(breaklinks);
 		BreakCurrentLinks.setHorizontalTextPosition(SwingConstants.LEFT);
 		BreakCurrentLinks.setFont(SMALL_FONT);
 		add(BreakCurrentLinks, gbc);
@@ -189,13 +186,18 @@ public class OneatExporterPanel extends JPanel {
 				};
 
 				csvfile.setCurrentDirectory(new File(settings.imp.getOriginalFileInfo().directory));
-				csvfile.setDialogTitle("Division Detection file");
+				csvfile.setDialogTitle("Mitosis Detection file");
 				csvfile.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				csvfile.setFileFilter(csvfilter);
 
-				if (csvfile.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION)
+				int showparent = csvfile.showOpenDialog(getParent());
+				if (showparent == JFileChooser.APPROVE_OPTION)
 
 					oneatdivisionfile = new File(csvfile.getSelectedFile().getPath());
+				
+				if (showparent == JFileChooser.CANCEL_OPTION)
+					oneatdivisionfile = null;
+				
 			}
 
 		});
@@ -228,21 +230,96 @@ public class OneatExporterPanel extends JPanel {
 				csvfile.setDialogTitle("Apoptosis Detection file");
 				csvfile.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				csvfile.setFileFilter(csvfilter);
-
-				if (csvfile.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION)
+				int showparent = csvfile.showOpenDialog(getParent());
+				if (showparent == JFileChooser.APPROVE_OPTION)
 
 					oneatapoptosisfile = new File(csvfile.getSelectedFile().getPath());
+				
+				if (showparent == JFileChooser.CANCEL_OPTION)
+					oneatapoptosisfile = null;
+				
 			}
 
 		});
 		
-		DetectionChannel.addPropertyChangeListener( "value", ( e ) -> this.detchannel = ( ( Number ) DetectionChannel.getValue() ).intValue() );
-		MotherDaughterSizeRatio.addPropertyChangeListener( "value", ( e ) -> this.sizeratio = ( ( Number ) MotherDaughterSizeRatio.getValue() ).doubleValue() );
-		CreateNewLinks.addPropertyChangeListener( "value", ( e ) -> this.createlinks = CreateNewLinks.isSelected() );
-		BreakCurrentLinks.addPropertyChangeListener( "value", ( e ) -> this.breaklinks = BreakCurrentLinks.isSelected() );
-		MinTracklet.addPropertyChangeListener( "value", ( e ) -> this.tracklet = ((Number) MinTracklet.getValue()).intValue() );
-		TimeGap.addPropertyChangeListener( "value", ( e ) -> this.deltat = ((Number) TimeGap.getValue()).intValue() );
-		MotherDaughterLinkDist.addPropertyChangeListener( "value", ( e ) -> this.linkdist = ( ( Number ) MotherDaughterLinkDist.getValue() ).doubleValue() );
+		DetectionChannel.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				detchannel = ( ( Number ) DetectionChannel.getValue() ).intValue();
+				
+			}
+		});
+		
+		
+		MotherDaughterSizeRatio.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				sizeratio = ( ( Number ) MotherDaughterSizeRatio.getValue() ).doubleValue();
+				
+			}
+		});
+		
+		
+		CreateNewLinks.addItemListener(new ItemListener() {
+			
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				
+				if (e.getStateChange() == ItemEvent.SELECTED)
+					  createlinks = true;
+				if (e.getStateChange() == ItemEvent.DESELECTED)
+					  createlinks = false;
+				
+			}
+		});
+		
+		BreakCurrentLinks.addItemListener(new ItemListener() {
+			
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				
+				if (e.getStateChange() == ItemEvent.SELECTED)
+					  breaklinks = true;
+				if (e.getStateChange() == ItemEvent.DESELECTED)
+					  breaklinks = false;
+			}
+		});
+		
+		
+		
+		MinTracklet.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				tracklet = ((Number) MinTracklet.getValue()).intValue();
+				
+			}
+		});
+		
+		
+		TimeGap.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				deltat = ((Number) TimeGap.getValue()).intValue();
+				
+			}
+		});
+		
+		
+		MotherDaughterLinkDist.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				linkdist = ( ( Number ) MotherDaughterLinkDist.getValue() ).doubleValue();
+				
+			}
+		});
+		
 		
 	}
 

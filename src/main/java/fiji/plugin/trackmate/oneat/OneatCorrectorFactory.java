@@ -8,35 +8,21 @@ import static fiji.plugin.trackmate.io.IOUtils.writeAttribute;
 import static fiji.plugin.trackmate.util.TMUtils.checkParameter;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
-import net.imglib2.util.Util;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 
 import org.jdom2.Element;
 import org.scijava.plugin.Plugin;
 
+import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 import net.imagej.ImgPlus;
-import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.display.imagej.ImgPlusViews;
-import net.imglib2.loops.LoopBuilder;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.Type;
-import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.view.Views;
 
 @Plugin( type = TrackCorrectorFactory.class, visible = true )
-public  class  OneatCorrectorFactory < T extends RealType< T > & NativeType< T > >implements TrackCorrectorFactory <T> {
+public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 
 	
 	public static final String DIVISION_FILE = "Division_File";
@@ -100,8 +86,8 @@ public  class  OneatCorrectorFactory < T extends RealType< T > & NativeType< T >
 	
 
 	@Override
-	public   TrackCorrector  create(  ImgPlus< T > img,  Model model,
-			Map<String, Object> settings) {
+	public   OneatCorrector  create(  ImgPlus< IntType > intimg,  Model model,
+			Map<String, Object> settings, final Logger logger) {
 		
 		 
 		  File oneatdivisionfile = (File) settings.get(DIVISION_FILE);
@@ -111,8 +97,6 @@ public  class  OneatCorrectorFactory < T extends RealType< T > & NativeType< T >
 		  int mintrackletlength = (int) settings.get(KEY_TRACKLET_LENGTH);
 		  
 		  int timegap = (int) settings.get(KEY_TIME_GAP);
-		 
-		  
 		  
 		  double sizeratio = (double) settings.get(KEY_SIZE_RATIO);
 		  
@@ -124,34 +108,17 @@ public  class  OneatCorrectorFactory < T extends RealType< T > & NativeType< T >
 		  
 		  
 		  
-		  System.out.println(oneatdivisionfile + " " + oneatapoptosisfile + " " + mintrackletlength + " " + timegap );
 		  int detectionchannel = (int) settings.get(KEY_TARGET_CHANNEL);
 		  assert detectionchannel <= img.numDimensions(): "Channel can not exceed the image dimension";
-		  System.out.println(img.dimensionIndex(Axes.CHANNEL) + " " +  img.dimensionIndex(Axes.TIME) + " " +  img.dimensionIndex(Axes.X) + " " +  img.dimensionIndex(Axes.Y) + " " + img.dimensionIndex(Axes.Z));
-		  ImgPlus <T> detectionimg =  img;
-		  if (img.dimensionIndex(Axes.CHANNEL) > 0) 
-		     detectionimg = ImgPlusViews.hyperSlice( img, img.dimensionIndex( Axes.CHANNEL ), (int) detectionchannel );
-		 
-		  AxisType[] axes = new AxisType[] {
-					Axes.X,
-					Axes.Y,
-					Axes.Z,
-					Axes.TIME };
-		  final ImgPlus< IntType > intimg = new ImgPlus<IntType>( Util.getArrayOrCellImgFactory( detectionimg, new IntType() ).create( detectionimg ), "lblimg", axes);
-			LoopBuilder
-					.setImages( Views.zeroMin( detectionimg ), intimg )
-					.multiThreaded( false )
-					.forEachPixel( ( i, o ) -> o.setReal( i.getRealDouble() ) );
-			
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, sizeratio, linkingdistance, createlinks, breaklinks, model, settings);
+		  
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, sizeratio, linkingdistance, createlinks, breaklinks, model, settings, logger);
 	}
 
 	@Override
 	public JPanel getTrackCorrectorConfigurationPanel(Settings settings, Model model, int detchannel, int sizeratio, double linkdist, int deltat,
-			int tracklet, boolean createlinks, boolean breaklinks) {
+			int tracklet) {
 		
-		return new OneatExporterPanel(settings, model,  detchannel,  sizeratio,  linkdist,  deltat,
-				 tracklet,  createlinks,  breaklinks);
+		return new OneatExporterPanel(settings, model);
 	}
 
 	@Override
@@ -269,8 +236,8 @@ public  class  OneatCorrectorFactory < T extends RealType< T > & NativeType< T >
 	}
 
 	@Override
-	public OneatCorrectorFactory<T> copy() {
-		return new OneatCorrectorFactory<T>();
+	public OneatCorrectorFactory copy() {
+		return new OneatCorrectorFactory();
 	}
 
 

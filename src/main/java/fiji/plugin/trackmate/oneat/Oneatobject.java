@@ -6,7 +6,11 @@ public class Oneatobject {
 
 	public final int time;
 
-	public final RealLocalizable Location;
+	public final double Z;
+	
+	public final double Y;
+	
+	public final double X;
 
 	public final double score;
 
@@ -16,12 +20,16 @@ public class Oneatobject {
 
 	public final double angle;
 
-	public Oneatobject(int time, RealLocalizable Location, double score, double size, double confidence, double angle) {
+	public Oneatobject(int time, double Z, double Y, double X, double score, double size, double confidence, double angle) {
 
 		
 		this.time = time;
 		
-		this.Location = Location;
+		this.Z = Z;
+		
+		this.Y = Y;
+		
+		this.X = X;
 		
 		this.score = score;
 
