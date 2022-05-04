@@ -123,7 +123,7 @@ public class TrackCorrectorRunner {
 			int trackID = trackidspots.getKey();
 			Pair<ArrayList<Spot>, Spot> trackspots = trackidspots.getValue();
 			
-			
+			count++;
 			Boolean acceptFirstdaughter = false;
 			Boolean acceptSeconddaughter = false;
 			for (Spot motherspot : trackspots.getA()) {
@@ -142,7 +142,7 @@ public class TrackCorrectorRunner {
 				Spot firstdaughter = null;
 				Spot seconddaughter = null;
 
-				do {
+				
 
 					// Get the closest trackmate spot in the next frame
 
@@ -174,7 +174,7 @@ public class TrackCorrectorRunner {
 
 					}
 
-				} while (!acceptFirstdaughter && !acceptSeconddaughter || spotsIt.iterator().hasNext());
+			
 
 				if (acceptFirstdaughter && acceptSeconddaughter) {
 
