@@ -1,5 +1,6 @@
 package fiji.plugin.trackmate.oneat;
 
+import java.io.File;
 import java.util.Map;
 
 import javax.swing.JPanel;
@@ -28,12 +29,11 @@ import net.imglib2.type.numeric.integer.IntType;
  *
  * @param <T>
  */
-public interface TrackCorrectorFactory extends TrackMateModule
+public interface  TrackCorrectorFactory < T extends RealType< T > & NativeType< T > > extends TrackMateModule
  {
 
 	
 	
-	   
 	
 	
 		/**
@@ -46,7 +46,7 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 *            the settings map configuring the tracker.
 		 * @return a new {@link SpotTracker} instance.
 		 */
-		public TrackCorrector create(  ImgPlus< IntType > img,  Model model, final Map< String, Object > settings );
+		public TrackCorrector create(  ImgPlus< T > img,  Model model, final Map< String, Object > settings );
 
 		/**
 		 * Returns a new GUI panel able to configure the settings suitable for the
@@ -56,7 +56,8 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 *            the model that will be modified by the target tracker.
 		 * @return a new configuration panel.
 		 */
-		public JPanel getTrackCorrectorConfigurationPanel(final Settings settings, final Model model );
+		public JPanel getTrackCorrectorConfigurationPanel(final Settings settings, final Model model, int detchannel, int sizeratio, double linkdist, int deltat,
+				int tracklet, boolean createlinks, boolean breaklinks );
 
 		/**
 		 * Marshalls a settings map to a JDom element, ready for saving to XML. The
@@ -99,13 +100,7 @@ public interface TrackCorrectorFactory extends TrackMateModule
 		 */
 		public String toString( final Map< String, Object > sm );
 
-		/**
-		 * Returns a new default settings map suitable for the tracker Settings are
-		 * instantiated with default values. is returned.
-		 *
-		 * @return a settings map.
-		 */
-		public Map< String, Object > getDefaultSettings();
+
 
 		/**
 		 * Checks the validity of the given settings map for the tracker. The
