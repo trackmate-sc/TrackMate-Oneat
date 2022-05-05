@@ -82,7 +82,10 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 		Map<String, Object> detectorsettings = settings.detectorSettings;
 		Model model = trackmate.getModel();
 		final ImgPlus<T> img = TMUtils.rawWraps( settings.imp );
-		
+		final double[] calibration = new double[ 3 ];
+		calibration[ 0 ] = settings.dx;
+		calibration[ 1 ] = settings.dy;
+		calibration[ 2 ] = settings.dz;
 		if (gui!=null)
 		{
 			
@@ -100,21 +103,21 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 			createlinks = panel.getCreateLinks();
 			detchannel = panel.getDetectionChannel();
 			linkdist = panel.getLinkDist();
-			
 			Map<String, Object> mapsettings = getSettings(oneatdivisionfile,oneatapotosisfile,trackmapsettings);
 			OneatCorrectorFactory corrector = new OneatCorrectorFactory();
 			ImgPlus <T> detectionimg =  img;
-			if (img.dimensionIndex(Axes.CHANNEL) > 0) 
-			     detectionimg = ImgPlusViews.hyperSlice( img, img.dimensionIndex( Axes.CHANNEL ), (int) detchannel );
+			if (img.dimensionIndex(Axes.CHANNEL) > 0) {
+			     detectionimg = ImgPlusViews.hyperSlice( img, img.dimensionIndex( Axes.CHANNEL ), (int) detchannel - 1 );
+			     System.out.println(detchannel + " " + linkdist);
+			}
 			else if ((img.dimensionIndex(Axes.CHANNEL) < 0) && img.numDimensions() < 5)
 				  
 				  detectionimg = img;
 			
-			else if (img.numDimensions() == 5)
+			else if (img.numDimensions() == 5) {
 				 
-				detectionimg = ImgPlusViews.hyperSlice( img, 0, (int) detchannel );
-					
-			 
+				detectionimg = ImgPlusViews.hyperSlice( img, 2, (int) detchannel );
+			}
 			AxisType[] axes = new AxisType[] {
 						Axes.X,
 						Axes.Y,
@@ -125,7 +128,8 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 						.setImages( Views.zeroMin( detectionimg ), intimg )
 						.multiThreaded( false )
 						.forEachPixel( ( i, o ) -> o.setReal( i.getRealDouble() ) );
-			OneatCorrector oneatcorrector = corrector.create(intimg, model, mapsettings, logger);
+			
+			OneatCorrector oneatcorrector = corrector.create(intimg, model, mapsettings, logger, calibration );
 			oneatcorrector.checkInput();
 			oneatcorrector.process();
 		}

@@ -38,6 +38,8 @@ public class OneatCorrector implements TrackCorrector {
 	private final boolean createlinks;
 	
 	private final boolean breaklinks;
+	
+	private final double[] calibration;
 
 	private SpotCollection divisionspots;
 
@@ -77,7 +79,7 @@ public class OneatCorrector implements TrackCorrector {
 			final int detectionchannel,
 			final double linkingdistance,
 			final boolean createlinks, 
-			final boolean breaklinks, final Model model,
+			final boolean breaklinks, final Model model, double[] calibration,
 			Map<String, Object> settings, final Logger logger) {
 
 		this.oneatdivision = oneatdivision;
@@ -105,7 +107,7 @@ public class OneatCorrector implements TrackCorrector {
 		
 		this.logger = logger;
 		
-		
+		this.calibration = calibration;
 		
 		setNumThreads();
 
@@ -126,7 +128,6 @@ public class OneatCorrector implements TrackCorrector {
 
 		
 		final long start = System.currentTimeMillis();
-		
 		divisionspots = new SpotCollection();
 		divisionframespots = new HashMap<Integer, ArrayList<Spot>>();
 
@@ -134,7 +135,7 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisframespots = new HashMap<Integer, ArrayList<Spot>>();
         int ndims = img.numDimensions() - 1;
 		Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner.run(
-				oneatdivision, oneatapoptosis, ndims);
+				oneatdivision, oneatapoptosis, ndims, calibration);
 		//Oneat found spots for mitosis
 		divisionspots = result.getA().getA();
 		divisionframespots = result.getA().getB();
@@ -147,7 +148,7 @@ public class OneatCorrector implements TrackCorrector {
 		if(divisionspots.keySet().size() > 0) {
 			
 			// This object contains the track ID and a list of split points and the root of the lineage tree
-			Mitossisspots = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, settings, true, logger);
+			Mitossisspots = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, settings, true, logger, calibration);
 			
 			
 			// To be safe let us sort the split points in ascending order of frame
@@ -166,7 +167,7 @@ public class OneatCorrector implements TrackCorrector {
         if(apoptosisspots.keySet().size() > 0) {
 			
         	// This object contains the track ID and a list of single object with the apoptotic spot where the track has to terminate and the root of the lineage tree
-			Apoptosisspots = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, settings, false, logger); 
+			Apoptosisspots = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, settings, false, logger, calibration); 
 			
 			// To be safe let us sort the dead points in ascending order of frame
 			
@@ -181,16 +182,16 @@ public class OneatCorrector implements TrackCorrector {
         
         }
         
-			graph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads); 	
+		//	graph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads); 	
 			
 			
 			// Check that the objects list itself isn't null
-			if ( null == graph )
-			{
-				errorMessage = BASE_ERROR_MESSAGE + "The output graph is null.";
-				return false;
-			}
-			
+		//	if ( null == graph )
+		//	{
+		//		errorMessage = BASE_ERROR_MESSAGE + "The output graph is null.";
+		//		return false;
+		//	}
+			/*
 			model.beginUpdate();
 			
 			
@@ -198,7 +199,7 @@ public class OneatCorrector implements TrackCorrector {
 			
 			
 			model.endUpdate();
-		
+		*/
 			logger.setProgress( 1d );
 			logger.setStatus( "" );
 			final long end = System.currentTimeMillis();

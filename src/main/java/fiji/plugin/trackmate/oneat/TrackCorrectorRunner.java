@@ -60,6 +60,10 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRA
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_GAP_CLOSING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_MERGING;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_CUTOFF_PERCENTILE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALTERNATIVE_LINKING_COST_FACTOR;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_MAX_DISTANCE; 
 
 public class TrackCorrectorRunner {
 
@@ -127,6 +131,10 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP));
 			cmsettings.put(KEY_ALLOW_GAP_CLOSING, true);
 			cmsettings.put(KEY_ALLOW_TRACK_MERGING, false);
+			cmsettings.put(KEY_CUTOFF_PERCENTILE, 0.9d);
+			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, 1.05d);
+			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, settings.get(KEY_SPLITTING_MAX_DISTANCE));
+			cmsettings.put(KEY_MERGING_MAX_DISTANCE, 0d);
 			
 			logger.log("Creating mitosis links.\n");
 			// Lets take care of mitosis
@@ -139,7 +147,24 @@ public class TrackCorrectorRunner {
 					Pair<ArrayList<Spot>, Spot> trackspots = trackidspots.getValue();
                     Spot rootspot = trackspots.getB(); 
 					count++;
-
+					for (Spot motherspot : trackspots.getA()) {
+						
+						System.out.println("Root" + rootspot.getFeature(FRAME) + " " +  rootspot.ID() + " " + trackID 
+								+ " " + rootspot.getFeature(POSITION_X) + " " + rootspot.getFeature(POSITION_Y) 
+								+ " " + rootspot.getFeature(POSITION_Z));
+						
+						System.out.println("Mother" + motherspot.getFeature(FRAME) + " " +  motherspot.ID() 
+						+ " " + motherspot.getFeature(POSITION_X)+ " " + motherspot.getFeature(POSITION_Y)
+						+ " " + motherspot.getFeature(POSITION_Z));
+						
+						
+					}
+					
+				}
+			
+		}
+			
+			/*
 					for (Spot motherspot : trackspots.getA()) {
 
 						int currentframe = motherspot.getFeature(FRAME).intValue();
@@ -155,16 +180,22 @@ public class TrackCorrectorRunner {
 								trackmodel.getDepthFirstIterator(motherspot, true);
 						Set<Spot> motherspots = Gettrackspots(motheriterator);
 						//Exclude mother spots from rootspots
+						System.out.println("size root" + rootspots.size() + " " + rootspots.iterator().next().ID());
+						System.out.println("size mother" + motherspots.size() + " " + motherspots.iterator().next().ID());
 						rootspots.removeAll(motherspots);
+						rootspots.add(motherspot);
+						System.out.println("size root - mother" + rootspots.size() + " " + motherspot.ID());
 						//Create a graph from the rootspots
 						Creategraph(rootspots, graph);
 						for(Spot regionalspot: regionspots.iterable(false)) {
 							
+							if (regionalspot!=null) {
 							// ALl the candidates for segment linking
 							GraphIterator<Spot, DefaultWeightedEdge> regionspotiterator = 
 									trackmodel.getDepthFirstIterator(regionalspot, true);
 							Set<Spot> regionalspots = Gettrackspots(regionspotiterator);
 							Creategraph(regionalspots, graph);
+						}
 						}
 						// Create the local graph in this region and create the cost matrix to find
 						// local links
@@ -183,9 +214,7 @@ public class TrackCorrectorRunner {
 						}
 
 
-						/*
-						 * Create links in graph.
-						 */
+						
 
 						logger.setProgress( 0.9d );
 						logger.setStatus( "Creating links..." );
@@ -205,7 +234,7 @@ public class TrackCorrectorRunner {
 					}
 				}
 		    }
-
+/*
 		// Lets take care of no event tracks
 		AlltrackIDs.removeAll(ApoptosisIDs);
 		AlltrackIDs.removeAll(MitosisIDs);
@@ -219,13 +248,15 @@ public class TrackCorrectorRunner {
 				final Spot target = trackmodel.getEdgeTarget(edge);
 				graph.addVertex(source);
 				graph.addVertex(target);
-				final DefaultWeightedEdge newedge = graph.addEdge(source, target);
-				graph.setEdgeWeight(newedge, -1);
+				if(graph.getEdge(source, target) == null) {
+				    final DefaultWeightedEdge newedge = graph.addEdge(source, target);
+					graph.setEdgeWeight(newedge, -1);
+				    }
 
 			}
 
 		}
-
+*/
 		return graph;
 
 	}
@@ -243,9 +274,10 @@ public class TrackCorrectorRunner {
 			
 			    graph.addVertex(source);
 			    graph.addVertex(target);
+			    if(graph.getEdge(source, target) == null) {
 			    final DefaultWeightedEdge newedge = graph.addEdge(source, target);
 				graph.setEdgeWeight(newedge, -1);
-				
+			    }
 			}
 			
 		}
@@ -281,27 +313,11 @@ public class TrackCorrectorRunner {
 		return regionspots;
 	}
 
-	private static Iterable<Spot> removespot(Iterable<Spot> spotsIt, Spot removespot) {
 
-		Iterator<Spot> spots = spotsIt.iterator();
-		Set<Spot> removespots = new HashSet<Spot>();
-
-		while (spots.hasNext()) {
-			Spot currentspot = spots.next();
-
-			if (currentspot.hashCode() == (removespot.hashCode()))
-				spots.remove();
-			else
-				removespots.add(currentspot);
-		}
-
-		return removespots;
-
-	}
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<ArrayList<Spot>, Spot>> getTrackID(
 			final Model model, final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
-			final Map<String, Object> mapsettings, final boolean checkdivision, final Logger logger) {
+			final Map<String, Object> mapsettings, final boolean checkdivision, final Logger logger, double[] calibration) {
 
 		HashMap<Integer, ArrayList<Spot>> Mitosisspots = new HashMap<Integer, ArrayList<Spot>>();
 		HashMap<Integer, Pair<ArrayList<Spot>, Spot>> TrackIDstartspots = new HashMap<Integer, Pair<ArrayList<Spot>, Spot>>();
@@ -312,7 +328,7 @@ public class TrackCorrectorRunner {
 		RandomAccess<IntType> ranac = intimg.randomAccess();
 
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
-		HashMap<String, Pair<Spot, Integer>> uniquelabelID = new HashMap<String, Pair<Spot, Integer>>();
+		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
 		logger.flush();
 		logger.log("Collecting tracks, in total " + AllTrackIds.size() + ".\n");
 		int count = 0;
@@ -324,20 +340,23 @@ public class TrackCorrectorRunner {
 
 				logger.setProgress((float) (count) / AllTrackIds.size());
 
-				int time = spot.getFeature(FRAME).intValue();
-				if (time < intimg.dimension(ndim) - 1) {
+				int frame = spot.getFeature(FRAME).intValue();
+				if (frame < intimg.dimension(ndim) - 1) {
 					long[] location = new long[ndim];
 					long[] timelocation = new long[ndim + 1];
 					for (int d = 0; d < ndim; ++d) {
 						location[d] = (long) spot.getDoublePosition(d);
-						timelocation[d] = location[d];
+						timelocation[d] = (long) (location[d]/calibration[d]);
+						ranac.setPosition(location[d], d);
 					}
-					timelocation[ndim] = time;
-					ranac.setPosition(timelocation);
+					timelocation[ndim] = frame;
+					
+					ranac.setPosition(frame, ndim);
 					int label = ranac.get().get();
 
-					String uniqueID = Integer.toString(label) + Integer.toString(time);
-					uniquelabelID.put(uniqueID, new ValuePair<Spot, Integer>(spot, trackID));
+					System.out.println(label);
+					String uniqueID = Integer.toString(label);
+					uniquelabelID.put(new ValuePair<Integer, Integer> (label, frame), new ValuePair<Spot, Integer>(spot, trackID));
 
 				}
 			}
@@ -364,18 +383,22 @@ public class TrackCorrectorRunner {
 					for (int d = 0; d < ndim; ++d) {
 						location[d] = (long) currentspots.getDoublePosition(d);
 						timelocation[d] = location[d];
+						ranac.setPosition(location[d], d);
 					}
 					timelocation[ndim] = frame;
-					ranac.setPosition(timelocation);
+					ranac.setPosition(frame, ndim);
 					// Get the label ID of the current interesting spot
 					int labelID = ranac.get().get();
-
-					String uniqueID = Integer.toString(labelID) + Integer.toString(frame);
-					if (uniquelabelID.containsKey(uniqueID)) {
-						Pair<Spot, Integer> spotandtrackID = uniquelabelID.get(uniqueID);
+                    
+					
+					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
+						Pair<Spot, Integer> spotandtrackID = uniquelabelID.get(new ValuePair<Integer, Integer>(labelID, frame));
 						// Now get the spot ID
 
 						Spot spot = spotandtrackID.getA();
+						
+					
+						
 
 						int trackID = spotandtrackID.getB();
 						Pair<Boolean, Pair<Spot, Spot>> isDividingTMspot = isDividingTrack(spot, trackID, tmoneatdeltat,
@@ -396,16 +419,23 @@ public class TrackCorrectorRunner {
 								Pair<ArrayList<Spot>, Spot> pairlist = new ValuePair<ArrayList<Spot>, Spot>(
 										trackspotlist, startspot);
 								TrackIDstartspots.put(trackID, pairlist);
+                                
 							} else {
 
 								ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
 								trackspotlist.add(spot);
-								Mitosisspots.put(trackID, trackspotlist);
+								
 								Pair<ArrayList<Spot>, Spot> pairlist = new ValuePair<ArrayList<Spot>, Spot>(
 										trackspotlist, startspot);
 								TrackIDstartspots.put(trackID, pairlist);
-							}
+								
+								
 
+							}
+							
+						
+							
+							
 						}
 						// If it is an apoptosis event we currently do not have any function to check if
 						// TM trajectory has it so we add oneat given trackid
@@ -438,7 +468,16 @@ public class TrackCorrectorRunner {
 
 			}
 		}
-
+		/*
+		for(Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> test: TrackIDstartspots.entrySet())
+		for(Spot list: test.getValue().getA()) {
+			Spot startspot = test.getValue().getB();
+			System.out.println(test.getKey() + " " + list.getFeature(FRAME) + " " + list.getFeature(POSITION_X) +  " "+ list.getFeature(POSITION_Y)+ 
+					" " + list.getFeature(POSITION_Z) + "ROOT" + " " + startspot.getFeature(POSITION_X) 
+					+  " "+ startspot.getFeature(POSITION_Y)+ 
+					" " + startspot.getFeature(POSITION_Z  ) + " " + startspot.getFeature(FRAME));
+		}
+		*/
 		logger.log("Verifying lineage trees.\n");
 		logger.setProgress(0.);
 
@@ -449,7 +488,7 @@ public class TrackCorrectorRunner {
 			final Model model) {
 
 		Boolean isDividing = false;
-		Pair<HashMap<Integer, ArrayList<Pair<Integer, Spot>>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(
+		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(
 				model);
 		Spot closestSpot = null;
 		Spot startingspot = null;
@@ -463,8 +502,8 @@ public class TrackCorrectorRunner {
 			if (id == trackID) {
 
 				ArrayList<Pair<Integer, Spot>> Dividingspotlocations = DividingStartspots.getB().get(id);
-				ArrayList<Pair<Integer, Spot>> Startingspotlocations = DividingStartspots.getA().get(id);
-				startingspot = Startingspotlocations.get(0).getB();
+				Pair<Integer, Spot> Startingspotlocations = DividingStartspots.getA().get(id);
+				startingspot = Startingspotlocations.getB();
 				Pair<Double, Spot> closestspotpair = closestSpot(spot, Dividingspotlocations);
 				double closestdistance = closestspotpair.getA();
 				closestSpot = closestspotpair.getB();
@@ -508,53 +547,33 @@ public class TrackCorrectorRunner {
 
 	}
 
-	private static Pair<Double, Spot> closestnextframeSpot(final Spot currentspot, final Iterable<Spot> nextspot) {
+	
 
-		double mintimeDistance = Double.MAX_VALUE;
-		Spot closestsourcespot = null;
+	
 
-		for (Spot Dividingspot : nextspot) {
-
-			final Spot sourcespot = Dividingspot;
-
-			final double dist = currentspot.squareDistanceTo(Dividingspot);
-
-			if (dist <= mintimeDistance) {
-
-				mintimeDistance = dist;
-				closestsourcespot = sourcespot;
-			}
-
-		}
-
-		Pair<Double, Spot> closestspotpair = new ValuePair<Double, Spot>(Math.abs(mintimeDistance), closestsourcespot);
-
-		return closestspotpair;
-
-	}
-
-	private static Pair<HashMap<Integer, ArrayList<Pair<Integer, Spot>>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> getTMDividing(
+	private static Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> getTMDividing(
 			final Model model) {
 
 		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspots = new HashMap<Integer, ArrayList<Pair<Integer, Spot>>>();
-		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Startingspots = new HashMap<Integer, ArrayList<Pair<Integer, Spot>>>();
-		for (final Integer trackID : model.getTrackModel().trackIDs(false)) {
+		HashMap<Integer, Pair<Integer, Spot>> Startingspots = new HashMap<Integer, Pair<Integer, Spot>>();
+		TrackModel trackmodel = model.getTrackModel();
+		for (final Integer trackID : trackmodel.trackIDs(false)) {
 
-			final Set<DefaultWeightedEdge> track = model.getTrackModel().trackEdges(trackID);
+			final Set<DefaultWeightedEdge> track = trackmodel.trackEdges(trackID);
 
 			ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
 			ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
 			ArrayList<Integer> SourcesID = new ArrayList<Integer>();
 			ArrayList<Integer> TargetsID = new ArrayList<Integer>();
 
-			ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
+			Pair<Integer, Spot> Starts = null;
 			ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
 			ArrayList<Pair<Integer, Spot>> Splits = new ArrayList<Pair<Integer, Spot>>();
 
 			for (final DefaultWeightedEdge e : track) {
 
-				Spot Spotbase = model.getTrackModel().getEdgeSource(e);
-				Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
+				Spot Spotbase = trackmodel.getEdgeSource(e);
+				Spot Spottarget = trackmodel.getEdgeTarget(e);
 
 				Integer targetID = Spottarget.ID();
 				Integer sourceID = Spotbase.ID();
@@ -575,12 +594,12 @@ public class TrackCorrectorRunner {
 
 			}
 
-			// find track starts
+			// find track start
 			for (Pair<Integer, Spot> sid : Sources) {
 
 				if (!TargetsID.contains(sid.getA())) {
 
-					Starts.add(sid);
+					Starts = sid;
 
 				}
 
@@ -607,13 +626,13 @@ public class TrackCorrectorRunner {
 
 		}
 
-		return new ValuePair<HashMap<Integer, ArrayList<Pair<Integer, Spot>>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>(
+		return new ValuePair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>(
 				Startingspots, Dividingspots);
 
 	}
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
-			final File oneatdivisionfile, final File oneatapoptosisfile, final int ndims) {
+			final File oneatdivisionfile, final File oneatapoptosisfile, final int ndims,final double[] calibration) {
 
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
@@ -634,10 +653,10 @@ public class TrackCorrectorRunner {
 
 					if (count > 0) {
 
-						int time = (int) Double.parseDouble(divisionspotsfile[0]);
-						double Z = Double.parseDouble(divisionspotsfile[1]);
-						double Y = Double.parseDouble(divisionspotsfile[2]);
-						double X = Double.parseDouble(divisionspotsfile[3]);
+						int time = (int) Double.parseDouble(divisionspotsfile[0]) - 1;
+						double Z = Double.parseDouble(divisionspotsfile[1]) * calibration[ 2 ];
+						double Y = Double.parseDouble(divisionspotsfile[2]) * calibration[ 1 ];
+						double X = Double.parseDouble(divisionspotsfile[3]) * calibration[ 0 ];
 						double score = Double.parseDouble(divisionspotsfile[4]);
 						double size = Double.parseDouble(divisionspotsfile[5]);
 						double confidence = Double.parseDouble(divisionspotsfile[6]);
@@ -675,7 +694,7 @@ public class TrackCorrectorRunner {
 					final double y = (cell.Y);
 					final double z = (cell.Z);
 
-					double volume = cell.size;
+					double volume = cell.size* calibration[0] * calibration[1] * calibration[2];
 					double quality = cell.size;
 
 					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
@@ -688,7 +707,7 @@ public class TrackCorrectorRunner {
 					currentspot.putFeature(POSITION_Z, Double.valueOf(z));
 					currentspot.putFeature(FRAME, Double.valueOf(frame));
 					currentspot.putFeature(RADIUS, Double.valueOf(radius));
-					currentspot.putFeature(QUALITY, Double.valueOf(radius));
+					currentspot.putFeature(QUALITY, Double.valueOf(quality));
 
 					currentspots.add(currentspot);
 					divisionspots.add(currentspot, frame);
@@ -716,10 +735,10 @@ public class TrackCorrectorRunner {
 
 					if (count > 0) {
 
-						int time = Integer.parseInt(apoptosisspotsfile[0]);
-						double Z = Double.parseDouble(apoptosisspotsfile[1]);
-						double Y = Double.parseDouble(apoptosisspotsfile[2]);
-						double X = Double.parseDouble(apoptosisspotsfile[3]);
+						int time = Integer.parseInt(apoptosisspotsfile[0]) - 1;
+						double Z = Double.parseDouble(apoptosisspotsfile[1]) * calibration[ 2 ];
+						double Y = Double.parseDouble(apoptosisspotsfile[2]) * calibration[ 1 ];
+						double X = Double.parseDouble(apoptosisspotsfile[3]) * calibration[ 0 ];
 						double score = Double.parseDouble(apoptosisspotsfile[4]);
 						double size = Double.parseDouble(apoptosisspotsfile[5]);
 						double confidence = Double.parseDouble(apoptosisspotsfile[6]);
@@ -757,7 +776,7 @@ public class TrackCorrectorRunner {
 					final double y = (cell.Y);
 					final double z = (cell.Z);
 
-					double volume = cell.size;
+					double volume = cell.size * calibration[0] * calibration[1] * calibration[2];
 					double quality = cell.size;
 
 					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
@@ -768,8 +787,8 @@ public class TrackCorrectorRunner {
 					currentspot.putFeature(POSITION_Y, Double.valueOf(y));
 					currentspot.putFeature(POSITION_Z, Double.valueOf(z));
 					currentspot.putFeature(FRAME, Double.valueOf(frame));
-					currentspot.putFeature(RADIUS, Double.valueOf(radius));
-					currentspot.putFeature(QUALITY, Double.valueOf(radius));
+					currentspot.putFeature(RADIUS, Double.valueOf(radius) );
+					currentspot.putFeature(QUALITY, Double.valueOf(quality));
 					currentspots.add(currentspot);
 					apoptosisspots.add(currentspot, frame);
 					ApoptosisSpotListFrame.put(frame, currentspots);
