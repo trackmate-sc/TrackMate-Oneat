@@ -30,7 +30,6 @@ public class OneatCorrector implements TrackCorrector {
     
     private final int timegap;
     
-    private final double sizeratio;
     
     private final double linkingdistance;
 	
@@ -76,7 +75,6 @@ public class OneatCorrector implements TrackCorrector {
 			final int mintrackletlength,
 			final int timegap,
 			final int detectionchannel,
-			final double sizeratio,
 			final double linkingdistance,
 			final boolean createlinks, 
 			final boolean breaklinks, final Model model,
@@ -94,7 +92,6 @@ public class OneatCorrector implements TrackCorrector {
 		
 		this.detectionchannel = detectionchannel;
 		
-		this.sizeratio = sizeratio;
 		
 		this.linkingdistance = linkingdistance;
 

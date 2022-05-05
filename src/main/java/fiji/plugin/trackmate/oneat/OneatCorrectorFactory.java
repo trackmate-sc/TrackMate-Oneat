@@ -20,7 +20,9 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.IntType;
-
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 @Plugin( type = TrackCorrectorFactory.class, visible = true )
 public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 
@@ -32,17 +34,11 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
     
     public static final String KEY_TRACKLET_LENGTH = "TRACKLET_LENGTH";
     
-    public static final String KEY_TIME_GAP = "TIME_GAP";
-    
-    public static final String KEY_SIZE_RATIO = "SIZE_RATIO";
-
-    public static final String KEY_SPLITTING_MAX_DISTANCE = "MAX_LINKING_DISTANCE";
     
     public static final String KEY_CREATE_LINKS = "CREATE_LINKS";
     
     public static final String KEY_BREAK_LINKS = "BREAK_LINKS";
     
-    public static final String KEY_TARGET_CHANNEL = "Detection_Channel";
     
     protected ImgPlus< IntType > img;
 	
@@ -96,9 +92,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  
 		  int mintrackletlength = (int) settings.get(KEY_TRACKLET_LENGTH);
 		  
-		  int timegap = (int) settings.get(KEY_TIME_GAP);
-		  
-		  double sizeratio = (double) settings.get(KEY_SIZE_RATIO);
+		  int timegap = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		  
 		  double linkingdistance = (double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
 				  
@@ -111,7 +105,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  int detectionchannel = (int) settings.get(KEY_TARGET_CHANNEL);
 		  assert detectionchannel <= img.numDimensions(): "Channel can not exceed the image dimension";
 		  
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, sizeratio, linkingdistance, createlinks, breaklinks, model, settings, logger);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, linkingdistance, createlinks, breaklinks, model, settings, logger);
 	}
 
 	@Override
@@ -128,7 +122,6 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & writeAttribute( settings, element, DIVISION_FILE, String.class, str );
 		ok = ok & writeAttribute( settings, element, APOPTOSIS_FILE, String.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_TRACKLET_LENGTH, Integer.class, str );
-		ok = ok & writeAttribute( settings, element, KEY_TIME_GAP, Integer.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_SPLITTING_MAX_DISTANCE, Double.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_CREATE_LINKS, Boolean.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_BREAK_LINKS, Boolean.class, str );
@@ -144,8 +137,6 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & readStringAttribute( element, settings, DIVISION_FILE, errorHolder );
 		ok = ok & readStringAttribute( element, settings, APOPTOSIS_FILE, errorHolder );
 		ok = ok & readIntegerAttribute( element, settings, KEY_TRACKLET_LENGTH, errorHolder );
-		ok = ok & readIntegerAttribute( element, settings, KEY_TIME_GAP, errorHolder );
-		ok = ok & readDoubleAttribute( element, settings, KEY_SIZE_RATIO, errorHolder );
 		ok = ok & readDoubleAttribute( element, settings, KEY_SPLITTING_MAX_DISTANCE, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_CREATE_LINKS, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_BREAK_LINKS, errorHolder );
@@ -164,10 +155,6 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		
 		final String mintrackletlength = (String) settings.get(KEY_TRACKLET_LENGTH);
 		
-		final String timegap = (String) settings.get(KEY_TIME_GAP);
-		
-		final String sizeratio = (String) settings.get(KEY_SIZE_RATIO);
-		
 		final String linkingdistance = (String) settings.get(KEY_SPLITTING_MAX_DISTANCE);
 		
 		final String createlinks = (String) settings.get(KEY_CREATE_LINKS);
@@ -181,8 +168,6 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		str.append( String.format( "  - oneat division detection file: %.1f\n", oneatdivisionfile));
 		str.append( String.format( "  - oneat apoptosis detection file: %.1f\n", oneatapoptosisfile));
 		str.append( String.format( "  - Min Tracklet Length: %.1f\n", mintrackletlength));
-		str.append( String.format( "  - Time Gap between Oneat and TM division: %.1f\n", timegap));
-		str.append( String.format( "  - Size ratio between mother and daughter cells: %.1f\n", sizeratio));
 		str.append( String.format( "  - Max linking distance to consider for making links: %.1f\n", linkingdistance));
 		str.append( String.format( "  -Create new links: %.1f\n", createlinks));
 		str.append( String.format( "  - Breal links: %.1f\n", breaklinks));
@@ -209,9 +194,6 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		
 		ok = ok & checkParameter( settings, KEY_TRACKLET_LENGTH, Integer.class, str );
 		
-		ok = ok & checkParameter( settings, KEY_TIME_GAP, Integer.class, str );
-		
-		ok = ok & checkParameter( settings, KEY_SIZE_RATIO, Double.class, str );
 		
 		ok = ok & checkParameter( settings, KEY_SPLITTING_MAX_DISTANCE, Double.class, str );
 		
