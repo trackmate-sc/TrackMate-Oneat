@@ -58,8 +58,8 @@ public interface  TrackCorrectorFactory  extends TrackMateModule
 		 *            the model that will be modified by the target tracker.
 		 * @return a new configuration panel.
 		 */
-		public JPanel getTrackCorrectorConfigurationPanel(final Settings settings, final Model model, int detchannel, int sizeratio, double linkdist, int deltat,
-				int tracklet);
+		public JPanel getTrackCorrectorConfigurationPanel(final Settings settings,Map<String, Object> trackmapsettings,
+				Map<String, Object> detectorsettings,  final Model model);
 
 		/**
 		 * Marshalls a settings map to a JDom element, ready for saving to XML. The

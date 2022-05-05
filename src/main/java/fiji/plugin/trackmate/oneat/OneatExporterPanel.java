@@ -2,6 +2,8 @@
 package fiji.plugin.trackmate.oneat;
 
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -32,8 +34,6 @@ import javax.swing.filechooser.FileFilter;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 
-
-
 import static fiji.plugin.trackmate.gui.Fonts.SMALL_FONT;
 
 public class OneatExporterPanel extends JPanel {
@@ -43,7 +43,7 @@ public class OneatExporterPanel extends JPanel {
 
 	private  int detchannel = 1;
 	private  double sizeratio = 0.75;
-	private double linkdist = 50;
+	private double linkdist = 250;
 	private  int deltat = 10;
 	private  int tracklet = 2;
 	private boolean createlinks = true;
@@ -54,18 +54,18 @@ public class OneatExporterPanel extends JPanel {
 	private JFormattedTextField MinTracklet;
 	private JFormattedTextField DetectionChannel;
 	private JFormattedTextField TimeGap;
-	private JFormattedTextField MotherDaughterSizeRatio;
 	private JFormattedTextField MotherDaughterLinkDist;
 
 	private JCheckBox CreateNewLinks;
 	private JCheckBox BreakCurrentLinks;
 	
-	public OneatExporterPanel(final Settings settings, final Model model) {
+	public OneatExporterPanel(final Settings settings,final Map<String, Object> trackmapsettings, 
+			final Map<String, Object> detectorsettings, final Model model) {
 
 		
 		
-		
-		
+		detchannel = detectorsettings.get(KEY_TARGET_CHANNEL)!=null? (int) detectorsettings.get(KEY_TARGET_CHANNEL): 1;
+		linkdist =  trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE)!=null? (double) trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE): 250;
 		final GridBagLayout gridBagLayout = new GridBagLayout();
 		setLayout( gridBagLayout );
 
@@ -124,19 +124,8 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
-		final JLabel lblMotherDaughterSizeRatio = new JLabel( "Max Size ratio daughter/mother cell:" );
-		add( lblMotherDaughterSizeRatio, gbc );
-		gbc.gridx++;
 		
-		MotherDaughterSizeRatio = new JFormattedTextField();
-		MotherDaughterSizeRatio.setValue(sizeratio);
-		MotherDaughterSizeRatio.setFont(new Font("Arial", Font.PLAIN, 10));
-		MotherDaughterSizeRatio.setColumns(4);
-		add(MotherDaughterSizeRatio, gbc);
-		gbc.gridy++;
-		gbc.gridx--;
-		
-		final JLabel lblMotherDaughterLinkDist = new JLabel( "Linking distance between mother/daughter:" );
+		final JLabel lblMotherDaughterLinkDist = new JLabel( "Linking distance between mother & daughters:" );
 		add( lblMotherDaughterLinkDist, gbc );
 		gbc.gridx++;
 		
@@ -252,15 +241,7 @@ public class OneatExporterPanel extends JPanel {
 		});
 		
 		
-		MotherDaughterSizeRatio.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				sizeratio = ( ( Number ) MotherDaughterSizeRatio.getValue() ).doubleValue();
-				
-			}
-		});
+		
 		
 		
 		CreateNewLinks.addItemListener(new ItemListener() {

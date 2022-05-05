@@ -56,7 +56,17 @@ public class OneatCorrector implements TrackCorrector {
 	
 	private final Map<String, Object> settings;
 	
-	private final Logger logger;
+	private Logger logger;
+	
+	private int numThreads;
+	
+	private long processingTime;
+	
+	private String errorMessage;
+	
+	private  SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph;
+	
+	private static final String BASE_ERROR_MESSAGE = "[OneatTrackCorrector] ";
 	
 
 	public OneatCorrector(
@@ -97,24 +107,29 @@ public class OneatCorrector implements TrackCorrector {
 		this.settings = settings;
 		
 		this.logger = logger;
+		
+		
+		
+		setNumThreads();
 
 	}
 
 	@Override
 	public SimpleWeightedGraph<Spot, DefaultWeightedEdge> getResult() {
-		// TODO Auto-generated method stub
-		return null;
+		return graph;
 	}
 
 	@Override
 	public boolean checkInput() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean process() {
 
+		
+		final long start = System.currentTimeMillis();
+		
 		divisionspots = new SpotCollection();
 		divisionframespots = new HashMap<Integer, ArrayList<Spot>>();
 
@@ -135,7 +150,7 @@ public class OneatCorrector implements TrackCorrector {
 		if(divisionspots.keySet().size() > 0) {
 			
 			// This object contains the track ID and a list of split points and the root of the lineage tree
-			Mitossisspots = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, true, timegap, detectionchannel, logger);
+			Mitossisspots = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, settings, true, logger);
 			
 			
 			// To be safe let us sort the split points in ascending order of frame
@@ -154,7 +169,7 @@ public class OneatCorrector implements TrackCorrector {
         if(apoptosisspots.keySet().size() > 0) {
 			
         	// This object contains the track ID and a list of single object with the apoptotic spot where the track has to terminate and the root of the lineage tree
-			Apoptosisspots = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, false, timegap, detectionchannel, logger); 
+			Apoptosisspots = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, settings, false, logger); 
 			
 			// To be safe let us sort the dead points in ascending order of frame
 			
@@ -169,48 +184,69 @@ public class OneatCorrector implements TrackCorrector {
         
         }
         
-			SimpleWeightedGraph<Spot, DefaultWeightedEdge> correctedgraph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger); 	
+			graph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads); 	
+			
+			
+			// Check that the objects list itself isn't null
+			if ( null == graph )
+			{
+				errorMessage = BASE_ERROR_MESSAGE + "The output graph is null.";
+				return false;
+			}
 			
 			model.beginUpdate();
 			
 			
-			model.setTracks(correctedgraph, false);
+			model.setTracks(graph, false);
 			
 			
 			model.endUpdate();
 		
- 		
+			logger.setProgress( 1d );
+			logger.setStatus( "" );
+			final long end = System.currentTimeMillis();
+			processingTime = end - start;
 
 		return true;
 	}
 
 	@Override
 	public String getErrorMessage() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return errorMessage;
 	}
 
 	@Override
 	public void setNumThreads() {
-		// TODO Auto-generated method stub
+		
+		this.numThreads = Runtime.getRuntime().availableProcessors();
 
 	}
 
 	@Override
 	public void setNumThreads(int numThreads) {
-		// TODO Auto-generated method stub
+		
+		this.numThreads = numThreads;
 
 	}
 
 	@Override
 	public int getNumThreads() {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		return numThreads;
+		
+	}
+	
+	@Override
+	public long getProcessingTime()
+	{
+		return processingTime;
 	}
 
 	@Override
 	public void setLogger(Logger logger) {
-		// TODO Auto-generated method stub
+		
+		this.logger = logger;
 
 	}
 

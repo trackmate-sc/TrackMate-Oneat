@@ -36,7 +36,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
     
     public static final String KEY_SIZE_RATIO = "SIZE_RATIO";
 
-    public static final String KEY_LINKING_MAX_DISTANCE = "MAX_LINKING_DISTANCE";
+    public static final String KEY_SPLITTING_MAX_DISTANCE = "MAX_LINKING_DISTANCE";
     
     public static final String KEY_CREATE_LINKS = "CREATE_LINKS";
     
@@ -100,7 +100,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  
 		  double sizeratio = (double) settings.get(KEY_SIZE_RATIO);
 		  
-		  double linkingdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
+		  double linkingdistance = (double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
 				  
 		  final boolean createlinks = ( boolean ) settings.get( KEY_CREATE_LINKS );
 		  
@@ -115,10 +115,10 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 	}
 
 	@Override
-	public JPanel getTrackCorrectorConfigurationPanel(Settings settings, Model model, int detchannel, int sizeratio, double linkdist, int deltat,
-			int tracklet) {
+	public JPanel getTrackCorrectorConfigurationPanel(Settings settings, Map<String, Object> trackmapsettings, 
+			Map<String, Object> detectorsettings, Model model) {
 		
-		return new OneatExporterPanel(settings, model);
+		return new OneatExporterPanel(settings, trackmapsettings, detectorsettings, model);
 	}
 
 	@Override
@@ -129,8 +129,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & writeAttribute( settings, element, APOPTOSIS_FILE, String.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_TRACKLET_LENGTH, Integer.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_TIME_GAP, Integer.class, str );
-		ok = ok & writeAttribute( settings, element, KEY_SIZE_RATIO, Double.class, str );
-		ok = ok & writeAttribute( settings, element, KEY_LINKING_MAX_DISTANCE, Double.class, str );
+		ok = ok & writeAttribute( settings, element, KEY_SPLITTING_MAX_DISTANCE, Double.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_CREATE_LINKS, Boolean.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_BREAK_LINKS, Boolean.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_TARGET_CHANNEL, Integer.class, str );
@@ -147,7 +146,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & readIntegerAttribute( element, settings, KEY_TRACKLET_LENGTH, errorHolder );
 		ok = ok & readIntegerAttribute( element, settings, KEY_TIME_GAP, errorHolder );
 		ok = ok & readDoubleAttribute( element, settings, KEY_SIZE_RATIO, errorHolder );
-		ok = ok & readDoubleAttribute( element, settings, KEY_LINKING_MAX_DISTANCE, errorHolder );
+		ok = ok & readDoubleAttribute( element, settings, KEY_SPLITTING_MAX_DISTANCE, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_CREATE_LINKS, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_BREAK_LINKS, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_TARGET_CHANNEL, errorHolder );
@@ -169,7 +168,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		
 		final String sizeratio = (String) settings.get(KEY_SIZE_RATIO);
 		
-		final String linkingdistance = (String) settings.get(KEY_LINKING_MAX_DISTANCE);
+		final String linkingdistance = (String) settings.get(KEY_SPLITTING_MAX_DISTANCE);
 		
 		final String createlinks = (String) settings.get(KEY_CREATE_LINKS);
 		
@@ -214,7 +213,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		
 		ok = ok & checkParameter( settings, KEY_SIZE_RATIO, Double.class, str );
 		
-		ok = ok & checkParameter( settings, KEY_LINKING_MAX_DISTANCE, Double.class, str );
+		ok = ok & checkParameter( settings, KEY_SPLITTING_MAX_DISTANCE, Double.class, str );
 		
         ok = ok & checkParameter( settings, KEY_CREATE_LINKS, Boolean.class, str );
 		

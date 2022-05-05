@@ -19,4 +19,7 @@ public interface TrackCorrector extends OutputAlgorithm< SimpleWeightedGraph< Sp
 	 *            the logger to echo messages to.
 	 */
 	public void setLogger( final Logger logger );
+	
+	public long getProcessingTime();
+	
 }
