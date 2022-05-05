@@ -12,13 +12,13 @@ import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.APOPTOSIS
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.DIVISION_FILE;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
-import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_SIZE_RATIO;
-import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TIME_GAP;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
-import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_SPLITTING_MAX_DISTANCE;
-import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TARGET_CHANNEL;
+import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 
 import static fiji.plugin.trackmate.gui.Icons.TRACKMATE_ICON;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
+
 import org.scijava.plugin.Plugin;
 import static fiji.plugin.trackmate.gui.Icons.CAMERA_ICON;
 import fiji.plugin.trackmate.Model;
@@ -48,7 +48,7 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 	public static final String INFO_TEXT = "<html>"
 			+ "This action initiates Oneat track correction for the tracking results. "
 			+  "<p> "
-			+ "Oneat is a keras based library in python by Varun Kapoor. "
+			+ "Oneat is a keras based library in python written by Varun Kapoor. "
 			+ "It provides csv files of event locations such as mitosis/apoptosis "
 			+ "using the csv file of event locations the tracks are corrected "
 			+ "and a new trackscheme is generated with corrected tracks. "
@@ -146,12 +146,13 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 		settings.put(DIVISION_FILE, oneatdivisionfile);
 		settings.put(APOPTOSIS_FILE, oneatapoptosisfile); 
 		settings.put(KEY_TRACKLET_LENGTH, tracklet);
-		settings.put(KEY_TIME_GAP, deltat);
 		settings.put(KEY_BREAK_LINKS, breaklinks);
 		settings.put(KEY_CREATE_LINKS, createlinks);
 		settings.put(KEY_TARGET_CHANNEL, detchannel);
 		settings.put(KEY_SPLITTING_MAX_DISTANCE, linkdist);
-
+		settings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, deltat);
+		
+		
 		return settings;
 	}
 	

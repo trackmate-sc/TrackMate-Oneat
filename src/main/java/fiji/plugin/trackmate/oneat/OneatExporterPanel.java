@@ -1,9 +1,9 @@
 
 package fiji.plugin.trackmate.oneat;
 
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -66,6 +66,8 @@ public class OneatExporterPanel extends JPanel {
 		
 		detchannel = detectorsettings.get(KEY_TARGET_CHANNEL)!=null? (int) detectorsettings.get(KEY_TARGET_CHANNEL): 1;
 		linkdist =  trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE)!=null? (double) trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE): 250;
+		deltat = trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null? (int) trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP):10;
+		
 		final GridBagLayout gridBagLayout = new GridBagLayout();
 		setLayout( gridBagLayout );
 
@@ -79,10 +81,11 @@ public class OneatExporterPanel extends JPanel {
 
 		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections From CSV");
 		add(Loaddivisioncsvbutton, gbc);
-		gbc.gridy++;
-
+		
+        gbc.gridx++;
 		Loadapoptosiscsvbutton = new JButton("Load Oneat apoptosis detections From CSV");
 		add(Loadapoptosiscsvbutton, gbc);
+		gbc.gridx--;
 		gbc.gridy++;
 		
 		final JLabel lblDetectionChannel = new JLabel( "Integer label detection channel:" );
@@ -140,14 +143,12 @@ public class OneatExporterPanel extends JPanel {
 		CreateNewLinks = new JCheckBox("Create new mitosis events (Verified by oneat, missed by TM) ");
 		CreateNewLinks.setSelected(createlinks);
 		CreateNewLinks.setHorizontalTextPosition(SwingConstants.LEFT);
-		CreateNewLinks.setFont(SMALL_FONT);
 		add(CreateNewLinks, gbc);
 		gbc.gridx++;
 
 		BreakCurrentLinks = new JCheckBox("Break current mitosis events (Labelled by TM, Unverfied by oneat ) ");
 		BreakCurrentLinks.setSelected(breaklinks);
 		BreakCurrentLinks.setHorizontalTextPosition(SwingConstants.LEFT);
-		BreakCurrentLinks.setFont(SMALL_FONT);
 		add(BreakCurrentLinks, gbc);
 
 		Loaddivisioncsvbutton.addActionListener(new ActionListener() {

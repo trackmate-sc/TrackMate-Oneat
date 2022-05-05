@@ -53,9 +53,13 @@ import static fiji.plugin.trackmate.Spot.FRAME;
 import static fiji.plugin.trackmate.Spot.RADIUS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
-import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TIME_GAP;
-import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_SPLITTING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.Spot.QUALITY;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_GAP_CLOSING;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_MERGING;
 
 public class TrackCorrectorRunner {
 
@@ -73,7 +77,7 @@ public class TrackCorrectorRunner {
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
 		double searchdistance = (double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
-		int tmoneatdeltat = (int) settings.get(KEY_TIME_GAP);
+		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
 		Set<Integer> AlltrackIDs = trackmodel.trackIDs(false);
@@ -116,6 +120,14 @@ public class TrackCorrectorRunner {
 
 		count = 0;
 		if (createlinks) {
+			Map<String, Object> cmsettings = new HashMap<>();
+			
+			cmsettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
+			cmsettings.put(KEY_SPLITTING_MAX_DISTANCE, settings.get(KEY_SPLITTING_MAX_DISTANCE));
+			cmsettings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP));
+			cmsettings.put(KEY_ALLOW_GAP_CLOSING, true);
+			cmsettings.put(KEY_ALLOW_TRACK_MERGING, false);
+			
 			logger.log("Creating mitosis links.\n");
 			// Lets take care of mitosis
 			if (Mitosisspots != null)
@@ -159,14 +171,14 @@ public class TrackCorrectorRunner {
 
 						logger.setStatus("Creating the segment linking cost matrix...");
 						final JaqamanSegmentCostMatrixCreator costMatrixCreator = new JaqamanSegmentCostMatrixCreator(
-								graph, settings);
+								graph, cmsettings);
 
 						costMatrixCreator.setNumThreads(numThreads);
 						final SlaveLogger jlLogger = new SlaveLogger( logger, 0, 0.9 );
 						final JaqamanLinker< Spot, Spot > linker = new JaqamanLinker<>( costMatrixCreator, jlLogger );
 						if ( !linker.checkInput() || !linker.process() )
 						{
-							linker.getErrorMessage();
+							System.out.println(linker.getErrorMessage());
 							return null;
 						}
 
@@ -258,7 +270,7 @@ public class TrackCorrectorRunner {
 		SpotCollection regionspots = new SpotCollection();
 		for (Spot spot : allspots.iterable(frame, false)) {
 
-			if (motherspot.squareDistanceTo(spot) < region * region) {
+			if (motherspot.squareDistanceTo(spot) <= region * region) {
 
 				regionspots.add(spot, frame);
 
@@ -296,7 +308,7 @@ public class TrackCorrectorRunner {
 		// Spots from trackmate
 
 		int ndim = intimg.numDimensions() - 1;
-		int tmoneatdeltat = (int) mapsettings.get(KEY_TIME_GAP);
+		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		RandomAccess<IntType> ranac = intimg.randomAccess();
 
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
