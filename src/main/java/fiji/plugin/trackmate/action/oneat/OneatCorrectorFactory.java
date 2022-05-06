@@ -27,13 +27,14 @@ import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 
 	
-	public static final String DIVISION_FILE = "Division_File";
+	public static final String DIVISION_FILE = "MITOSIS_FILE";
 	
     
-    public static final String APOPTOSIS_FILE = "Apoptosis_File";
+    public static final String APOPTOSIS_FILE = "APOPTOSIS_FILE";
     
     public static final String KEY_TRACKLET_LENGTH = "TRACKLET_LENGTH";
     
+    public static final String KEY_PROB_THRESHOLD = "DETECTION_THRESHOLD";
     
     public static final String KEY_CREATE_LINKS = "CREATE_LINKS";
     

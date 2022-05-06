@@ -13,8 +13,8 @@ import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.DIVISION_
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
+import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
-
 import static fiji.plugin.trackmate.gui.Icons.TRACKMATE_ICON;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
@@ -67,6 +67,8 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 	
 	private int tracklet = 2;
 	
+	private double probthreshold = 0.999;
+	
 	private boolean breaklinks = true;
 	
 	private boolean createlinks = false;
@@ -103,12 +105,12 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 			createlinks = panel.getCreateLinks();
 			detchannel = panel.getDetectionChannel();
 			linkdist = panel.getLinkDist();
+			probthreshold = panel.getProbThreshold();
 			Map<String, Object> mapsettings = getSettings(oneatdivisionfile,oneatapotosisfile,trackmapsettings);
 			OneatCorrectorFactory corrector = new OneatCorrectorFactory();
 			ImgPlus <T> detectionimg =  img;
 			if (img.dimensionIndex(Axes.CHANNEL) > 0) {
 			     detectionimg = ImgPlusViews.hyperSlice( img, img.dimensionIndex( Axes.CHANNEL ), (int) detchannel - 1 );
-			     System.out.println(detchannel + " " + linkdist);
 			}
 			else if ((img.dimensionIndex(Axes.CHANNEL) < 0) && img.numDimensions() < 5)
 				  
@@ -155,7 +157,7 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 		settings.put(KEY_TARGET_CHANNEL, detchannel);
 		settings.put(KEY_SPLITTING_MAX_DISTANCE, linkdist);
 		settings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, deltat);
-		
+		settings.put(KEY_PROB_THRESHOLD, probthreshold);
 		
 		return settings;
 	}

@@ -44,6 +44,7 @@ public class OneatExporterPanel extends JPanel {
 	private  static File oneatapoptosisfile;
 
 	private  int detchannel = 1;
+	private double probthreshold = 0.999;
 	private  double sizeratio = 0.75;
 	private double linkdist = 250;
 	private  int deltat = 10;
@@ -57,6 +58,7 @@ public class OneatExporterPanel extends JPanel {
 	private JFormattedTextField DetectionChannel;
 	private JFormattedTextField TimeGap;
 	private JFormattedTextField MotherDaughterLinkDist;
+	private JFormattedTextField DetectionThreshold;
 
 	private JCheckBox CreateNewLinks;
 	private JCheckBox BreakCurrentLinks;
@@ -90,7 +92,20 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx--;
 		gbc.gridy++;
 		
-		final JLabel lblDetectionChannel = new JLabel( "Integer label detection channel (press enter after choosing)::" );
+		final JLabel lblDetectionThreshold = new JLabel( "Detection threshold veto" );
+		add( lblDetectionThreshold, gbc );
+		gbc.gridx++;
+		
+		
+		DetectionThreshold = new JFormattedTextField();
+		DetectionThreshold.setValue(probthreshold);
+		DetectionThreshold.setColumns( 4 );
+		DetectionThreshold.setFont(new Font("Arial", Font.PLAIN, 10));
+		add(DetectionThreshold, gbc);
+		gbc.gridy++;
+		gbc.gridx--;
+		
+		final JLabel lblDetectionChannel = new JLabel( "Integer label detection channel" );
 		add( lblDetectionChannel, gbc );
 		gbc.gridx++;
 		
@@ -243,7 +258,14 @@ public class OneatExporterPanel extends JPanel {
 			}
 		});
 		
-		
+		DetectionThreshold.addPropertyChangeListener(new PropertyChangeListener() {
+					
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						probthreshold = ((Number) DetectionThreshold.getValue()).doubleValue();
+						
+					}
+				});
 		
 		
 		
@@ -313,6 +335,11 @@ public class OneatExporterPanel extends JPanel {
 		return linkdist;
 	}
 	
+	public double getProbThreshold() {
+		
+		return probthreshold;
+	}
+	
 	
 	public int getDetectionChannel() {
 		
@@ -359,7 +386,7 @@ public class OneatExporterPanel extends JPanel {
 	}
 	
 
-
+    
 
 
 }
