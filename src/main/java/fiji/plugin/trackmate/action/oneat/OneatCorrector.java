@@ -135,7 +135,7 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisframespots = new HashMap<Integer, ArrayList<Spot>>();
         int ndims = img.numDimensions() - 1;
 		Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner.run(
-				oneatdivision, oneatapoptosis, ndims, calibration);
+				oneatdivision, oneatapoptosis, settings, ndims, calibration);
 		//Oneat found spots for mitosis
 		divisionspots = result.getA().getA();
 		divisionframespots = result.getA().getB();

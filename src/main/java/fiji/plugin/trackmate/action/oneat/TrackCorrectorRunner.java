@@ -53,6 +53,7 @@ import static fiji.plugin.trackmate.Spot.FRAME;
 import static fiji.plugin.trackmate.Spot.RADIUS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
+import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.Spot.QUALITY;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
@@ -683,11 +684,12 @@ public class TrackCorrectorRunner {
 	}
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
-			final File oneatdivisionfile, final File oneatapoptosisfile, final int ndims, final double[] calibration) {
+			final File oneatdivisionfile, final File oneatapoptosisfile,Map<String, Object> settings, final int ndims, final double[] calibration) {
 
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
 
+		double probthreshold = (double) settings.get(KEY_PROB_THRESHOLD);
 		if (oneatdivisionfile != null) {
 			String line = "";
 			String cvsSplitBy = ",";
@@ -713,6 +715,7 @@ public class TrackCorrectorRunner {
 						double confidence = Double.parseDouble(divisionspotsfile[6]);
 						double angle = Double.parseDouble(divisionspotsfile[7]);
 
+						if (score >= probthreshold) {
 						Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
 
 						if (DivisionMap.get(time) == null) {
@@ -725,7 +728,7 @@ public class TrackCorrectorRunner {
 					count = count + 1;
 				}
 			}
-
+			}
 			catch (IOException ie) {
 				ie.printStackTrace();
 			}
@@ -794,7 +797,7 @@ public class TrackCorrectorRunner {
 						double size = Double.parseDouble(apoptosisspotsfile[5]);
 						double confidence = Double.parseDouble(apoptosisspotsfile[6]);
 						double angle = Double.parseDouble(apoptosisspotsfile[7]);
-
+						if (score >= probthreshold) {
 						Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
 
 						if (ApoptosisMap.get(time) == null) {
@@ -807,7 +810,7 @@ public class TrackCorrectorRunner {
 					count = count + 1;
 				}
 			}
-
+			}
 			catch (IOException ie) {
 				ie.printStackTrace();
 			}

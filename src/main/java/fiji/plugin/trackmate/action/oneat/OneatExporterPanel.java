@@ -13,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -74,12 +76,10 @@ public class OneatExporterPanel extends JPanel {
 		final GridBagConstraints gbc = new GridBagConstraints();
 		gbc.anchor = GridBagConstraints.WEST;
 		gbc.insets = new Insets( 5, 5, 5, 5 );
-		final JLabel label = new JLabel("Press enter after changing a text box");
 		
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		add(label, gbc);
-		gbc.gridy++;
+		
 
 		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections From CSV");
 		add(Loaddivisioncsvbutton, gbc);
@@ -234,12 +234,12 @@ public class OneatExporterPanel extends JPanel {
 
 		});
 		
-		DetectionChannel.addActionListener(new ActionListener() {
+		DetectionChannel.addPropertyChangeListener(new PropertyChangeListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				detchannel = ( ( Number ) DetectionChannel.getValue() ).intValue();
-				System.out.println(detchannel + " " + "action" );
+			public void propertyChange(PropertyChangeEvent evt) {
+				detchannel = ((Number) DetectionChannel.getValue()).intValue();
+				
 			}
 		});
 		
@@ -274,25 +274,25 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		
-		MinTracklet.addActionListener(new ActionListener() {
+		
+		
+		MinTracklet.addPropertyChangeListener(new PropertyChangeListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void propertyChange(PropertyChangeEvent evt) {
 				tracklet = ((Number) MinTracklet.getValue()).intValue();
 				
 			}
 		});
 		
-		
-		TimeGap.addActionListener(new ActionListener() {
+		TimeGap.addPropertyChangeListener(new PropertyChangeListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void propertyChange(PropertyChangeEvent evt) {
 				deltat = ((Number) TimeGap.getValue()).intValue();
 				
 			}
 		});
-		
 		
 		MotherDaughterLinkDist.addActionListener(new ActionListener() {
 			
