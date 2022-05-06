@@ -1,4 +1,4 @@
-package fiji.plugin.trackmate.oneat;
+package fiji.plugin.trackmate.action.oneat;
 
 import static fiji.plugin.trackmate.io.IOUtils.readStringAttribute;
 import static fiji.plugin.trackmate.io.IOUtils.readIntegerAttribute;

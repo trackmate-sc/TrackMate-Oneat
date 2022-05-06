@@ -1,4 +1,4 @@
-package fiji.plugin.trackmate.oneat;
+package fiji.plugin.trackmate.action.oneat;
 
 import java.io.File;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package fiji.plugin.trackmate.oneat;
+package fiji.plugin.trackmate.action.oneat;
 
 import net.imglib2.RealLocalizable;
 

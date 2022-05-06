@@ -1,5 +1,5 @@
 
-package fiji.plugin.trackmate.oneat;
+package fiji.plugin.trackmate.action.oneat;
 
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
@@ -13,8 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -76,10 +74,12 @@ public class OneatExporterPanel extends JPanel {
 		final GridBagConstraints gbc = new GridBagConstraints();
 		gbc.anchor = GridBagConstraints.WEST;
 		gbc.insets = new Insets( 5, 5, 5, 5 );
+		final JLabel label = new JLabel("Press enter after changing a text box");
+		
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-
-
+		add(label, gbc);
+		gbc.gridy++;
 
 		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections From CSV");
 		add(Loaddivisioncsvbutton, gbc);
@@ -90,7 +90,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx--;
 		gbc.gridy++;
 		
-		final JLabel lblDetectionChannel = new JLabel( "Integer label detection channel:" );
+		final JLabel lblDetectionChannel = new JLabel( "Integer label detection channel (press enter after choosing)::" );
 		add( lblDetectionChannel, gbc );
 		gbc.gridx++;
 		
@@ -116,7 +116,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
-		final JLabel lblTimeGap = new JLabel( "Allowed timegap between oneat & TM events:" );
+		final JLabel lblTimeGap = new JLabel( "Allowed timegap between oneat & TM events :" );
 		add( lblTimeGap, gbc );
 		gbc.gridx++;
 		
@@ -130,7 +130,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx--;
 		
 		
-		final JLabel lblMotherDaughterLinkDist = new JLabel( "Linking distance between mother & daughters:" );
+		final JLabel lblMotherDaughterLinkDist = new JLabel( "Linking distance between mother & daughters :" );
 		add( lblMotherDaughterLinkDist, gbc );
 		gbc.gridx++;
 		
@@ -234,26 +234,12 @@ public class OneatExporterPanel extends JPanel {
 
 		});
 		
-		DetectionChannel.addKeyListener(new KeyListener() {
+		DetectionChannel.addActionListener(new ActionListener() {
 			
-			
-
 			@Override
-			public void keyTyped(KeyEvent e) {
+			public void actionPerformed(ActionEvent e) {
 				detchannel = ( ( Number ) DetectionChannel.getValue() ).intValue();
-				
-			}
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
+				System.out.println(detchannel + " " + "action" );
 			}
 		});
 		
@@ -288,74 +274,32 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		
-		MinTracklet.addKeyListener(new KeyListener() {
+		MinTracklet.addActionListener(new ActionListener() {
 			
-			
-
 			@Override
-			public void keyTyped(KeyEvent e) {
+			public void actionPerformed(ActionEvent e) {
 				tracklet = ((Number) MinTracklet.getValue()).intValue();
 				
 			}
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
 		});
 		
 		
-		TimeGap.addKeyListener(new KeyListener() {
+		TimeGap.addActionListener(new ActionListener() {
 			
-		
-
 			@Override
-			public void keyTyped(KeyEvent e) {
+			public void actionPerformed(ActionEvent e) {
 				deltat = ((Number) TimeGap.getValue()).intValue();
 				
 			}
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
 		});
 		
 		
-		MotherDaughterLinkDist.addKeyListener(new KeyListener() {
+		MotherDaughterLinkDist.addActionListener(new ActionListener() {
 			
-			
-
 			@Override
-			public void keyTyped(KeyEvent e) {
+			public void actionPerformed(ActionEvent e) {
+				
 				linkdist = ( ( Number ) MotherDaughterLinkDist.getValue() ).doubleValue();
-				
-				
-			}
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				// TODO Auto-generated method stub
 				
 			}
 		});

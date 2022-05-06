@@ -1,4 +1,4 @@
-package fiji.plugin.trackmate.oneat;
+package fiji.plugin.trackmate.action.oneat;
 
 import java.awt.Frame;
 import java.io.File;

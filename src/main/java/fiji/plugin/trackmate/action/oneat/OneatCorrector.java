@@ -1,4 +1,4 @@
-package fiji.plugin.trackmate.oneat;
+package fiji.plugin.trackmate.action.oneat;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,9 +49,9 @@ public class OneatCorrector implements TrackCorrector {
 
 	private HashMap<Integer, ArrayList<Spot>> apoptosisframespots;
 	
-	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> Mitossisspots;
+	private  HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitossisspots;
 	
-	private  HashMap<Integer, Pair<ArrayList<Spot>, Spot>> Apoptosisspots;
+	private  HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots;
 	
 	private final ImgPlus<IntType> img;
 	
@@ -148,15 +148,15 @@ public class OneatCorrector implements TrackCorrector {
 		if(divisionspots.keySet().size() > 0) {
 			
 			// This object contains the track ID and a list of split points and the root of the lineage tree
-			Mitossisspots = TrackCorrectorRunner.getTrackID(model, img, divisionframespots, settings, true, logger, calibration);
+			Mitossisspots = TrackCorrectorRunner.getmitosisTrackID(model, img, divisionframespots, settings, true, logger, calibration);
 			
 			
 			// To be safe let us sort the split points in ascending order of frame
 			
-			for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> dividingTrack: Mitossisspots.entrySet()) {
+			for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> dividingTrack: Mitossisspots.entrySet()) {
 				
 				
-				ArrayList<Spot> splitpoints = dividingTrack.getValue().getA();
+				ArrayList<Spot> splitpoints = dividingTrack.getValue().getB();
 				
 				splitpoints.sort(Spot.frameComparator);
 				
@@ -167,31 +167,30 @@ public class OneatCorrector implements TrackCorrector {
         if(apoptosisspots.keySet().size() > 0) {
 			
         	// This object contains the track ID and a list of single object with the apoptotic spot where the track has to terminate and the root of the lineage tree
-			Apoptosisspots = TrackCorrectorRunner.getTrackID( model, img, apoptosisframespots, settings, false, logger, calibration); 
+			Apoptosisspots = TrackCorrectorRunner.getapoptosisTrackID( model, img, apoptosisframespots, settings, logger, calibration); 
 			
 			// To be safe let us sort the dead points in ascending order of frame
 			
-			for (Map.Entry<Integer, Pair<ArrayList<Spot>, Spot>> dyingTrack: Apoptosisspots.entrySet()) {
+			for (Map.Entry<Integer, Pair<Spot, Spot>> dyingTrack: Apoptosisspots.entrySet()) {
 				
 				
-			ArrayList<Spot> deadpoints = dyingTrack.getValue().getA();
+			Spot deadpoints = dyingTrack.getValue().getB();
 			
-			deadpoints.sort(Spot.frameComparator);
 			
         }
         
         }
         
-		//	graph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads); 	
+			graph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads); 	
 			
 			
-			// Check that the objects list itself isn't null
-		//	if ( null == graph )
-		//	{
-		//		errorMessage = BASE_ERROR_MESSAGE + "The output graph is null.";
-		//		return false;
-		//	}
-			/*
+			 //Check that the objects list itself isn't null
+			if ( null == graph )
+			{
+				errorMessage = BASE_ERROR_MESSAGE + "The output graph is null.";
+				return false;
+			}
+			
 			model.beginUpdate();
 			
 			
@@ -199,7 +198,7 @@ public class OneatCorrector implements TrackCorrector {
 			
 			
 			model.endUpdate();
-		*/
+		
 			logger.setProgress( 1d );
 			logger.setStatus( "" );
 			final long end = System.currentTimeMillis();
