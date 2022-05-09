@@ -19,6 +19,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +33,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.text.NumberFormatter;
 
+import org.scijava.convert.NumberConverters;
 
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
@@ -97,10 +101,9 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx++;
 		
 		
-		DetectionThreshold = new JFormattedTextField();
+		DetectionThreshold = new JFormattedTextField(new DecimalFormat("#.00000000"));
 		DetectionThreshold.setValue(probthreshold);
-		DetectionThreshold.setColumns( 4 );
-		DetectionThreshold.setFont(new Font("Arial", Font.PLAIN, 10));
+		DetectionThreshold.setColumns( 8 );
 		add(DetectionThreshold, gbc);
 		gbc.gridy++;
 		gbc.gridx--;
@@ -113,7 +116,6 @@ public class OneatExporterPanel extends JPanel {
 		DetectionChannel = new JFormattedTextField();
 		DetectionChannel.setValue(detchannel);
 		DetectionChannel.setColumns( 4 );
-		DetectionChannel.setFont(new Font("Arial", Font.PLAIN, 10));
 		add(DetectionChannel, gbc);
 		gbc.gridy++;
 		gbc.gridx--;
@@ -125,7 +127,6 @@ public class OneatExporterPanel extends JPanel {
 		MinTracklet = new JFormattedTextField();
 		MinTracklet.setValue(tracklet);
 		MinTracklet.setColumns( 4 );
-		MinTracklet.setFont(new Font("Arial", Font.PLAIN, 10));
 		add(MinTracklet, gbc);
 		
 		gbc.gridy++;
@@ -139,7 +140,6 @@ public class OneatExporterPanel extends JPanel {
 		TimeGap = new JFormattedTextField();
 		TimeGap.setValue(deltat);
 		TimeGap.setColumns( 4 );
-		TimeGap.setFont(new Font("Arial", Font.PLAIN, 10));
 		add(TimeGap, gbc);
 		gbc.gridy++;
 		gbc.gridx--;
@@ -151,7 +151,6 @@ public class OneatExporterPanel extends JPanel {
 		
 		MotherDaughterLinkDist = new JFormattedTextField();
 		MotherDaughterLinkDist.setValue(linkdist);
-		MotherDaughterLinkDist.setFont(new Font("Arial", Font.PLAIN, 10));
 		MotherDaughterLinkDist.setColumns(4);
 		add(MotherDaughterLinkDist, gbc);
 		gbc.gridy++;
