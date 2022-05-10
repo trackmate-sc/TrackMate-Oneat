@@ -374,6 +374,7 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 						if(regionspots.getNSpots((int)frame, false) > 0)
 					    for(Spot spot : regionspots.iterable((int)frame, false)) {
 					    
+					    	if(trackmodel.trackIDOf(spot)!=null ) { 
 					    	int regiontrackID = trackmodel.trackIDOf(spot);
 					    	Set<DefaultWeightedEdge> localtracks = trackmodel.trackEdges(regiontrackID);
 					    	
@@ -390,7 +391,7 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 								
 							}
 					    	
-					    
+					    	}
 					    }
 					
 					}
