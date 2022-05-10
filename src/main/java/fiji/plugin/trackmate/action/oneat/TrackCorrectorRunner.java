@@ -28,6 +28,7 @@ import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackModel;
+import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
 import fiji.plugin.trackmate.tracking.sparselap.costmatrix.JaqamanSegmentCostMatrixCreator;
 import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
 import fiji.plugin.trackmate.util.TMUtils;
@@ -60,13 +61,16 @@ import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.Spot.QUALITY;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_GAP_CLOSING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_MERGING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_CUTOFF_PERCENTILE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALTERNATIVE_LINKING_COST_FACTOR;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_FEATURE_PENALTIES;
 
 public class TrackCorrectorRunner {
 
@@ -285,16 +289,28 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 		count = 0;
 		if (createlinks) {
 			Map<String, Object> cmsettings = new HashMap<>();
-
+			// Gap closing.
+			
+			final int maxFrameInterval = ( Integer ) settings.get( KEY_GAP_CLOSING_MAX_FRAME_GAP );
+			final double gcMaxDistance = ( Double ) settings.get( KEY_GAP_CLOSING_MAX_DISTANCE );
+			final boolean allowGapClosing = ( Boolean ) settings.get( KEY_ALLOW_GAP_CLOSING );
+			// Merging
+			final double mMaxDistance = ( Double ) settings.get( KEY_MERGING_MAX_DISTANCE );
+			final boolean allowMerging = ( Boolean ) settings.get( KEY_ALLOW_TRACK_MERGING );
+			// Splitting
+			final double sMaxDistance = ( Double ) settings.get( KEY_SPLITTING_MAX_DISTANCE );
+			// Alternative cost
+			final double alternativeCostFactor = ( Double ) settings.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR );
+			final double percentile = ( Double ) settings.get( KEY_CUTOFF_PERCENTILE );
 			cmsettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
-			cmsettings.put(KEY_SPLITTING_MAX_DISTANCE, settings.get(KEY_SPLITTING_MAX_DISTANCE));
-			cmsettings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP));
-			cmsettings.put(KEY_ALLOW_GAP_CLOSING, true);
-			cmsettings.put(KEY_ALLOW_TRACK_MERGING, false);
-			cmsettings.put(KEY_CUTOFF_PERCENTILE, 0.9d);
-			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, 1.05d);
-			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, settings.get(KEY_SPLITTING_MAX_DISTANCE));
-			cmsettings.put(KEY_MERGING_MAX_DISTANCE, 0d);
+			cmsettings.put(KEY_SPLITTING_MAX_DISTANCE, sMaxDistance);
+			cmsettings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, maxFrameInterval);
+			cmsettings.put(KEY_ALLOW_GAP_CLOSING, allowGapClosing);
+			cmsettings.put(KEY_ALLOW_TRACK_MERGING, allowMerging);
+			cmsettings.put(KEY_CUTOFF_PERCENTILE, percentile);
+			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
+			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
+			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
 
 			logger.log("Removing mitotic edges.\n");
 			// Lets take care of mitosis
