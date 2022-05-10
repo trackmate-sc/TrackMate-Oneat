@@ -108,17 +108,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
-		final JLabel lblDetectionChannel = new JLabel( "Integer label detection channel" );
-		add( lblDetectionChannel, gbc );
-		gbc.gridx++;
 		
-		
-		DetectionChannel = new JFormattedTextField();
-		DetectionChannel.setValue(detchannel);
-		DetectionChannel.setColumns( 4 );
-		add(DetectionChannel, gbc);
-		gbc.gridy++;
-		gbc.gridx--;
 		
 		final JLabel lblMinTracklet = new JLabel( "Minimum length of tracklet:" );
 		add( lblMinTracklet, gbc );
@@ -145,16 +135,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx--;
 		
 		
-		final JLabel lblMotherDaughterLinkDist = new JLabel( "Linking distance between mother & daughters :" );
-		add( lblMotherDaughterLinkDist, gbc );
-		gbc.gridx++;
 		
-		MotherDaughterLinkDist = new JFormattedTextField();
-		MotherDaughterLinkDist.setValue(linkdist);
-		MotherDaughterLinkDist.setColumns(4);
-		add(MotherDaughterLinkDist, gbc);
-		gbc.gridy++;
-		gbc.gridx--;
 		
 		CreateNewLinks = new JCheckBox("Create new mitosis events (Verified by oneat, missed by TM) ");
 		CreateNewLinks.setSelected(createlinks);
@@ -248,14 +229,7 @@ public class OneatExporterPanel extends JPanel {
 
 		});
 		
-		DetectionChannel.addPropertyChangeListener(new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				detchannel = ((Number) DetectionChannel.getValue()).intValue();
-				
-			}
-		});
+		
 		
 		DetectionThreshold.addPropertyChangeListener(new PropertyChangeListener() {
 					
@@ -315,16 +289,7 @@ public class OneatExporterPanel extends JPanel {
 			}
 		});
 		
-		MotherDaughterLinkDist.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				linkdist = ( ( Number ) MotherDaughterLinkDist.getValue() ).doubleValue();
-				
-			}
-		});
-		
+	
 		
 	}
 
