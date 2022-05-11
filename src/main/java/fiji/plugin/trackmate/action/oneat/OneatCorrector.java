@@ -126,7 +126,7 @@ public class OneatCorrector implements TrackCorrector {
 	@Override
 	public boolean process() {
 
-		
+		model.beginUpdate();
 		final long start = System.currentTimeMillis();
 		divisionspots = new SpotCollection();
 		divisionframespots = new HashMap<Integer, ArrayList<Spot>>();
@@ -170,11 +170,11 @@ public class OneatCorrector implements TrackCorrector {
 				return false;
 			}
 			
-			model.beginUpdate();
+			
 			
 			model.clearTracks(true);
-			model.setTracks(graph, false);
-			
+			model.setTracks(graph, true);
+			logger.log( "New tracks: " + model.getTrackModel().nTracks(false));
 			
 			model.endUpdate();
 		

@@ -228,16 +228,14 @@ public class TrackCorrectorRunner {
 		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
-		Set<Integer> AlltrackIDs = trackmodel.trackIDs(false);
 		Set<Integer> MitosisIDs = new HashSet<Integer>();
 		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
 		
 		
 		//Generate the default graph
-				for (int trackID : AlltrackIDs) {
-
+				
 					// Nothing special here just maintaining the normal links found
-					Set<DefaultWeightedEdge> normaltracks = trackmodel.trackEdges(trackID);
+					Set<DefaultWeightedEdge> normaltracks = trackmodel.edgeSet();
 					for (final DefaultWeightedEdge edge : normaltracks) {
 						final Spot source = trackmodel.getEdgeSource(edge);
 						final Spot target = trackmodel.getEdgeTarget(edge);
@@ -249,12 +247,12 @@ public class TrackCorrectorRunner {
 						
 					}
 
-				}
 				
-				if (breaklinks) {
+				
+				if (breaklinks) 
 					
 					 graph = BreakLinksTrack(model, framespots,  intimg, logger, graph,calibration,tmoneatdeltat); 
-				}
+				
 				
 		int count = 0;
 		if (Apoptosisspots != null) {
@@ -281,7 +279,7 @@ public class TrackCorrectorRunner {
 							final Spot target = trackmodel.getEdgeTarget(edge);
 							graph.addVertex(target);
 							final DefaultWeightedEdge newedge = graph.addEdge(source, target);
-							graph.setEdgeWeight(newedge, -1);
+							graph.setEdgeWeight(newedge, graph.getEdgeWeight(newedge));
 						}
 					
 
@@ -767,7 +765,7 @@ public class TrackCorrectorRunner {
 			}
 		}
 		
-		
+		ArrayList<Integer> DividingTrackids = new ArrayList<Integer>();
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 
 			int frame = framemap.getKey();
@@ -795,27 +793,63 @@ public class TrackCorrectorRunner {
 						// Now get the spot ID
 
 						Spot spot = spotandtrackID.getA();
-						Spot closestSpot = null;
 						int trackID = spotandtrackID.getB();
 						Pair<Double, Spot> closestspotpair = closestSpot(spot, Dividingspotlocations.get(trackID));
 						double closestdistance = closestspotpair.getA();
-						closestSpot = closestspotpair.getB();
+						Spot closestSpot = closestspotpair.getB();
 						// There could be a N frame gap at most between the TM detected dividing spot
 						// location and oneat found spot location
-						if (closestdistance > N && closestSpot!=null) {
+						if (closestdistance > N && closestSpot!=null ) {
+							
 							
 							Set<DefaultWeightedEdge> e = model.getTrackModel().edgesOf(closestSpot);
 							
-							for(DefaultWeightedEdge edge : e)
-							    graph.removeEdge(edge);
+							Iterator<DefaultWeightedEdge> it = e.iterator();
+							while(it.hasNext()) {
+								
+								DefaultWeightedEdge edge  = it.next();
+								graph.getEdgeSource(edge);
+								graph.getEdgeTarget(edge);
+								DefaultWeightedEdge thisedge = graph.getEdge(graph.getEdgeSource(edge), graph.getEdgeTarget(edge));
+								graph.removeEdge(thisedge );
+									   
+							}
 							
 							
 						}
+						else
+						   DividingTrackids.add(trackID);
 					}
 					
 				}
 				
 			}
+			
+		}
+		
+		AllTrackIds.removeAll(DividingTrackids);
+		System.out.println(AllTrackIds.size() + " " + DividingTrackids.size());
+		for(int trackID: AllTrackIds) {
+			
+			
+			ArrayList<Pair<Integer, Spot>> badapple = Dividingspotlocations.get(trackID);
+			
+			for(Pair<Integer, Spot> removeapple: badapple) {
+				
+				Set<DefaultWeightedEdge> e = model.getTrackModel().edgesOf(removeapple.getB());
+				
+				Iterator<DefaultWeightedEdge> it = e.iterator();
+				while(it.hasNext()) {
+					
+					DefaultWeightedEdge edge  = it.next();
+					graph.getEdgeSource(edge);
+					graph.getEdgeTarget(edge);
+					DefaultWeightedEdge thisedge = graph.getEdge(graph.getEdgeSource(edge), graph.getEdgeTarget(edge));
+					graph.removeEdge(thisedge );
+						   
+				}
+			
+		}
 			
 		}
 		return graph;
