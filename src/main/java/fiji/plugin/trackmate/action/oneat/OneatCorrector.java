@@ -145,43 +145,22 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisframespots = result.getB().getB();
 		
 		//We have to regerenate the graph and tracks after correction
-		if(divisionspots.keySet().size() > 0) {
+		if(divisionspots.keySet().size() > 0) 
 			
 			// This object contains the track ID and a list of split points and the root of the lineage tree
 			Mitossisspots = TrackCorrectorRunner.getmitosisTrackID(model, img, divisionframespots, settings, true, logger, calibration);
 			
 			
-			// To be safe let us sort the split points in ascending order of frame
-			
-			for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> dividingTrack: Mitossisspots.entrySet()) {
-				
-				
-				ArrayList<Spot> splitpoints = dividingTrack.getValue().getB();
-				
-				splitpoints.sort(Spot.frameComparator);
-				
-			}
-			
-		}
 		
-        if(apoptosisspots.keySet().size() > 0) {
+        if(apoptosisspots.keySet().size() > 0) 
 			
         	// This object contains the track ID and a list of single object with the apoptotic spot where the track has to terminate and the root of the lineage tree
 			Apoptosisspots = TrackCorrectorRunner.getapoptosisTrackID( model, img, apoptosisframespots, settings, logger, calibration); 
 			
 			// To be safe let us sort the dead points in ascending order of frame
-			
-			for (Map.Entry<Integer, Pair<Spot, Spot>> dyingTrack: Apoptosisspots.entrySet()) {
-				
-				
-			Spot deadpoints = dyingTrack.getValue().getB();
-			
-			
-        }
-        
-        }
-        
-			graph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads); 	
+		
+			graph = TrackCorrectorRunner.getCorrectedTracks(model, Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads,
+					img,divisionframespots, calibration ); 	
 			
 			
 			 //Check that the objects list itself isn't null
@@ -193,7 +172,7 @@ public class OneatCorrector implements TrackCorrector {
 			
 			model.beginUpdate();
 			
-			model.clearTracks(false);
+			model.clearTracks(true);
 			model.setTracks(graph, false);
 			
 			

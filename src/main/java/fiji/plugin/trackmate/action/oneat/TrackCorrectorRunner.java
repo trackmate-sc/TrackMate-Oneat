@@ -61,7 +61,7 @@ import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.Spot.QUALITY;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_FEATURE_PENALTIES;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_GAP_CLOSING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_MERGING;
@@ -71,151 +71,152 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALTERNATIVE_LINKING
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_FEATURE_PENALTIES;
-
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_SPLITTING_FEATURE_PENALTIES;
 public class TrackCorrectorRunner {
 
 	private final static Context context = TMUtils.getContext();
-	
-	
+
 	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> removeTracklets(final Model model,
-			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph,
-			final Map<String, Object> settings) {
-	double timecutoff = 0;
-	TrackModel trackModel = model.getTrackModel();
-	if (settings.get(KEY_TRACKLET_LENGTH) != null)
-		timecutoff = (Integer) settings.get(KEY_TRACKLET_LENGTH);
+			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, final Map<String, Object> settings) {
+		double timecutoff = 1;
+		TrackModel trackModel = model.getTrackModel();
+		if (settings.get(KEY_TRACKLET_LENGTH) != null)
+			timecutoff = (Integer) settings.get(KEY_TRACKLET_LENGTH);
 
+		for (final Integer trackID : trackModel.trackIDs(false)) {
 
-	for (final Integer trackID : trackModel.trackIDs(false)) {
+			ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Integer> SourcesID = new ArrayList<Integer>();
+			ArrayList<Integer> TargetsID = new ArrayList<Integer>();
+			ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
+			HashSet<Pair<Integer, Spot>> Splits = new HashSet<Pair<Integer, Spot>>();
 
-		ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
-		ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
-		ArrayList<Integer> SourcesID = new ArrayList<Integer>();
-		ArrayList<Integer> TargetsID = new ArrayList<Integer>();
-		ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
-		ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
-		HashSet<Pair<Integer, Spot>> Splits = new HashSet<Pair<Integer, Spot>>();
+			final Set<DefaultWeightedEdge> track = trackModel.trackEdges(trackID);
 
-		final Set<DefaultWeightedEdge> track = trackModel.trackEdges(trackID);
+			for (final DefaultWeightedEdge e : track) {
 
-		for (final DefaultWeightedEdge e : track) {
+				Spot Spotbase = model.getTrackModel().getEdgeSource(e);
+				Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
 
-			Spot Spotbase = model.getTrackModel().getEdgeSource(e);
-			Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
-
-			Integer targetID = Spottarget.ID();
-			Integer sourceID = Spotbase.ID();
-			Sources.add(new ValuePair<Integer, Spot>(sourceID, Spotbase));
-			Targets.add(new ValuePair<Integer, Spot>(targetID, Spottarget));
-			SourcesID.add(sourceID);
-			TargetsID.add(targetID);
-
-		}
-		// find track ends
-		for (Pair<Integer, Spot> tid : Targets) {
-
-			if (!SourcesID.contains(tid.getA())) {
-
-				Ends.add(tid);
+				Integer targetID = Spottarget.ID();
+				Integer sourceID = Spotbase.ID();
+				Sources.add(new ValuePair<Integer, Spot>(sourceID, Spotbase));
+				Targets.add(new ValuePair<Integer, Spot>(targetID, Spottarget));
+				SourcesID.add(sourceID);
+				TargetsID.add(targetID);
 
 			}
+			// find track ends
+			for (Pair<Integer, Spot> tid : Targets) {
 
-		}
+				if (!SourcesID.contains(tid.getA())) {
 
-		// find track starts
-		for (Pair<Integer, Spot> sid : Sources) {
+					Ends.add(tid);
 
-			if (!TargetsID.contains(sid.getA())) {
-
-				Starts.add(sid);
-
-			}
-
-		}
-
-		// find track splits
-		int scount = 0;
-		for (Pair<Integer, Spot> sid : Sources) {
-
-			for (Pair<Integer, Spot> dupsid : Sources) {
-
-				if (dupsid.getA().intValue() == sid.getA().intValue()) {
-					scount++;
 				}
+
 			}
-			if (scount > 1) {
-				Splits.add(sid);
+
+			// find track starts
+			for (Pair<Integer, Spot> sid : Sources) {
+
+				if (!TargetsID.contains(sid.getA())) {
+
+					Starts.add(sid);
+
+				}
+
 			}
-			scount = 0;
-		}
 
-		if (Splits.size() > 0) {
+			// find track splits
+			int scount = 0;
+			for (Pair<Integer, Spot> sid : Sources) {
 
-			for (Pair<Integer, Spot> sid : Ends) {
+				for (Pair<Integer, Spot> dupsid : Sources) {
 
-				Spot Spotend = sid.getB();
+					if (dupsid.getA().intValue() == sid.getA().intValue()) {
+						scount++;
+					}
+				}
+				if (scount > 1) {
+					Splits.add(sid);
+				}
+				scount = 0;
+			}
 
-				int trackletlength = 0;
+			if (Splits.size() > 0) {
 
-				double minsize = Double.MAX_VALUE;
-				Spot Actualsplit = null;
-				for (Pair<Integer, Spot> splitid : Splits) {
-					Spot Spotstart = splitid.getB();
-					Set<Spot> spotset = connectedSetOf(graph, Spotend, Spotstart);
+				for (Pair<Integer, Spot> sid : Ends) {
 
-					if (spotset.size() < minsize) {
+					Spot Spotend = sid.getB();
 
-						minsize = spotset.size();
-						Actualsplit = Spotstart;
+					int trackletlength = 0;
+
+					double minsize = Double.MAX_VALUE;
+					Spot Actualsplit = null;
+					for (Pair<Integer, Spot> splitid : Splits) {
+						Spot Spotstart = splitid.getB();
+						Set<Spot> spotset = connectedSetOf(graph, Spotend, Spotstart);
+
+						if (spotset.size() < minsize) {
+
+							minsize = spotset.size();
+							Actualsplit = Spotstart;
+
+						}
 
 					}
 
-				}
+					if (Actualsplit != null) {
+						Set<Spot> connectedspotset = connectedSetOf(graph, Spotend, Actualsplit);
+						trackletlength = (int) Math.abs(Actualsplit.diffTo(Spotend, Spot.FRAME));
 
-				if (Actualsplit != null) {
-					Set<Spot> connectedspotset = connectedSetOf(graph, Spotend, Actualsplit);
-					trackletlength = (int) Math.abs(Actualsplit.diffTo(Spotend, Spot.FRAME));
+						if (trackletlength <= timecutoff) {
 
-					if (trackletlength <= timecutoff) {
+							Iterator<Spot> it = connectedspotset.iterator();
+							while (it.hasNext())
+								graph.removeVertex(it.next());
 
-						Iterator<Spot> it = connectedspotset.iterator();
-						while (it.hasNext())
-							graph.removeVertex(it.next());
-
+						}
 					}
-				}
 
+				}
 			}
 		}
+
+		return graph;
+
 	}
 
-return graph;
+	private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, Spot vertex,
+			Spot split) {
 
-}
+		Set<Spot> connectedSet = new HashSet<>();
 
-private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, Spot vertex, Spot split) {
+		connectedSet = new HashSet<>();
 
-	Set<Spot> connectedSet = new HashSet<>();
+		BreadthFirstIterator<Spot, DefaultWeightedEdge> i = new BreadthFirstIterator<>(graph, vertex);
 
-	connectedSet = new HashSet<>();
+		do {
+			Spot spot = i.next();
+			if (spot.ID() == split.ID()) {
+				break;
 
-	BreadthFirstIterator<Spot, DefaultWeightedEdge> i = new BreadthFirstIterator<>(graph, vertex);
+			}
+			connectedSet.add(spot);
+		} while (i.hasNext());
 
-	do {
-		Spot spot = i.next();
-		if (spot.ID() == split.ID()) {
-			break;
+		return connectedSet;
+	}
 
-		}
-		connectedSet.add(spot);
-	} while (i.hasNext());
-
-	return connectedSet;
-}
 	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
 			HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim,
-			final Logger logger, int numThreads) {
+			final Logger logger, int numThreads,final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
+			 double[] calibration) {
 
 		// Get the trackmodel and spots in the default tracking result and start to
 		// create a new graph
@@ -223,7 +224,7 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 		SpotCollection allspots = model.getSpots();
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
-		double searchdistance = (double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
+		double searchdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
 		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
@@ -250,7 +251,11 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 
 				}
 				
-		
+				if (breaklinks) {
+					
+					 graph = BreakLinksTrack(model, framespots,  intimg, logger, graph,calibration,tmoneatdeltat); 
+				}
+				
 		int count = 0;
 		if (Apoptosisspots != null) {
 
@@ -286,19 +291,35 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 
 		}
 
+		
+		
 		count = 0;
+		
+		
+		
 		if (createlinks) {
 			Map<String, Object> cmsettings = new HashMap<>();
 			// Gap closing.
 			
 			final int maxFrameInterval = ( Integer ) settings.get( KEY_GAP_CLOSING_MAX_FRAME_GAP );
 			final double gcMaxDistance = ( Double ) settings.get( KEY_GAP_CLOSING_MAX_DISTANCE );
+			
 			final boolean allowGapClosing = ( Boolean ) settings.get( KEY_ALLOW_GAP_CLOSING );
+			final boolean allowTrackMerging = ( Boolean ) settings.get( KEY_ALLOW_TRACK_MERGING );
+			final boolean allowTrackSplitting = ( Boolean ) settings.get( KEY_ALLOW_TRACK_SPLITTING );
 			// Merging
-			final double mMaxDistance = ( Double ) settings.get( KEY_MERGING_MAX_DISTANCE );
+			 double mMaxDistance = Double.MAX_VALUE;
+			 double sMaxDistance = Double.MAX_VALUE;
 			final boolean allowMerging = ( Boolean ) settings.get( KEY_ALLOW_TRACK_MERGING );
+			if(allowTrackMerging) 
+			mMaxDistance = ( Double ) settings.get( KEY_MERGING_MAX_DISTANCE );
+			else 
+				mMaxDistance = searchdistance;
+			if (allowTrackSplitting) 
 			// Splitting
-			final double sMaxDistance = ( Double ) settings.get( KEY_SPLITTING_MAX_DISTANCE );
+			sMaxDistance = ( Double ) settings.get( KEY_SPLITTING_MAX_DISTANCE );
+			else 
+				sMaxDistance = searchdistance;
 			// Alternative cost
 			final double alternativeCostFactor = ( Double ) settings.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR );
 			final double percentile = ( Double ) settings.get( KEY_CUTOFF_PERCENTILE );
@@ -311,7 +332,10 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
 			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
-
+			if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES)!=DEFAULT_SPLITTING_FEATURE_PENALTIES)
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
+			else
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
 			logger.log("Removing mitotic edges.\n");
 			// Lets take care of mitosis
 			if (Mitosisspots != null) {
@@ -365,8 +389,10 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 					for(Spot motherspot : mitosismotherspots ) {
 					
 						
-						for(int i = 1; i < tmoneatdeltat /2; ++i) {
+						for(int i = 0; i < tmoneatdeltat/2; ++i) {
 					
+							if(i < 0)
+								i = 0;
 							double frame = motherspot.getFeature(FRAME) + i;
 						
 						
@@ -383,6 +409,8 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 								final Spot source = trackmodel.getEdgeSource(localedge);
 								final Spot target = trackmodel.getEdgeTarget(localedge);
 								final double linkcost = trackmodel.getEdgeWeight(localedge);
+								
+							
 								localgraph.addVertex(source);
 								localgraph.addVertex(target);
 								localgraph.addEdge(source, target);
@@ -400,7 +428,7 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 					
 					
 					
-					final JaqamanSegmentCostMatrixCreator costMatrixCreator = new JaqamanSegmentCostMatrixCreator( graph, cmsettings );
+					final OneatCostMatrix costMatrixCreator = new OneatCostMatrix( graph, cmsettings );
 					costMatrixCreator.setNumThreads( numThreads );
 					final SlaveLogger jlLogger = new SlaveLogger( logger, 0, 0.9 );
 					final JaqamanLinker< Spot, Spot > linker = new JaqamanLinker<>( costMatrixCreator, jlLogger );
@@ -420,14 +448,14 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 					final Map< Spot, Spot > assignment = linker.getResult();
 					final Map< Spot, Double > costs = linker.getAssignmentCosts();
 					//Recreate new links
+					if(assignment!=null)
 					for ( final Spot source : assignment.keySet() )
 					{
 						final Spot target = assignment.get( source );
 						final DefaultWeightedEdge edge = graph.addEdge( source, target );
 
 						final double cost = costs.get( source );
-						System.out.println("linking cost" + cost + " " + source.getDoublePosition(0) +  " " +
-						source.getDoublePosition(1) + " " + source.getDoublePosition(2) );
+						
 						
 						graph.setEdgeWeight( edge, cost );
 					}
@@ -453,10 +481,6 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 
 	}
 
-
-
-
-
 	private static SpotCollection regionspot(SpotCollection allspots, Spot motherspot, int frame, double region) {
 
 		SpotCollection regionspots = new SpotCollection();
@@ -475,8 +499,7 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
 			final Model model, final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
-			final Map<String, Object> mapsettings, final Logger logger,
-			double[] calibration) {
+			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
 
 		HashMap<Integer, Spot> Apoptosisspots = new HashMap<Integer, Spot>();
 
@@ -688,7 +711,6 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 							}
 
 						}
-					
 
 					}
 				}
@@ -700,6 +722,104 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 		logger.setProgress(0.);
 
 		return Trackmitosis;
+	}
+	
+	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> BreakLinksTrack(final Model model, HashMap<Integer, ArrayList<Spot>>  framespots, 
+			final ImgPlus<IntType> intimg, final Logger logger,final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph,
+			double[] calibration, int N) {
+		
+		int count = 0;
+		logger.log("Breaking links not found by oneat.\n");
+		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(
+				model);
+		
+		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspotlocations  = DividingStartspots.getB();
+		int ndim = intimg.numDimensions() - 1;
+		
+		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
+		RandomAccess<IntType> ranac = intimg.randomAccess();
+		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
+		
+		
+		for (int trackID : AllTrackIds) {
+
+			Set<Spot> trackspots = model.getTrackModel().trackSpots(trackID);
+		
+			for (Spot spot : trackspots) {
+
+				
+
+				int frame = spot.getFeature(FRAME).intValue();
+				if (frame < intimg.dimension(ndim) - 1) {
+					long[] location = new long[ndim];
+					for (int d = 0; d < ndim; ++d) {
+						location[d] = (long) (spot.getDoublePosition(d) / calibration[d]);
+						ranac.setPosition(location[d], d);
+					}
+
+					ranac.setPosition(frame, ndim);
+					int label = ranac.get().get();
+
+					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
+							new ValuePair<Spot, Integer>(spot, trackID));
+
+				}
+			}
+		}
+		
+		
+		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
+
+			int frame = framemap.getKey();
+			if (frame < intimg.dimension(ndim) - 1) {
+				count++;
+
+				ArrayList<Spot> spotlist = framemap.getValue();
+
+				for (Spot currentspots : spotlist) {
+
+					logger.setProgress((float) (count) / framespots.size());
+
+					long[] location = new long[ndim];
+					for (int d = 0; d < ndim; ++d) {
+						location[d] = (long) (currentspots.getDoublePosition(d) / calibration[d]);
+						ranac.setPosition(location[d], d);
+					}
+					ranac.setPosition(frame, ndim);
+					// Get the label ID of the current interesting spot
+					int labelID = ranac.get().get();
+
+					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
+						Pair<Spot, Integer> spotandtrackID = uniquelabelID
+								.get(new ValuePair<Integer, Integer>(labelID, frame));
+						// Now get the spot ID
+
+						Spot spot = spotandtrackID.getA();
+						Spot closestSpot = null;
+						int trackID = spotandtrackID.getB();
+						Pair<Double, Spot> closestspotpair = closestSpot(spot, Dividingspotlocations.get(trackID));
+						double closestdistance = closestspotpair.getA();
+						closestSpot = closestspotpair.getB();
+						// There could be a N frame gap at most between the TM detected dividing spot
+						// location and oneat found spot location
+						if (closestdistance > N && closestSpot!=null) {
+							
+							Set<DefaultWeightedEdge> e = model.getTrackModel().edgesOf(closestSpot);
+							
+							for(DefaultWeightedEdge edge : e)
+							    graph.removeEdge(edge);
+							
+							
+						}
+					}
+					
+				}
+				
+			}
+			
+		}
+		return graph;
+		
 	}
 
 	private static Pair<Boolean, Pair<Spot, Spot>> isDividingTrack(final Spot spot, final int trackID, final int N,
@@ -846,13 +966,14 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 	}
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
-			final File oneatdivisionfile, final File oneatapoptosisfile,Map<String, Object> settings, final int ndims, final double[] calibration) {
+			final File oneatdivisionfile, final File oneatapoptosisfile, Map<String, Object> settings, final int ndims,
+			final double[] calibration) {
 
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
 
 		double probthreshold = (double) settings.get(KEY_PROB_THRESHOLD);
-		
+
 		if (oneatdivisionfile != null) {
 			String line = "";
 			String cvsSplitBy = ",";
@@ -878,23 +999,21 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 						double confidence = Double.parseDouble(divisionspotsfile[6]);
 						double angle = Double.parseDouble(divisionspotsfile[7]);
 
-						
 						if (score >= probthreshold) {
-						Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
+							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
 
-						if (DivisionMap.get(time) == null) {
-							DivisionSpots = new ArrayList<Oneatobject>();
-							DivisionMap.put(time, DivisionSpots);
-						} else
-							DivisionMap.put(time, DivisionSpots);
-						DivisionSpots.add(Spot);
+							if (DivisionMap.get(time) == null) {
+								DivisionSpots = new ArrayList<Oneatobject>();
+								DivisionMap.put(time, DivisionSpots);
+							} else
+								DivisionMap.put(time, DivisionSpots);
+							DivisionSpots.add(Spot);
+						}
+
 					}
-				
-				}
 					count = count + 1;
-			}
-			}
-			catch (IOException ie) {
+				}
+			} catch (IOException ie) {
 				ie.printStackTrace();
 			}
 
@@ -963,21 +1082,20 @@ private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeighte
 						double confidence = Double.parseDouble(apoptosisspotsfile[6]);
 						double angle = Double.parseDouble(apoptosisspotsfile[7]);
 						if (score >= probthreshold) {
-						Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
+							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
 
-						if (ApoptosisMap.get(time) == null) {
-							ApoptosisSpots = new ArrayList<Oneatobject>();
-							ApoptosisMap.put(time, ApoptosisSpots);
-						} else
-							ApoptosisMap.put(time, ApoptosisSpots);
-						ApoptosisSpots.add(Spot);
+							if (ApoptosisMap.get(time) == null) {
+								ApoptosisSpots = new ArrayList<Oneatobject>();
+								ApoptosisMap.put(time, ApoptosisSpots);
+							} else
+								ApoptosisMap.put(time, ApoptosisSpots);
+							ApoptosisSpots.add(Spot);
+						}
+
 					}
-					
-				}
 					count = count + 1;
-			}
-			}
-			catch (IOException ie) {
+				}
+			} catch (IOException ie) {
 				ie.printStackTrace();
 			}
 
