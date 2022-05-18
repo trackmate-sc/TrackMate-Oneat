@@ -475,7 +475,7 @@ public class TrackCorrectorRunner {
 		logger.flush();
 		logger.log("Done, please review the TrackScheme by going back.\n");
 	
-		graph = removeTracklets(model, graph, settings);
+	
 		
 		return graph;
 

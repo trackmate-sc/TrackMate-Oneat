@@ -89,7 +89,7 @@ public class OneatExporterPanel extends JPanel {
 
 		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections From CSV");
 		add(Loaddivisioncsvbutton, gbc);
-		
+		gbc.gridy++;
        
 		Loadapoptosiscsvbutton = new JButton("Load Oneat apoptosis detections From CSV");
 		add(Loadapoptosiscsvbutton, gbc);
@@ -110,17 +110,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		
-		final JLabel lblMinTracklet = new JLabel( "Minimum length of tracklet:" );
-		add( lblMinTracklet, gbc );
-		gbc.gridx++;
 		
-		MinTracklet = new JFormattedTextField();
-		MinTracklet.setValue(tracklet);
-		MinTracklet.setColumns( 4 );
-		add(MinTracklet, gbc);
-		
-		gbc.gridy++;
-		gbc.gridx--;
 		
 		final JLabel lblTimeGap = new JLabel( "Allowed timegap between oneat & TM events :" );
 		add( lblTimeGap, gbc );
@@ -271,14 +261,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		
-		MinTracklet.addPropertyChangeListener(new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				tracklet = ((Number) MinTracklet.getValue()).intValue();
-				
-			}
-		});
+		
 		
 		TimeGap.addPropertyChangeListener(new PropertyChangeListener() {
 			
