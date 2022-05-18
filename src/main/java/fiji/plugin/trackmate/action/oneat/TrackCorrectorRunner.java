@@ -213,6 +213,8 @@ public class TrackCorrectorRunner {
 	}
 
 	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
+			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, 
+			Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
 			HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim,
 			final Logger logger, int numThreads,final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
@@ -251,7 +253,7 @@ public class TrackCorrectorRunner {
 				
 				if (breaklinks) 
 					
-					 graph = BreakLinksTrack(model, framespots,  intimg, logger, graph,calibration,tmoneatdeltat); 
+					 graph = BreakLinksTrack(model, uniquelabelID, DividingStartspots, framespots,  intimg, logger, graph,calibration,tmoneatdeltat); 
 				
 				
 		int count = 0;
@@ -495,12 +497,13 @@ public class TrackCorrectorRunner {
 		return regionspots;
 	} 
 	
-	public static HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> getfirstTrackMateobject(
+	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getfirstTrackMateobject(
 			final Model model, 
 			final ImgPlus<IntType> intimg, 
 			final Logger logger, 
 			double[] calibration) {
 		
+		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(model);
 		int ndim = intimg.numDimensions() - 1;
 		RandomAccess<IntType> ranac = intimg.randomAccess();
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
@@ -535,7 +538,7 @@ public class TrackCorrectorRunner {
 		}
 		
 		
-		return uniquelabelID;
+		return new ValuePair <HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> (uniquelabelID, DividingStartspots);
 		
 	}
 	
@@ -710,49 +713,25 @@ public class TrackCorrectorRunner {
 		return Trackmitosis;
 	}
 	
-	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> BreakLinksTrack(final Model model, HashMap<Integer, ArrayList<Spot>>  framespots, 
+	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> BreakLinksTrack(final Model model, 
+			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, 
+			Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots,
+			HashMap<Integer, ArrayList<Spot>>  framespots, 
 			final ImgPlus<IntType> intimg, final Logger logger,final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph,
 			double[] calibration, int N) {
 		
 		int count = 0;
 		logger.log("Breaking links not found by oneat.\n");
-		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(
-				model);
+		
 		
 		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspotlocations  = DividingStartspots.getB();
 		int ndim = intimg.numDimensions() - 1;
 		
-		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
-		RandomAccess<IntType> ranac = intimg.randomAccess();
+		
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
 		
 		
-		for (int trackID : AllTrackIds) {
-
-			Set<Spot> trackspots = model.getTrackModel().trackSpots(trackID);
-		
-			for (Spot spot : trackspots) {
-
-				
-
-				int frame = spot.getFeature(FRAME).intValue();
-				if (frame < intimg.dimension(ndim) - 1) {
-					long[] location = new long[ndim];
-					for (int d = 0; d < ndim; ++d) {
-						location[d] = (long) (spot.getDoublePosition(d) / calibration[d]);
-						ranac.setPosition(location[d], d);
-					}
-
-					ranac.setPosition(frame, ndim);
-					int label = ranac.get().get();
-
-					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
-							new ValuePair<Spot, Integer>(spot, trackID));
-
-				}
-			}
-		}
-		
+		RandomAccess<IntType> ranac = intimg.randomAccess();
 		ArrayList<Integer> DividingTrackids = new ArrayList<Integer>();
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 

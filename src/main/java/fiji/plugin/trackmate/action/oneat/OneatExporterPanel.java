@@ -90,10 +90,10 @@ public class OneatExporterPanel extends JPanel {
 		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections From CSV");
 		add(Loaddivisioncsvbutton, gbc);
 		
-        gbc.gridx++;
+       
 		Loadapoptosiscsvbutton = new JButton("Load Oneat apoptosis detections From CSV");
 		add(Loadapoptosiscsvbutton, gbc);
-		gbc.gridx--;
+		
 		gbc.gridy++;
 		
 		final JLabel lblDetectionThreshold = new JLabel( "Detection threshold veto" );
@@ -141,7 +141,7 @@ public class OneatExporterPanel extends JPanel {
 		CreateNewLinks.setSelected(createlinks);
 		CreateNewLinks.setHorizontalTextPosition(SwingConstants.LEFT);
 		add(CreateNewLinks, gbc);
-		gbc.gridx++;
+		gbc.gridy++;
 
 		BreakCurrentLinks = new JCheckBox("Break current mitosis events (Labelled by TM, Unverfied by oneat ) ");
 		BreakCurrentLinks.setSelected(breaklinks);
