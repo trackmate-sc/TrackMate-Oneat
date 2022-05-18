@@ -136,6 +136,12 @@ public class OneatCorrector implements TrackCorrector {
         int ndims = img.numDimensions() - 1;
 		Pair<  Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner.run(
 				oneatdivision, oneatapoptosis, settings, ndims, calibration);
+		
+		// Get first TrackMate object as in blue print
+		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID =  TrackCorrectorRunner.getfirstTrackMateobject(model, img, logger, 
+				calibration);
+		
+		
 		//Oneat found spots for mitosis
 		divisionspots = result.getA().getA();
 		divisionframespots = result.getA().getB();
@@ -144,18 +150,21 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisspots = result.getB().getA();
 		apoptosisframespots = result.getB().getB();
 		
+		
+		
+		
 		//We have to regerenate the graph and tracks after correction
 		if(divisionspots.keySet().size() > 0) 
 			
 			// This object contains the track ID and a list of split points and the root of the lineage tree
-			Mitossisspots = TrackCorrectorRunner.getmitosisTrackID(model, img, divisionframespots, settings, true, logger, calibration);
+			Mitossisspots = TrackCorrectorRunner.getmitosisTrackID( uniquelabelID, model, img, divisionframespots, settings, logger, calibration);
 			
 			
 		
         if(apoptosisspots.keySet().size() > 0) 
 			
         	// This object contains the track ID and a list of single object with the apoptotic spot where the track has to terminate and the root of the lineage tree
-			Apoptosisspots = TrackCorrectorRunner.getapoptosisTrackID( model, img, apoptosisframespots, settings, logger, calibration); 
+			Apoptosisspots = TrackCorrectorRunner.getapoptosisTrackID( uniquelabelID, model, img, apoptosisframespots, settings, logger, calibration); 
 			
 			// To be safe let us sort the dead points in ascending order of frame
 		
@@ -173,7 +182,9 @@ public class OneatCorrector implements TrackCorrector {
 			
 			
 			model.clearTracks(true);
+			
 			model.setTracks(graph, true);
+			
 			logger.log( "New tracks: " + model.getTrackModel().nTracks(false));
 			
 			model.endUpdate();

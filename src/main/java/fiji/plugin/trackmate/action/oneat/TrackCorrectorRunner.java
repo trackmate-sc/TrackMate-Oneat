@@ -493,22 +493,16 @@ public class TrackCorrectorRunner {
 		}
 
 		return regionspots;
-	}
-
-	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
-			final Model model, final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
-			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
-
-		HashMap<Integer, Spot> Apoptosisspots = new HashMap<Integer, Spot>();
-
-		// Starting point of the tree + apoptotic spot in the trackID
-		HashMap<Integer, Pair<Spot, Spot>> Trackapoptosis = new HashMap<Integer, Pair<Spot, Spot>>();
-		// Spots from trackmate
-
+	} 
+	
+	public static HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> getfirstTrackMateobject(
+			final Model model, 
+			final ImgPlus<IntType> intimg, 
+			final Logger logger, 
+			double[] calibration) {
+		
 		int ndim = intimg.numDimensions() - 1;
-		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		RandomAccess<IntType> ranac = intimg.randomAccess();
-
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
 		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
 		logger.flush();
@@ -539,10 +533,34 @@ public class TrackCorrectorRunner {
 				}
 			}
 		}
+		
+		
+		return uniquelabelID;
+		
+	}
+	
+	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
+			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
+			final Model model, final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
+			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
+
+		HashMap<Integer, Spot> Apoptosisspots = new HashMap<Integer, Spot>();
+
+		// Starting point of the tree + apoptotic spot in the trackID
+		HashMap<Integer, Pair<Spot, Spot>> Trackapoptosis = new HashMap<Integer, Pair<Spot, Spot>>();
+		// Spots from trackmate
+
+		int ndim = intimg.numDimensions() - 1;
+		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
+		RandomAccess<IntType> ranac = intimg.randomAccess();
+
+		
+		int count = 0;
+		
 
 		logger.log("Matching with oneat apoptosis spots.\n");
 		logger.setProgress(0.);
-		count = 0;
+		
 
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 
@@ -600,8 +618,9 @@ public class TrackCorrectorRunner {
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
+			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			final Model model, final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
-			final Map<String, Object> mapsettings, final boolean checkdivision, final Logger logger,
+			final Map<String, Object> mapsettings, final Logger logger,
 			double[] calibration) {
 
 		HashMap<Integer, ArrayList<Spot>> Mitosisspots = new HashMap<Integer, ArrayList<Spot>>();
@@ -614,40 +633,9 @@ public class TrackCorrectorRunner {
 		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		RandomAccess<IntType> ranac = intimg.randomAccess();
 
-		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
-		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
-		logger.flush();
-		logger.log("Collecting tracks, in total " + AllTrackIds.size() + ".\n");
-		int count = 0;
-		for (int trackID : AllTrackIds) {
-
-			Set<Spot> trackspots = model.getTrackModel().trackSpots(trackID);
-			count++;
-			for (Spot spot : trackspots) {
-
-				logger.setProgress((float) (count) / AllTrackIds.size());
-
-				int frame = spot.getFeature(FRAME).intValue();
-				if (frame < intimg.dimension(ndim) - 1) {
-					long[] location = new long[ndim];
-					for (int d = 0; d < ndim; ++d) {
-						location[d] = (long) (spot.getDoublePosition(d) / calibration[d]);
-						ranac.setPosition(location[d], d);
-					}
-
-					ranac.setPosition(frame, ndim);
-					int label = ranac.get().get();
-
-					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
-							new ValuePair<Spot, Integer>(spot, trackID));
-
-				}
-			}
-		}
-
 		logger.log("Matching with oneat mitosis spots.\n");
 		logger.setProgress(0.);
-		count = 0;
+		int count = 0;
 
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 
@@ -683,7 +671,7 @@ public class TrackCorrectorRunner {
 						Boolean isDividing = isDividingTMspot.getA();
 						// If isDividing is true oneat does not need to correct the track else it has to
 						// correct the trackid
-						if (checkdivision & isDividing == false) {
+						if (!isDividing) {
 
 							Spot startspot = isDividingTMspot.getB().getA();
 
