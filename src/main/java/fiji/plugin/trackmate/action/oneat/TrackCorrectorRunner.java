@@ -73,6 +73,7 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_MAX_DISTANC
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_SPLITTING_FEATURE_PENALTIES;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_LINKING_FEATURE_PENALTIES;
 public class TrackCorrectorRunner {
 
 	private final static Context context = TMUtils.getContext();
@@ -391,10 +392,9 @@ public class TrackCorrectorRunner {
 						
 						for(int i = 0; i < tmoneatdeltat/2; ++i) {
 					
-							if(i < 0)
-								i = 0;
+							
 							double frame = motherspot.getFeature(FRAME) + i;
-						
+						    if (frame > 0) {
 						
 						SpotCollection regionspots =  regionspot(allspots,motherspot, (int) frame, searchdistance);
 						if(regionspots.getNSpots((int)frame, false) > 0)
@@ -423,12 +423,12 @@ public class TrackCorrectorRunner {
 					    }
 					
 					}
-						
+						}
 					}
 					
 					
 					
-					final OneatCostMatrix costMatrixCreator = new OneatCostMatrix( graph, cmsettings );
+					final OneatCostMatrix costMatrixCreator = new OneatCostMatrix( localgraph, cmsettings );
 					costMatrixCreator.setNumThreads( numThreads );
 					final SlaveLogger jlLogger = new SlaveLogger( logger, 0, 0.9 );
 					final JaqamanLinker< Spot, Spot > linker = new JaqamanLinker<>( costMatrixCreator, jlLogger );
@@ -452,12 +452,16 @@ public class TrackCorrectorRunner {
 					for ( final Spot source : assignment.keySet() )
 					{
 						final Spot target = assignment.get( source );
-						final DefaultWeightedEdge edge = graph.addEdge( source, target );
-
+						if(graph.getEdge( source, target ) ==null) {
 						final double cost = costs.get( source );
-						
-						
+							
+						if(cost >= 20) {	
+						final DefaultWeightedEdge edge = graph.addEdge( source, target );
 						graph.setEdgeWeight( edge, cost );
+						
+						}
+					}
+						
 					}
 
 
@@ -480,6 +484,8 @@ public class TrackCorrectorRunner {
 		return graph;
 
 	}
+
+
 
 	private static SpotCollection regionspot(SpotCollection allspots, Spot motherspot, int frame, double region) {
 

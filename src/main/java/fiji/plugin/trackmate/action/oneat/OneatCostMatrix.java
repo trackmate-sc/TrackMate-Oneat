@@ -176,7 +176,7 @@ public class OneatCostMatrix implements CostMatrixCreator< Spot, Spot >, MultiTh
 		 */
 
 		final ExecutorService executorGCM = Executors.newFixedThreadPool( numThreads );
-		for ( final Spot source : segmentEnds )
+		for ( final Spot source : allMiddles )
 		{
 			executorGCM.submit( new Runnable()
 			{
@@ -239,7 +239,7 @@ public class OneatCostMatrix implements CostMatrixCreator< Spot, Spot >, MultiTh
 
 	
 			final ExecutorService executorS = Executors.newFixedThreadPool( numThreads );
-			for ( final Spot source : allMiddles )
+			for ( final Spot source : segmentEnds )
 			{
 				executorS.submit( new Runnable()
 				{

@@ -105,7 +105,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  
 		  int detectionchannel = (int) settings.get(KEY_TARGET_CHANNEL);
 		  assert detectionchannel <= img.numDimensions(): "Channel can not exceed the image dimension";
-		  
+		  System.out.println(detectionchannel);
 		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, linkingdistance, createlinks, breaklinks, model, calibration, settings, logger);
 	}
 
