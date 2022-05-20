@@ -352,14 +352,14 @@ public class TrackCorrectorRunner {
 					// Get the current trackID
 					int trackID = trackidspots.getKey();
 					Set<DefaultWeightedEdge> dividingtracks = trackmodel.trackEdges(trackID);
-					MitosisIDs.add(trackID);
+					
 					
 					// List of all the mother cells and the root of the lineage tree
 					Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
 					
 					ArrayList<Spot> mitosismotherspots = trackspots.getB();
 					count++;
-					ArrayList<DefaultWeightedEdge> prunededges = new ArrayList<DefaultWeightedEdge>();
+				
 					//Remove edges corresponding to mitotic trajectories
 					for (final DefaultWeightedEdge edge : dividingtracks) {
 						
@@ -368,11 +368,10 @@ public class TrackCorrectorRunner {
 						if(mitosismotherspots.contains(source)) {
 							
 							graph.removeEdge(edge);
-							prunededges.add(edge);
+							
 						}
 						
 					}
-					dividingtracks.removeAll(prunededges);
 					
 					for(DefaultWeightedEdge localedge: dividingtracks) {
 						
@@ -406,7 +405,10 @@ public class TrackCorrectorRunner {
 					    	
 					    	for(DefaultWeightedEdge localedge: localtracks) {
 								
+					    		
+					    		
 								final Spot source = trackmodel.getEdgeSource(localedge);
+								if(source.getFeature(FRAME) >= frame) {
 								final Spot target = trackmodel.getEdgeTarget(localedge);
 								final double linkcost = trackmodel.getEdgeWeight(localedge);
 								
@@ -416,7 +418,7 @@ public class TrackCorrectorRunner {
 								localgraph.addEdge(source, target);
 								localgraph.setEdgeWeight(localedge, linkcost);
 								
-								
+								}
 							}
 					    	
 					    	}
@@ -452,15 +454,24 @@ public class TrackCorrectorRunner {
 					for ( final Spot source : assignment.keySet() )
 					{
 						final Spot target = assignment.get( source );
-						if(graph.getEdge( source, target ) ==null) {
-						final double cost = costs.get( source );
+						
+						Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
+						// Remove the targetsource and target edge prior to assingment
+						for(DefaultWeightedEdge targetedge: targetlinks) {
 							
-						if(cost >= 20) {	
+							Spot targetsource = trackmodel.getEdgeSource(targetedge);
+							graph.removeEdge(targetsource, target);
+						}
+						
+						
+						final double cost = costs.get( source );
+					    if(cost >= 10) {		
+						System.out.println(cost);
 						final DefaultWeightedEdge edge = graph.addEdge( source, target );
 						graph.setEdgeWeight( edge, cost );
 						
-						}
-					}
+					    }
+					
 						
 					}
 
@@ -490,6 +501,8 @@ public class TrackCorrectorRunner {
 	private static SpotCollection regionspot(SpotCollection allspots, Spot motherspot, int frame, double region) {
 
 		SpotCollection regionspots = new SpotCollection();
+		final int Nspots = allspots.getNSpots(frame, false);
+		if (Nspots> 0)
 		for (Spot spot : allspots.iterable(frame, false)) {
 
 			if (motherspot.squareDistanceTo(spot) <= region * region) {
