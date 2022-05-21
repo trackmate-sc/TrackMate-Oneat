@@ -54,7 +54,7 @@ public class OneatExporterPanel extends JPanel {
 	private  int deltat = 10;
 	private  int tracklet = 2;
 	private boolean createlinks = true;
-	private boolean breaklinks = false;
+	private boolean breaklinks = true;
 	
 	private JButton Loaddivisioncsvbutton;
 	private JButton Loadapoptosiscsvbutton;

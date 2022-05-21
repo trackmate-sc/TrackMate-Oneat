@@ -377,6 +377,7 @@ public class TrackCorrectorRunner {
 						for (DefaultWeightedEdge localedge : mothertrack) {
 
 							if(!graph.containsEdge(localedge)) {
+								
 							final Spot source = trackmodel.getEdgeSource(localedge);
 							final Spot target = trackmodel.getEdgeTarget(localedge);
 							final double linkcost = trackmodel.getEdgeWeight(localedge);
@@ -384,11 +385,10 @@ public class TrackCorrectorRunner {
 							localgraph.addVertex(target);
 							localgraph.addEdge(source, target);
 							localgraph.setEdgeWeight(localedge, linkcost);
-
+							
 						}
 						}
 
-						System.out.println("Mothers Time"+ " " + motherspot.getFeature(FRAME)); 
 						for (int i = 0; i < tmoneatdeltat; ++i) {
 
 							double frame = motherspot.getFeature(FRAME) + i;
@@ -463,7 +463,6 @@ public class TrackCorrectorRunner {
 
 							final double cost = costs.get(source);
 
-							System.out.println("Linking cost oneat" + " " + cost + " " + source.getFeature(FRAME));
 							final DefaultWeightedEdge edge = graph.addEdge(source, target);
 							if (edge != null)
 								graph.setEdgeWeight(edge, cost);
