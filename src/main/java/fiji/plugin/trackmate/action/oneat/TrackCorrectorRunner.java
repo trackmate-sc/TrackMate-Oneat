@@ -376,9 +376,10 @@ public class TrackCorrectorRunner {
 								DefaultWeightedEdge.class);
 						for (DefaultWeightedEdge localedge : mothertrack) {
 
-							if(!graph.containsEdge(localedge)) {
-								
+							
+							if(!graph.containsEdge(localedge)) {	
 							final Spot source = trackmodel.getEdgeSource(localedge);
+							
 							final Spot target = trackmodel.getEdgeTarget(localedge);
 							final double linkcost = trackmodel.getEdgeWeight(localedge);
 							localgraph.addVertex(source);
@@ -386,10 +387,10 @@ public class TrackCorrectorRunner {
 							localgraph.addEdge(source, target);
 							localgraph.setEdgeWeight(localedge, linkcost);
 							
-						}
+							}
 						}
 
-						for (int i = 0; i < tmoneatdeltat; ++i) {
+						for (int i = -1; i < tmoneatdeltat/2; ++i) {
 
 							double frame = motherspot.getFeature(FRAME) + i;
 							if (frame > 0) {
@@ -406,10 +407,9 @@ public class TrackCorrectorRunner {
 											for (DefaultWeightedEdge localedge : localtracks) {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
-												if (source.getFeature(FRAME) >= frame) {
 
-													if (source.getFeature(FRAME) == frame && source
-															.getFeature(QUALITY) < motherspot.getFeature(QUALITY)) {
+													if (source.getFeature(FRAME) == frame && source.getFeature(QUALITY) < motherspot.getFeature(QUALITY) &&
+															Math.abs( source.getFeature(POSITION_Z) - motherspot.getFeature(POSITION_Z)) <= 4) {
 														final Spot target = trackmodel.getEdgeTarget(localedge);
 														final double linkcost = trackmodel.getEdgeWeight(localedge);
 
@@ -418,7 +418,8 @@ public class TrackCorrectorRunner {
 														localgraph.addEdge(source, target);
 														localgraph.setEdgeWeight(localedge, linkcost);
 													}
-												}
+													
+													
 
 											}
 
@@ -450,7 +451,6 @@ public class TrackCorrectorRunner {
 					if (assignment != null)
 						for (final Spot source : assignment.keySet()) {
 							
-							if(mitosismotherspots.contains(source)) {
 							final Spot target = assignment.get(source);
 
 							Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
@@ -467,7 +467,6 @@ public class TrackCorrectorRunner {
 							if (edge != null)
 								graph.setEdgeWeight(edge, cost);
 
-						}
 						}
 					
 
@@ -793,7 +792,6 @@ public class TrackCorrectorRunner {
 		}
 
 		AllTrackIds.removeAll(DividingTrackids);
-		System.out.println(AllTrackIds.size() + " " + DividingTrackids.size());
 		for (int trackID : AllTrackIds) {
 
 			ArrayList<Pair<Integer, Spot>> badapple = Dividingspotlocations.get(trackID);

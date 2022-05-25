@@ -52,7 +52,7 @@ public class OneatExporterPanel extends JPanel {
 	private  double sizeratio = 0.75;
 	private double linkdist = 250;
 	private  int deltat = 10;
-	private  int tracklet = 2;
+	private  int tracklet = 1;
 	private boolean createlinks = true;
 	private boolean breaklinks = true;
 	
@@ -108,10 +108,21 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
+		/*
 		
+		final JLabel lblMinTracklet = new JLabel( "Minimum length of tracklet:" );
+		add( lblMinTracklet, gbc );
+		gbc.gridx++;
 		
+		MinTracklet = new JFormattedTextField();
+		MinTracklet.setValue(tracklet);
+		MinTracklet.setColumns( 4 );
+		add(MinTracklet, gbc);
 		
+		gbc.gridy++;
+		gbc.gridx--;
 		
+		*/
 		final JLabel lblTimeGap = new JLabel( "Allowed timegap between oneat & TM events :" );
 		add( lblTimeGap, gbc );
 		gbc.gridx++;
@@ -230,8 +241,17 @@ public class OneatExporterPanel extends JPanel {
 					}
 				});
 		
-		
-		
+		/*
+		MinTracklet.addPropertyChangeListener(new PropertyChangeListener() {
+					
+					@Override
+					public void propertyChange(PropertyChangeEvent evt) {
+						tracklet = ((Number) MinTracklet.getValue()).intValue();
+						
+					}
+				});
+				
+				*/
 		CreateNewLinks.addItemListener(new ItemListener() {
 			
 			@Override
