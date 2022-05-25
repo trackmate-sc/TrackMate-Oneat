@@ -18,11 +18,21 @@ TF	0.9751831914559107
 
 BCi	0.10526315789473684
 
-# LAP Tracker with splits
+# LAP Tracker with track splitting and Quality as additional cost
 
-# LAP Tracker with splits + Oneat
+DET	0.9900832702498108
 
-# LAP Tracker without splits + Oneat
+TRA	0.9867850157965999
+
+CT	0.6770334928229665
+
+TF	0.9504135656182898
+
+BCi	0.043478260869565216
+
+# LAP Tracker with track splitting and Quality as additional cost + Oneat
+
+# LAP Tracker without  track splitting and Quality as additional cost + Oneat
 
 ## Videos
 In this video I compare the tracking results using LAP tracker of TrackMate and SimpleLap tracker + oneat correction. 
