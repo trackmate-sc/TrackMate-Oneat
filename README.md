@@ -6,5 +6,4 @@ Oneat is a keras based action classification library written by us and TrackMate
 
 ## Videos
 In this video I compare the tracking results using LAP tracker of TrackMate and SimpleLap tracker + oneat correction. 
-![LAP tracker comparision with SimpleLAP Tracker + oneat correction]([https://github.com/stardist/stardist/raw/master/images/overview_2d.png](https://youtu.be/9HZvWxr2fsY))
-
+![LAP tracker comparision with SimpleLAP Tracker + oneat correction](https://youtu.be/9HZvWxr2fsY)
