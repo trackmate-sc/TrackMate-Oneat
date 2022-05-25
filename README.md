@@ -8,13 +8,9 @@ Oneat is a keras based action classification library written by us and TrackMate
 
 # Simple LAP tracker + Oneat
 
-DET	0.996442089326268
+DET	0.996442089326268     CT	0.7353126974099811
 
-TRA	0.993380472393561
-
-CT	0.7353126974099811
-
-TF	0.9751831914559107
+TRA	0.993380472393561     TF	0.9751831914559107
 
 BCi	0.10526315789473684
 
@@ -32,7 +28,14 @@ BCi	0.043478260869565216
 
 # LAP Tracker with track splitting and Quality as additional cost + Oneat
 
-# LAP Tracker without  track splitting and Quality as additional cost + Oneat
+DET	0.9891198128139839
+
+TRA	0.9857740333985257
+
+
+
+
+# LAP Tracker without track splitting and Quality as additional cost + Oneat
 
 ## Videos
 In this video I compare the tracking results using LAP tracker of TrackMate and SimpleLap tracker + oneat correction. 
