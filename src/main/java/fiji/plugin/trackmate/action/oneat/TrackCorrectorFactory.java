@@ -21,6 +21,7 @@ import net.imglib2.Interval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 /**
  * Interface for track corrector factories that need to process all the tracks at
@@ -48,7 +49,7 @@ public interface  TrackCorrectorFactory  extends TrackMateModule
 		 *            the settings map configuring the tracker.
 		 * @return a new {@link SpotTracker} instance.
 		 */
-		public TrackCorrector create(  ImgPlus< IntType > img,  Model model,
+		public TrackCorrector create(  ImgPlus< UnsignedShortType > img,  Model model,
 				final Map< String, Object > settings, final Logger logger, final double[] calibration );
 
 		/**

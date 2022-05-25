@@ -20,6 +20,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
@@ -83,7 +85,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 	
 
 	@Override
-	public   OneatCorrector  create(  ImgPlus< IntType > intimg,  Model model,
+	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> intimg,  Model model,
 			Map<String, Object> settings, final Logger logger, double[] calibration) {
 		
 		 
@@ -105,7 +107,6 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  
 		  int detectionchannel = (int) settings.get(KEY_TARGET_CHANNEL);
 		  assert detectionchannel <= img.numDimensions(): "Channel can not exceed the image dimension";
-		  System.out.println(detectionchannel);
 		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, linkingdistance, createlinks, breaklinks, model, calibration, settings, logger);
 	}
 

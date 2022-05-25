@@ -16,6 +16,7 @@ import fiji.plugin.trackmate.SpotCollection;
 import net.imagej.ImgPlus;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Pair;
 
 public class OneatCorrector implements TrackCorrector {
@@ -53,7 +54,7 @@ public class OneatCorrector implements TrackCorrector {
 	
 	private  HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots;
 	
-	private final ImgPlus<IntType> img;
+	private final ImgPlus<UnsignedShortType> img;
 	
 	private final Map<String, Object> settings;
 	
@@ -73,7 +74,7 @@ public class OneatCorrector implements TrackCorrector {
 	public OneatCorrector(
 			final File oneatdivision, 
 			final File oneatapoptosis, 
-			final ImgPlus<IntType> img, 
+			final ImgPlus<UnsignedShortType> intimg, 
 			final int mintrackletlength,
 			final int timegap,
 			final int detectionchannel,
@@ -86,7 +87,7 @@ public class OneatCorrector implements TrackCorrector {
 
 		this.oneatapoptosis = oneatapoptosis;
 
-		this.img = img;
+		this.img = intimg;
 		
 		this.mintrackletlength = mintrackletlength;
 		

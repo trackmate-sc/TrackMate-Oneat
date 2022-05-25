@@ -44,6 +44,7 @@ import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
@@ -219,7 +220,7 @@ public class TrackCorrectorRunner {
 			Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
 			HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim,
-			final Logger logger, int numThreads, final ImgPlus<IntType> intimg,
+			final Logger logger, int numThreads, final ImgPlus<UnsignedShortType> img,
 			HashMap<Integer, ArrayList<Spot>> framespots, double[] calibration) {
 
 		// Get the trackmodel and spots in the default tracking result and start to
@@ -251,7 +252,7 @@ public class TrackCorrectorRunner {
 
 		if (breaklinks)
 
-			graph = BreakLinksTrack(model, uniquelabelID, DividingStartspots, framespots, intimg, logger, graph,
+			graph = BreakLinksTrack(model, uniquelabelID, DividingStartspots, framespots, img, logger, graph,
 					calibration, tmoneatdeltat);
 
 		int count = 0;
@@ -468,14 +469,7 @@ public class TrackCorrectorRunner {
 								graph.setEdgeWeight(edge, cost);
 
 						}
-					
-
-					
-					
-					
-				}
-
-					
+						}
 					
 			}
 			}
@@ -507,12 +501,12 @@ public class TrackCorrectorRunner {
 	}
 
 	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getfirstTrackMateobject(
-			final Model model, final ImgPlus<IntType> intimg, final Logger logger, double[] calibration) {
+			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
 
 		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(
 				model);
-		int ndim = intimg.numDimensions() - 1;
-		RandomAccess<IntType> ranac = intimg.randomAccess();
+		int ndim = img.numDimensions() - 1;
+		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
 		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
 		logger.flush();
@@ -527,7 +521,7 @@ public class TrackCorrectorRunner {
 				logger.setProgress((float) (count) / (AllTrackIds.size() + 1));
 
 				int frame = spot.getFeature(FRAME).intValue();
-				if (frame < intimg.dimension(ndim) - 1) {
+				if (frame < img.dimension(ndim) - 1) {
 					long[] location = new long[ndim];
 					for (int d = 0; d < ndim; ++d) {
 						location[d] = (long) (spot.getDoublePosition(d) / calibration[d]);
@@ -551,7 +545,7 @@ public class TrackCorrectorRunner {
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, final Model model,
-			final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
+			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
 
 		HashMap<Integer, Spot> Apoptosisspots = new HashMap<Integer, Spot>();
@@ -560,9 +554,9 @@ public class TrackCorrectorRunner {
 		HashMap<Integer, Pair<Spot, Spot>> Trackapoptosis = new HashMap<Integer, Pair<Spot, Spot>>();
 		// Spots from trackmate
 
-		int ndim = intimg.numDimensions() - 1;
+		int ndim = img.numDimensions() - 1;
 		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-		RandomAccess<IntType> ranac = intimg.randomAccess();
+		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 
 		int count = 0;
 
@@ -572,7 +566,7 @@ public class TrackCorrectorRunner {
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 
 			int frame = framemap.getKey();
-			if (frame < intimg.dimension(ndim) - 1) {
+			if (frame < img.dimension(ndim) - 1) {
 				count++;
 
 				ArrayList<Spot> spotlist = framemap.getValue();
@@ -626,7 +620,7 @@ public class TrackCorrectorRunner {
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, final Model model,
-			final ImgPlus<IntType> intimg, HashMap<Integer, ArrayList<Spot>> framespots,
+			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
 
 		HashMap<Integer, ArrayList<Spot>> Mitosisspots = new HashMap<Integer, ArrayList<Spot>>();
@@ -635,9 +629,9 @@ public class TrackCorrectorRunner {
 		HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Trackmitosis = new HashMap<Integer, Pair<Spot, ArrayList<Spot>>>();
 		// Spots from trackmate
 
-		int ndim = intimg.numDimensions() - 1;
+		int ndim = img.numDimensions() - 1;
 		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-		RandomAccess<IntType> ranac = intimg.randomAccess();
+		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 
 		logger.log("Matching with oneat mitosis spots.\n");
 		logger.setProgress(0.);
@@ -646,7 +640,7 @@ public class TrackCorrectorRunner {
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 
 			int frame = framemap.getKey();
-			if (frame < intimg.dimension(ndim) - 1) {
+			if (frame < img.dimension(ndim) - 1) {
 				count++;
 
 				ArrayList<Spot> spotlist = framemap.getValue();
@@ -719,23 +713,23 @@ public class TrackCorrectorRunner {
 	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> BreakLinksTrack(final Model model,
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots,
-			HashMap<Integer, ArrayList<Spot>> framespots, final ImgPlus<IntType> intimg, final Logger logger,
+			HashMap<Integer, ArrayList<Spot>> framespots, final ImgPlus<UnsignedShortType> img, final Logger logger,
 			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, double[] calibration, int N) {
 
 		int count = 0;
 		logger.log("Breaking links not found by oneat.\n");
 
 		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspotlocations = DividingStartspots.getB();
-		int ndim = intimg.numDimensions() - 1;
+		int ndim = img.numDimensions() - 1;
 
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
 
-		RandomAccess<IntType> ranac = intimg.randomAccess();
+		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 		ArrayList<Integer> DividingTrackids = new ArrayList<Integer>();
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 
 			int frame = framemap.getKey();
-			if (frame < intimg.dimension(ndim) - 1) {
+			if (frame < img.dimension(ndim) - 1) {
 				count++;
 
 				ArrayList<Spot> spotlist = framemap.getValue();

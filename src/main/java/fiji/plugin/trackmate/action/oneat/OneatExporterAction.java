@@ -37,12 +37,14 @@ import net.imagej.axis.AxisType;
 import net.imglib2.img.display.imagej.ImgPlusViews;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
-public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > extends AbstractTMAction {
+public class  OneatExporterAction < T extends RealType< T > & NumericType< T > > extends AbstractTMAction {
 
 	
 	public static final String INFO_TEXT = "<html>"
@@ -125,16 +127,13 @@ public class  OneatExporterAction < T extends RealType< T > & NativeType< T > > 
 						Axes.Y,
 						Axes.Z,
 						Axes.TIME };
-			final ImgPlus< IntType > intimg = new ImgPlus<IntType>( Util.getArrayOrCellImgFactory( detectionimg, new IntType() ).create( detectionimg ), "lblimg", axes);
-			LoopBuilder
-						.setImages( Views.zeroMin( detectionimg ), intimg )
-						.multiThreaded( false )
-						.forEachPixel( ( i, o ) -> o.setReal( i.getRealDouble() ) );
+			final ImgPlus< UnsignedShortType > intimg = (ImgPlus<UnsignedShortType>) detectionimg;
 			
 			OneatCorrector oneatcorrector = corrector.create(intimg, model, mapsettings, logger, calibration );
 			oneatcorrector.checkInput();
 			oneatcorrector.process();
 		}
+		
 		
 		
 		
