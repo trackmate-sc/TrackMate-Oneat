@@ -45,7 +45,7 @@ import static fiji.plugin.trackmate.gui.Fonts.SMALL_FONT;
 public class OneatExporterPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private static File oneatdivisionfile;
-	private  static File oneatapoptosisfile;
+	private  static File oneatcelldeathfile;
 
 	private  int detchannel = 1;
 	private double probthreshold = 0.999;
@@ -57,7 +57,7 @@ public class OneatExporterPanel extends JPanel {
 	private boolean breaklinks = true;
 	
 	private JButton Loaddivisioncsvbutton;
-	private JButton Loadapoptosiscsvbutton;
+	private JButton Loadcelldeathcsvbutton;
 	private JFormattedTextField MinTracklet;
 	private JFormattedTextField DetectionChannel;
 	private JFormattedTextField TimeGap;
@@ -91,8 +91,8 @@ public class OneatExporterPanel extends JPanel {
 		add(Loaddivisioncsvbutton, gbc);
 		gbc.gridy++;
        
-		Loadapoptosiscsvbutton = new JButton("Load Oneat apoptosis detections From CSV");
-		add(Loadapoptosiscsvbutton, gbc);
+		Loadcelldeathcsvbutton = new JButton("Load Oneat cell death detections From CSV");
+		add(Loadcelldeathcsvbutton, gbc);
 		
 		gbc.gridy++;
 		
@@ -190,7 +190,7 @@ public class OneatExporterPanel extends JPanel {
 
 		});
 
-		Loadapoptosiscsvbutton.addActionListener(new ActionListener() {
+		Loadcelldeathcsvbutton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent a) {
@@ -221,10 +221,10 @@ public class OneatExporterPanel extends JPanel {
 				int showparent = csvfile.showOpenDialog(getParent());
 				if (showparent == JFileChooser.APPROVE_OPTION)
 
-					oneatapoptosisfile = new File(csvfile.getSelectedFile().getPath());
+					oneatcelldeathfile = new File(csvfile.getSelectedFile().getPath());
 				
 				if (showparent == JFileChooser.CANCEL_OPTION)
-					oneatapoptosisfile = null;
+					oneatcelldeathfile = null;
 				
 			}
 
@@ -349,7 +349,7 @@ public class OneatExporterPanel extends JPanel {
 	
 	public File getApoptosisFile() {
 		
-		return oneatapoptosisfile;
+		return oneatcelldeathfile;
 	}
 	
 
