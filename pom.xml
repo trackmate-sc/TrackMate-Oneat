@@ -10,12 +10,12 @@
 	</parent>
 
 	<groupId>sc.fiji</groupId>
-	<artifactId>TrackMate-oneat</artifactId>
+	<artifactId>TrackMate-Oneat</artifactId>
 	<version>1.0.0</version>
 
-	<name>TrackMate-oneat</name>
+	<name>TrackMate-Oneat</name>
 	<description>TrackMate oneat extension.</description>
-	<url>https://github.com/Kapoorlabs-CAPED/TrackMate-oneat</url>
+	<url>https://github.com/Kapoorlabs-CAPED/TrackMate-Oneat</url>
 	<inceptionYear>2022</inceptionYear>
 	<organization>
 		<name>Fiji</name>
@@ -64,18 +64,18 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:https://github.com/Kapoorlabs-CAPED/TrackMate-oneat</connection>
-		<developerConnection>scm:git:git@github.com:Kapoorlabs-CAPED/TrackMate-oneat</developerConnection>
+		<connection>scm:git:https://github.com/Kapoorlabs-CAPED/TrackMate-Oneat</connection>
+		<developerConnection>scm:git:git@github.com:Kapoorlabs-CAPED/TrackMate-Oneat</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/Kapoorlabs-CAPED/TrackMate-oneat</url>
+		<url>https://github.com/Kapoorlabs-CAPED/TrackMate-Oneat</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/Kapoorlabs-CAPED/TrackMate-oneat/issues</url>
+		<url>https://github.com/Kapoorlabs-CAPED/TrackMate-Oneat/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>GitHub Actions</system>
-		<url>https://github.com/Kapoorlabs-CAPED/TrackMate-oneat/actions</url>
+		<url>https://github.com/Kapoorlabs-CAPED/TrackMate-Oneat/actions</url>
 	</ciManagement>
 
 	<properties>
