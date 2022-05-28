@@ -1,4 +1,4 @@
-# TrackMate-oneat
+# TrackMate-Oneat
 TrackMate extension for oneat for verifying lineage trees
 
 ## Overview
