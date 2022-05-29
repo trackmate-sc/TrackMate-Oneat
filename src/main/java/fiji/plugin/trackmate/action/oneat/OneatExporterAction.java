@@ -13,14 +13,15 @@ import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.DIVISION_
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
+import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_ICON;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
-import static fiji.plugin.trackmate.gui.Icons.TRACKMATE_ICON;
+import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_BIG_ICON;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 
 import org.scijava.plugin.Plugin;
-import static fiji.plugin.trackmate.gui.Icons.CAMERA_ICON;
+
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
@@ -95,7 +96,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 			
 			
 			final OneatExporterPanel panel = new OneatExporterPanel(settings,trackmapsettings,detectorsettings, model);
-			final int userInput = JOptionPane.showConfirmDialog(gui, panel, "Launch Oneat track corrector", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, TRACKMATE_ICON);
+			final int userInput = JOptionPane.showConfirmDialog(gui, panel, "Launch Oneat track corrector", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, ONEAT_BIG_ICON);
 			if ( userInput != JOptionPane.OK_OPTION )
 				return;
 			
@@ -186,7 +187,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 		@Override
 		public ImageIcon getIcon()
 		{
-			return CAMERA_ICON;
+			return ONEAT_ICON;
 		}
 
 		@Override
