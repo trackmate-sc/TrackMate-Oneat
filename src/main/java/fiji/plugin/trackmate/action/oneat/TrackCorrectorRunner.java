@@ -420,7 +420,7 @@ public class TrackCorrectorRunner {
 														localgraph.setEdgeWeight(localedge, linkcost);
 													}
 													
-													
+												
 
 											}
 
@@ -453,7 +453,9 @@ public class TrackCorrectorRunner {
 						for (final Spot source : assignment.keySet()) {
 							
 							final Spot target = assignment.get(source);
-
+							if ( (trackmodel.edgesOf(source).size() >= 3 && trackmodel.edgesOf(target).size() < 3) ||
+									trackmodel.edgesOf(source).size() < 3 && trackmodel.edgesOf(target).size() < 3 ||
+							            trackmodel.edgesOf(source).size() < 3 && trackmodel.edgesOf(target).size() >= 3 ){
 							Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
 							// Remove the targetsource and target edge prior to assingment
 							for (DefaultWeightedEdge targetedge : targetlinks) {
@@ -464,12 +466,16 @@ public class TrackCorrectorRunner {
 
 							final double cost = costs.get(source);
 
+							
 							final DefaultWeightedEdge edge = graph.addEdge(source, target);
 							if (edge != null)
 								graph.setEdgeWeight(edge, cost);
 
+						
 						}
-						}
+					
+					}
+					}
 					
 			}
 			}
