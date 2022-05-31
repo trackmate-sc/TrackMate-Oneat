@@ -183,10 +183,12 @@ public class OneatCorrector implements TrackCorrector {
 			
 			
 			model.clearTracks(true);
+			model.endUpdate();
 			
+			model.beginUpdate();
 			model.setTracks(graph, true);
 			
-			logger.log( "New tracks: " + model.getTrackModel().nTracks(false));
+			logger.log( "New tracks: " + model.getTrackModel().nTracks(true));
 			
 			model.endUpdate();
 		

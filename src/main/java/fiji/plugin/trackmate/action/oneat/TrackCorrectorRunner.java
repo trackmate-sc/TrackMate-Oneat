@@ -328,10 +328,10 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
 			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
-			//if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
-				//cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
-			//else
-				//cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
+			if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
+				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
+			else
+				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
 			logger.log("Removing mitotic edges.\n");
 			// Lets take care of mitosis
 			logger.log("Total oneat Mitosis events " + " "  + Mitosisspots.entrySet().size() + "\n");
@@ -394,7 +394,7 @@ public class TrackCorrectorRunner {
 							}
 						}
 
-						for (int i = -1; i < tmoneatdeltat/2; ++i) {
+						for (int i = 0; i < tmoneatdeltat; ++i) {
 
 							double frame = motherspot.getFeature(FRAME) + i;
 							if (frame > 0) {
@@ -457,9 +457,7 @@ public class TrackCorrectorRunner {
 							
 							final Spot target = assignment.get(source);
 							
-							if ( (trackmodel.edgesOf(source).size() >= 3 && trackmodel.edgesOf(target).size() < 3) ||
-									trackmodel.edgesOf(source).size() < 3 && trackmodel.edgesOf(target).size() < 3 ||
-							            trackmodel.edgesOf(source).size() < 3 && trackmodel.edgesOf(target).size() >= 3 ){
+							
 							Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
 							// Remove the targetsource and target edge prior to assingment
 							for (DefaultWeightedEdge targetedge : targetlinks) {
@@ -479,7 +477,7 @@ public class TrackCorrectorRunner {
 						
 						}
 					
-					}
+					
 					}
 					
 			}
