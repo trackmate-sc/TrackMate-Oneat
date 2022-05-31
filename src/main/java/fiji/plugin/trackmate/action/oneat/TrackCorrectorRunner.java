@@ -39,6 +39,7 @@ import net.imagej.axis.AxisType;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
+import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.img.display.imagej.ImgPlusViews;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
@@ -87,7 +88,7 @@ public class TrackCorrectorRunner {
 		if (settings.get(KEY_TRACKLET_LENGTH) != null)
 			timecutoff = (Integer) settings.get(KEY_TRACKLET_LENGTH);
 
-		for (final Integer trackID : trackModel.trackIDs(false)) {
+		for (final Integer trackID : trackModel.trackIDs(true)) {
 
 			ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
 			ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
@@ -237,10 +238,11 @@ public class TrackCorrectorRunner {
 		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
 
 		// Generate the default graph
-
+		for (final Integer trackID : trackmodel.trackIDs(true)) {
 		// Nothing special here just maintaining the normal links found
-		Set<DefaultWeightedEdge> normaltracks = trackmodel.edgeSet();
+		Set<DefaultWeightedEdge> normaltracks = trackmodel.trackEdges(trackID);
 		for (final DefaultWeightedEdge edge : normaltracks) {
+			
 			final Spot source = trackmodel.getEdgeSource(edge);
 			final Spot target = trackmodel.getEdgeTarget(edge);
 			graph.addVertex(source);
@@ -249,7 +251,7 @@ public class TrackCorrectorRunner {
 			graph.setEdgeWeight(newedge, graph.getEdgeWeight(newedge));
 
 		}
-
+		}
 		if (breaklinks)
 
 			graph = BreakLinksTrack(model, uniquelabelID, DividingStartspots, framespots, img, logger, graph,
@@ -326,12 +328,13 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
 			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
-			if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
-				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
-			else
-				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
+			//if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
+				//cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
+			//else
+				//cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
 			logger.log("Removing mitotic edges.\n");
 			// Lets take care of mitosis
+			logger.log("Total oneat Mitosis events " + " "  + Mitosisspots.entrySet().size() + "\n");
 			if (Mitosisspots != null) {
 
 				int trackcount = 0;
@@ -453,6 +456,7 @@ public class TrackCorrectorRunner {
 						for (final Spot source : assignment.keySet()) {
 							
 							final Spot target = assignment.get(source);
+							
 							if ( (trackmodel.edgesOf(source).size() >= 3 && trackmodel.edgesOf(target).size() < 3) ||
 									trackmodel.edgesOf(source).size() < 3 && trackmodel.edgesOf(target).size() < 3 ||
 							            trackmodel.edgesOf(source).size() < 3 && trackmodel.edgesOf(target).size() >= 3 ){
@@ -466,9 +470,10 @@ public class TrackCorrectorRunner {
 
 							final double cost = costs.get(source);
 
-							
+							graph.addVertex(source);
+							graph.addVertex(target);
 							final DefaultWeightedEdge edge = graph.addEdge(source, target);
-							if (edge != null)
+							//if (edge != null)
 								graph.setEdgeWeight(edge, cost);
 
 						
@@ -513,7 +518,7 @@ public class TrackCorrectorRunner {
 				model);
 		int ndim = img.numDimensions() - 1;
 		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
-		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
+		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(true);
 		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
 		logger.flush();
 		logger.log("Collecting tracks, in total " + AllTrackIds.size() + ".\n");
@@ -521,6 +526,7 @@ public class TrackCorrectorRunner {
 		for (int trackID : AllTrackIds) {
 
 			Set<Spot> trackspots = model.getTrackModel().trackSpots(trackID);
+			
 			count++;
 			for (Spot spot : trackspots) {
 
@@ -587,8 +593,17 @@ public class TrackCorrectorRunner {
 						ranac.setPosition(location[d], d);
 					}
 					ranac.setPosition(frame, ndim);
-					// Get the label ID of the current interesting spot
-					int labelID = ranac.get().get();
+					
+					HyperSphere< UnsignedShortType > hyperSphere =
+							new HyperSphere<UnsignedShortType>( img, ranac, 1 );
+					int maxval = 0;
+					for (UnsignedShortType val: hyperSphere) {
+						
+						if(maxval < val.get())
+							maxval = val.get();
+					}
+							
+					int labelID = maxval;
 
 					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID
@@ -613,9 +628,10 @@ public class TrackCorrectorRunner {
 						Trackapoptosis.put(trackID, pair);
 
 					}
+					}
 				}
 
-			}
+			
 		}
 
 		logger.log("Verifying lineage trees.\n");
@@ -624,6 +640,8 @@ public class TrackCorrectorRunner {
 		return Trackapoptosis;
 	}
 
+	
+	
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, final Model model,
 			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
@@ -637,7 +655,8 @@ public class TrackCorrectorRunner {
 
 		int ndim = img.numDimensions() - 1;
 		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
+		RandomAccess<UnsignedShortType> ranac   = img.randomAccess();
+		
 
 		logger.log("Matching with oneat mitosis spots.\n");
 		logger.setProgress(0.);
@@ -661,8 +680,16 @@ public class TrackCorrectorRunner {
 						ranac.setPosition(location[d], d);
 					}
 					ranac.setPosition(frame, ndim);
-					// Get the label ID of the current interesting spot
-					int labelID = ranac.get().get();
+					HyperSphere< UnsignedShortType > hyperSphere =
+							new HyperSphere<UnsignedShortType>( img, ranac, 1 );
+					int maxval = 0;
+					for (UnsignedShortType val: hyperSphere) {
+						
+						if(maxval < val.get())
+							maxval = val.get();
+					}
+							
+					int labelID = maxval;
 
 					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID
@@ -675,6 +702,7 @@ public class TrackCorrectorRunner {
 						Pair<Boolean, Pair<Spot, Spot>> isDividingTMspot = isDividingTrack(spot, trackID, tmoneatdeltat,
 								model);
 						Boolean isDividing = isDividingTMspot.getA();
+					
 						// If isDividing is true oneat does not need to correct the track else it has to
 						// correct the trackid
 						if (!isDividing) {
@@ -705,6 +733,7 @@ public class TrackCorrectorRunner {
 						}
 
 					}
+					
 				}
 
 			}
@@ -728,7 +757,7 @@ public class TrackCorrectorRunner {
 		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspotlocations = DividingStartspots.getB();
 		int ndim = img.numDimensions() - 1;
 
-		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(false);
+		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(true);
 
 		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 		ArrayList<Integer> DividingTrackids = new ArrayList<Integer>();
@@ -887,7 +916,7 @@ public class TrackCorrectorRunner {
 		HashMap<Integer, ArrayList<Pair<Integer, Spot>>> Dividingspots = new HashMap<Integer, ArrayList<Pair<Integer, Spot>>>();
 		HashMap<Integer, Pair<Integer, Spot>> Startingspots = new HashMap<Integer, Pair<Integer, Spot>>();
 		TrackModel trackmodel = model.getTrackModel();
-		for (final Integer trackID : trackmodel.trackIDs(false)) {
+		for (final Integer trackID : trackmodel.trackIDs(true)) {
 
 			final Set<DefaultWeightedEdge> track = trackmodel.trackEdges(trackID);
 
