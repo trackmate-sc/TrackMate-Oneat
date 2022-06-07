@@ -298,7 +298,7 @@ public class TrackCorrectorRunner {
 			Map<String, Object> cmsettings = new HashMap<>();
 			// Gap closing.
 
-			int maxFrameInterval = 0;
+			int maxFrameInterval = tmoneatdeltat;
 			if(settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null)
 					maxFrameInterval =  (Integer) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 			double gcMaxDistance = searchdistance;
@@ -331,10 +331,10 @@ public class TrackCorrectorRunner {
 			else
 				sMaxDistance = searchdistance;
 			// Alternative cost
-		    double alternativeCostFactor = 1.0;
+		    double alternativeCostFactor = 1.05;
 			if(settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR)!=null)
 				alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
-			double percentile = 0;
+			double percentile = 1;
 					if(settings.get(KEY_CUTOFF_PERCENTILE)!=null)
 						percentile  = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
 
@@ -349,11 +349,12 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
 			
 			HashMap<String, Double> qu = new HashMap<String, Double>();
-			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qu.put(QUALITY, 1.0));
-			HashMap<String, Double> qz = new HashMap<String, Double>();
-			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qz.put(POSITION_Z, 1.0));
-			HashMap<String, Double> qr = new HashMap<String, Double>();
-			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qr.put(RADIUS, 1.0));
+			qu.put(QUALITY, 1.0);
+			qu.put(POSITION_Z, 1.0);
+			qu.put(RADIUS, 1.0);
+			
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qu);
+		
 			
 		    if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
