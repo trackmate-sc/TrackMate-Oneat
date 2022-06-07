@@ -331,7 +331,7 @@ public class TrackCorrectorRunner {
 			else
 				sMaxDistance = searchdistance;
 			// Alternative cost
-		    double alternativeCostFactor = 0;
+		    double alternativeCostFactor = 1.0;
 			if(settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR)!=null)
 				alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
 			double percentile = 0;
