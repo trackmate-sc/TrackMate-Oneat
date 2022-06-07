@@ -192,19 +192,15 @@ public class OneatCorrector implements TrackCorrector {
 			}
 			
 			
-			model.beginUpdate();
-			model.clearTracks(true);
-			model.setTracks(graph, true);
+			
 		
 		  
-			logger.log( "New tracks: " + model.getTrackModel().nTracks(true));
 		
 			modelsettings.trackerSettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
 		    
 			trackmate.computeTrackFeatures(true);
-		    
-			model.endUpdate();
-		    System.out.println(trackmate.getSettings());
+		  
+		  
 			logger.setProgress( 1d );
 			logger.setStatus( "" );
 			final long end = System.currentTimeMillis();

@@ -84,7 +84,7 @@ public class TrackCorrectorRunner {
 
 	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> removeTracklets(final Model model,
 			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, final Map<String, Object> settings) {
-		double timecutoff = 1;
+		double timecutoff = 2;
 		TrackModel trackModel = model.getTrackModel();
 		if (settings.get(KEY_TRACKLET_LENGTH) != null)
 			timecutoff = (Integer) settings.get(KEY_TRACKLET_LENGTH);
@@ -313,7 +313,9 @@ public class TrackCorrectorRunner {
 			boolean allowTrackMerging = false;
 			if(settings.get(KEY_ALLOW_TRACK_MERGING)!=null)
 				allowTrackMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
-			final boolean allowTrackSplitting = true;
+			boolean allowTrackSplitting = true;
+			if(settings.get(KEY_ALLOW_TRACK_SPLITTING)!=null)
+				allowTrackSplitting = (Boolean) settings.get(KEY_ALLOW_TRACK_SPLITTING);
 			// Merging
 			double mMaxDistance = Double.MAX_VALUE;
 			double sMaxDistance = Double.MAX_VALUE;
@@ -331,10 +333,10 @@ public class TrackCorrectorRunner {
 			else
 				sMaxDistance = searchdistance;
 			// Alternative cost
-		    double alternativeCostFactor = 1.05;
+		    double alternativeCostFactor = 1.05d;
 			if(settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR)!=null)
 				alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
-			double percentile = 1;
+			double percentile = 0.9d;
 					if(settings.get(KEY_CUTOFF_PERCENTILE)!=null)
 						percentile  = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
 
@@ -412,7 +414,7 @@ public class TrackCorrectorRunner {
 							}
 						}
 
-						for (int i = 0; i < tmoneatdeltat; ++i) {
+						for (int i = 1; i < tmoneatdeltat; ++i) {
 
 							double frame = motherspot.getFeature(FRAME) + i;
 							if (frame > 0) {
@@ -430,7 +432,8 @@ public class TrackCorrectorRunner {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
 
-												if (source.getFeature(FRAME) == frame
+												if (source.getFeature(FRAME) == frame && motherspot.getFeature(QUALITY) > 
+												source.getFeature(QUALITY)
 														) {
 													final Spot target = trackmodel.getEdgeTarget(localedge);
 													final double linkcost = trackmodel.getEdgeWeight(localedge);
@@ -507,6 +510,13 @@ public class TrackCorrectorRunner {
 		logger.flush();
 		logger.log("Done, please review the TrackScheme by going back.\n");
 
+		model.beginUpdate();
+		
+		model.clearTracks(true);
+		model.setTracks(graph, true);
+		logger.log( "New tracks: " + model.getTrackModel().nTracks(true));
+		model.endUpdate();
+		graph = removeTracklets(model,graph,settings);
 		return graph;
 
 	}
