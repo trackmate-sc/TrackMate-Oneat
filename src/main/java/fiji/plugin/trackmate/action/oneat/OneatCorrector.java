@@ -1,9 +1,12 @@
 package fiji.plugin.trackmate.action.oneat;
 
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -13,6 +16,7 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackMate;
 import net.imagej.ImgPlus;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.IntType;
@@ -36,6 +40,8 @@ public class OneatCorrector implements TrackCorrector {
 	
 	private final Model model;
 	
+	private final TrackMate trackmate;
+	
 	private final boolean createlinks;
 	
 	private final boolean breaklinks;
@@ -57,6 +63,8 @@ public class OneatCorrector implements TrackCorrector {
 	private final ImgPlus<UnsignedShortType> img;
 	
 	private final Map<String, Object> settings;
+	
+	private final Settings modelsettings;
 	
 	private Logger logger;
 	
@@ -80,7 +88,7 @@ public class OneatCorrector implements TrackCorrector {
 			final int detectionchannel,
 			final double linkingdistance,
 			final boolean createlinks, 
-			final boolean breaklinks, final Model model, double[] calibration,
+			final boolean breaklinks, final Model model, final TrackMate trackmate, final Settings modelsettings, double[] calibration,
 			Map<String, Object> settings, final Logger logger) {
 
 		this.oneatdivision = oneatdivision;
@@ -95,6 +103,7 @@ public class OneatCorrector implements TrackCorrector {
 		
 		this.detectionchannel = detectionchannel;
 		
+	    this.trackmate = trackmate;
 		
 		this.linkingdistance = linkingdistance;
 
@@ -105,6 +114,8 @@ public class OneatCorrector implements TrackCorrector {
 		this.model = model;
 		
 		this.settings = settings;
+		
+		this.modelsettings = modelsettings;
 		
 		this.logger = logger;
 		
@@ -127,7 +138,7 @@ public class OneatCorrector implements TrackCorrector {
 	@Override
 	public boolean process() {
 
-		model.beginUpdate();
+		
 		final long start = System.currentTimeMillis();
 		divisionspots = new SpotCollection();
 		divisionframespots = new HashMap<Integer, ArrayList<Spot>>();
@@ -181,17 +192,19 @@ public class OneatCorrector implements TrackCorrector {
 			}
 			
 			
-			
-			model.clearTracks(true);
-			model.endUpdate();
-			
 			model.beginUpdate();
+			model.clearTracks(true);
 			model.setTracks(graph, true);
-			
-			logger.log( "New tracks: " + model.getTrackModel().nTracks(true));
-			
-			model.endUpdate();
 		
+		  
+			logger.log( "New tracks: " + model.getTrackModel().nTracks(true));
+		
+			modelsettings.trackerSettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
+		    
+			trackmate.computeTrackFeatures(true);
+		    
+			model.endUpdate();
+		    System.out.println(trackmate.getSettings());
 			logger.setProgress( 1d );
 			logger.setStatus( "" );
 			final long end = System.currentTimeMillis();

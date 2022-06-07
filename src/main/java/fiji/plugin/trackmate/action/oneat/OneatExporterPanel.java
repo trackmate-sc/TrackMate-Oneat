@@ -48,10 +48,10 @@ public class OneatExporterPanel extends JPanel {
 	private  static File oneatcelldeathfile;
 
 	private  int detchannel = 1;
-	private double probthreshold = 0.999;
+	private double probthreshold = 0.9;
 	private  double sizeratio = 0.75;
 	private double linkdist = 250;
-	private  int deltat = 10;
+	private  int deltat = 4;
 	private  int tracklet = 1;
 	private boolean createlinks = true;
 	private boolean breaklinks = true;
@@ -74,7 +74,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		detchannel = detectorsettings.get(KEY_TARGET_CHANNEL)!=null? (int) detectorsettings.get(KEY_TARGET_CHANNEL): 1;
 		linkdist =  trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE)!=null? (double) trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE): 250;
-		deltat = trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null? (int) trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP):10;
+		deltat = trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null? (int) trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP):4;
 		
 		final GridBagLayout gridBagLayout = new GridBagLayout();
 		setLayout( gridBagLayout );

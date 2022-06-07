@@ -18,6 +18,7 @@ import org.scijava.plugin.Plugin;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
+import fiji.plugin.trackmate.TrackMate;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -85,7 +86,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 	
 
 	@Override
-	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> intimg,  Model model,
+	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> intimg,  Model model, TrackMate trackmate, Settings modelsettings,
 			Map<String, Object> settings, final Logger logger, double[] calibration) {
 		
 		 
@@ -107,7 +108,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  
 		  int detectionchannel = (int) settings.get(KEY_TARGET_CHANNEL);
 		  assert detectionchannel <= img.numDimensions(): "Channel can not exceed the image dimension";
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, linkingdistance, createlinks, breaklinks, model, calibration, settings, logger);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, linkingdistance, createlinks, breaklinks, model, trackmate, modelsettings, calibration, settings, logger);
 	}
 
 	@Override

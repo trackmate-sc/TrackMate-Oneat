@@ -17,6 +17,7 @@ import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_ICON;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_BIG_ICON;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 
@@ -66,11 +67,11 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 	
 	private double linkdist = 50;
 	
-	private int deltat = 10;
+	private int deltat = 4;
 	
 	private int tracklet = 2;
 	
-	private double probthreshold = 0.999;
+	private double probthreshold = 0.9;
 	
 	private boolean breaklinks = true;
 	
@@ -79,9 +80,9 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 	@Override
 	public void execute(TrackMate trackmate, SelectionModel selectionModel, DisplaySettings displaySettings,
 			Frame gui) {
-		
+
 		Settings settings = trackmate.getSettings();
-	
+	    
 		Map<String, Object> trackmapsettings = settings.trackerSettings;
 		
 		Map<String, Object> detectorsettings = settings.detectorSettings;
@@ -130,7 +131,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 						Axes.TIME };
 			final ImgPlus< UnsignedShortType > intimg = (ImgPlus<UnsignedShortType>) detectionimg;
 			
-			OneatCorrector oneatcorrector = corrector.create(intimg, model, mapsettings, logger, calibration );
+			OneatCorrector oneatcorrector = corrector.create(intimg, model, trackmate, settings, mapsettings, logger, calibration );
 			oneatcorrector.checkInput();
 			oneatcorrector.process();
 		}

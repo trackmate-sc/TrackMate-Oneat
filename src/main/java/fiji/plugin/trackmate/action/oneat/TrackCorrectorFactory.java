@@ -11,6 +11,7 @@ import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.TrackMateModule;
 import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 import fiji.plugin.trackmate.tracking.SpotTracker;
@@ -49,7 +50,7 @@ public interface  TrackCorrectorFactory  extends TrackMateModule
 		 *            the settings map configuring the tracker.
 		 * @return a new {@link SpotTracker} instance.
 		 */
-		public TrackCorrector create(  ImgPlus< UnsignedShortType > img,  Model model,
+		public TrackCorrector create(  ImgPlus< UnsignedShortType > img,  Model model, TrackMate trackmate, Settings modelsettings,
 				final Map< String, Object > settings, final Logger logger, final double[] calibration );
 
 		/**

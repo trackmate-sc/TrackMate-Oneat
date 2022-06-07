@@ -55,6 +55,7 @@ import static fiji.plugin.trackmate.Spot.POSITION_Y;
 import static fiji.plugin.trackmate.Spot.POSITION_Z;
 import static fiji.plugin.trackmate.Spot.FRAME;
 import static fiji.plugin.trackmate.Spot.RADIUS;
+
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
@@ -239,18 +240,18 @@ public class TrackCorrectorRunner {
 
 		// Generate the default graph
 		for (final Integer trackID : trackmodel.trackIDs(true)) {
-		// Nothing special here just maintaining the normal links found
-		Set<DefaultWeightedEdge> normaltracks = trackmodel.trackEdges(trackID);
-		for (final DefaultWeightedEdge edge : normaltracks) {
-			
-			final Spot source = trackmodel.getEdgeSource(edge);
-			final Spot target = trackmodel.getEdgeTarget(edge);
-			graph.addVertex(source);
-			graph.addVertex(target);
-			final DefaultWeightedEdge newedge = graph.addEdge(source, target);
-			graph.setEdgeWeight(newedge, graph.getEdgeWeight(newedge));
+			// Nothing special here just maintaining the normal links found
+			Set<DefaultWeightedEdge> normaltracks = trackmodel.trackEdges(trackID);
+			for (final DefaultWeightedEdge edge : normaltracks) {
 
-		}
+				final Spot source = trackmodel.getEdgeSource(edge);
+				final Spot target = trackmodel.getEdgeTarget(edge);
+				graph.addVertex(source);
+				graph.addVertex(target);
+				final DefaultWeightedEdge newedge = graph.addEdge(source, target);
+				graph.setEdgeWeight(newedge, graph.getEdgeWeight(newedge));
+
+			}
 		}
 		if (breaklinks)
 
@@ -297,28 +298,46 @@ public class TrackCorrectorRunner {
 			Map<String, Object> cmsettings = new HashMap<>();
 			// Gap closing.
 
-			final int maxFrameInterval = (Integer) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-			final double gcMaxDistance = (Double) settings.get(KEY_GAP_CLOSING_MAX_DISTANCE);
-
-			final boolean allowGapClosing = (Boolean) settings.get(KEY_ALLOW_GAP_CLOSING);
-			final boolean allowTrackMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
-			final boolean allowTrackSplitting = (Boolean) settings.get(KEY_ALLOW_TRACK_SPLITTING);
+			int maxFrameInterval = 0;
+			if(settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null)
+					maxFrameInterval =  (Integer) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
+			double gcMaxDistance = searchdistance;
+		
+					if(settings.get(KEY_GAP_CLOSING_MAX_DISTANCE)!=null)
+						
+						gcMaxDistance = (double) settings.get(KEY_GAP_CLOSING_MAX_DISTANCE);
+			boolean allowGapClosing = false;
+			if(settings.get(KEY_ALLOW_GAP_CLOSING)!=null) {
+			allowGapClosing = (Boolean) settings.get(KEY_ALLOW_GAP_CLOSING);
+			}
+			boolean allowTrackMerging = false;
+			if(settings.get(KEY_ALLOW_TRACK_MERGING)!=null)
+				allowTrackMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
+			final boolean allowTrackSplitting = true;
 			// Merging
 			double mMaxDistance = Double.MAX_VALUE;
 			double sMaxDistance = Double.MAX_VALUE;
-			final boolean allowMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
+			boolean allowMerging = false;
+			if(settings.get(KEY_ALLOW_TRACK_MERGING)!=null)
+				allowMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
 			if (allowTrackMerging)
 				mMaxDistance = (Double) settings.get(KEY_MERGING_MAX_DISTANCE);
 			else
 				mMaxDistance = searchdistance;
+			
 			if (allowTrackSplitting)
 				// Splitting
 				sMaxDistance = (Double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
 			else
 				sMaxDistance = searchdistance;
 			// Alternative cost
-			final double alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
-			final double percentile = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
+		    double alternativeCostFactor = 0;
+			if(settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR)!=null)
+				alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
+			double percentile = 0;
+					if(settings.get(KEY_CUTOFF_PERCENTILE)!=null)
+						percentile  = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
+
 			cmsettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
 			cmsettings.put(KEY_SPLITTING_MAX_DISTANCE, sMaxDistance);
 			cmsettings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, maxFrameInterval);
@@ -328,19 +347,25 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
 			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
-			if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
+			
+			HashMap<String, Double> qu = new HashMap<String, Double>();
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qu.put(QUALITY, 1.0));
+			HashMap<String, Double> qz = new HashMap<String, Double>();
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qz.put(POSITION_Z, 1.0));
+			HashMap<String, Double> qr = new HashMap<String, Double>();
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qr.put(RADIUS, 1.0));
+			
+		    if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
 			else
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
 			logger.log("Removing mitotic edges.\n");
 			// Lets take care of mitosis
-			logger.log("Total oneat Mitosis events " + " "  + Mitosisspots.entrySet().size() + "\n");
+			logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
 			if (Mitosisspots != null) {
 
 				int trackcount = 0;
 				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
-
-					
 
 					logger.setProgress((float) (count) / Mitosisspots.size());
 					// Get the current trackID
@@ -353,11 +378,6 @@ public class TrackCorrectorRunner {
 					ArrayList<Spot> mitosismotherspots = trackspots.getB();
 					count++;
 
-					
-				
-						
-					
-						
 					// Remove edges corresponding to mitotic trajectories
 					for (final DefaultWeightedEdge edge : dividingtracks) {
 
@@ -370,27 +390,24 @@ public class TrackCorrectorRunner {
 
 					}
 
-					
-
 					for (Spot motherspot : mitosismotherspots) {
-						
+
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
-						
+
 						SimpleWeightedGraph<Spot, DefaultWeightedEdge> localgraph = new SimpleWeightedGraph<>(
 								DefaultWeightedEdge.class);
 						for (DefaultWeightedEdge localedge : mothertrack) {
 
-							
-							if(!graph.containsEdge(localedge)) {	
-							final Spot source = trackmodel.getEdgeSource(localedge);
-							
-							final Spot target = trackmodel.getEdgeTarget(localedge);
-							final double linkcost = trackmodel.getEdgeWeight(localedge);
-							localgraph.addVertex(source);
-							localgraph.addVertex(target);
-							localgraph.addEdge(source, target);
-							localgraph.setEdgeWeight(localedge, linkcost);
-							
+							if (!graph.containsEdge(localedge)) {
+								final Spot source = trackmodel.getEdgeSource(localedge);
+
+								final Spot target = trackmodel.getEdgeTarget(localedge);
+								final double linkcost = trackmodel.getEdgeWeight(localedge);
+								localgraph.addVertex(source);
+								localgraph.addVertex(target);
+								localgraph.addEdge(source, target);
+								localgraph.setEdgeWeight(localedge, linkcost);
+
 							}
 						}
 
@@ -412,18 +429,16 @@ public class TrackCorrectorRunner {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
 
-													if (source.getFeature(FRAME) == frame && source.getFeature(QUALITY) < motherspot.getFeature(QUALITY) &&
-															Math.abs( source.getFeature(POSITION_Z) - motherspot.getFeature(POSITION_Z)) <= 4) {
-														final Spot target = trackmodel.getEdgeTarget(localedge);
-														final double linkcost = trackmodel.getEdgeWeight(localedge);
+												if (source.getFeature(FRAME) == frame
+														) {
+													final Spot target = trackmodel.getEdgeTarget(localedge);
+													final double linkcost = trackmodel.getEdgeWeight(localedge);
 
-														localgraph.addVertex(source);
-														localgraph.addVertex(target);
-														localgraph.addEdge(source, target);
-														localgraph.setEdgeWeight(localedge, linkcost);
-													}
-													
-												
+													localgraph.addVertex(source);
+													localgraph.addVertex(target);
+													localgraph.addEdge(source, target);
+													localgraph.setEdgeWeight(localedge, linkcost);
+												}
 
 											}
 
@@ -432,63 +447,80 @@ public class TrackCorrectorRunner {
 
 							}
 						}
-					
 
-					final OneatCostMatrix costMatrixCreator = new OneatCostMatrix(localgraph, cmsettings);
-					costMatrixCreator.setNumThreads(numThreads);
-					final SlaveLogger jlLogger = new SlaveLogger(logger, 0, 0.9);
-					final JaqamanLinker<Spot, Spot> linker = new JaqamanLinker<>(costMatrixCreator, jlLogger);
-					if (!linker.checkInput() || !linker.process()) {
-						System.out.println(linker.getErrorMessage());
-					}
+						final OneatCostMatrix costMatrixCreator = new OneatCostMatrix(localgraph, cmsettings);
+						costMatrixCreator.setNumThreads(numThreads);
+						final SlaveLogger jlLogger = new SlaveLogger(logger, 0, 0.9);
+						final JaqamanLinker<Spot, Spot> linker = new JaqamanLinker<>(costMatrixCreator, jlLogger);
+						if (!linker.checkInput() || !linker.process()) {
+							System.out.println(linker.getErrorMessage());
+						}
 
-					/*
-					 * Create links in graph.
-					 */
+						/*
+						 * Create links in graph.
+						 */
 
-					logger.setProgress(trackcount / (Mitosisspots.size() + 1));
+						logger.setProgress(trackcount / (Mitosisspots.size() + 1));
 
-					trackcount++;
-					final Map<Spot, Spot> assignment = linker.getResult();
-					final Map<Spot, Double> costs = linker.getAssignmentCosts();
-					// Recreate new links
-					if (assignment != null)
-						for (final Spot source : assignment.keySet()) {
+						trackcount++;
+						final Map<Spot, Spot> assignment = linker.getResult();
+						final Map<Spot, Double> costs = linker.getAssignmentCosts();
+						// Recreate new links
+						if (assignment != null)
+							for (final Spot source : assignment.keySet()) {
+
+								final Spot target = assignment.get(source);
+
+								Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
+								// Remove the targetsource and target edge prior to assingment
+								for (DefaultWeightedEdge targetedge : targetlinks) {
+
+									Spot targetsource = trackmodel.getEdgeSource(targetedge);
+									graph.removeEdge(targetsource, target);
+								}
+
+								final double cost = costs.get(source);
+
+								
 							
-							final Spot target = assignment.get(source);
-							
-							
-							Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
-							// Remove the targetsource and target edge prior to assingment
-							for (DefaultWeightedEdge targetedge : targetlinks) {
+									graph.addVertex(source);
+									graph.addVertex(target);
+									final DefaultWeightedEdge edge = graph.addEdge(source, target);
+									// if (edge != null)
+									graph.setEdgeWeight(edge, cost);
 
-								Spot targetsource = trackmodel.getEdgeSource(targetedge);
-								graph.removeEdge(targetsource, target);
+								
 							}
 
-							final double cost = costs.get(source);
-
-							graph.addVertex(source);
-							graph.addVertex(target);
-							final DefaultWeightedEdge edge = graph.addEdge(source, target);
-							//if (edge != null)
-								graph.setEdgeWeight(edge, cost);
-
-						
-						}
-					
-					
 					}
-					
+
+				}
+				
+			
+
 			}
-			}
+
 		}
+		
 		logger.setProgress(1d);
 		logger.flush();
 		logger.log("Done, please review the TrackScheme by going back.\n");
 
 		return graph;
 
+	}
+
+	private static boolean Validlinks(SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, Spot source, Spot target) {
+
+		boolean breaklink = true;
+		int sourcedegree = graph.degreeOf(source);
+		int targetdegree = graph.degreeOf(target);
+
+		System.out.println(sourcedegree + " " + targetdegree + " " + "SS" + source.ID() + " " + target.ID());
+		if (sourcedegree > 2 && targetdegree > 2)
+			breaklink = true;
+
+		return breaklink;
 	}
 
 	private static SpotCollection regionspot(SpotCollection allspots, Spot motherspot, int frame, double region) {
@@ -524,7 +556,7 @@ public class TrackCorrectorRunner {
 		for (int trackID : AllTrackIds) {
 
 			Set<Spot> trackspots = model.getTrackModel().trackSpots(trackID);
-			
+
 			count++;
 			for (Spot spot : trackspots) {
 
@@ -591,16 +623,15 @@ public class TrackCorrectorRunner {
 						ranac.setPosition(location[d], d);
 					}
 					ranac.setPosition(frame, ndim);
-					
-					HyperSphere< UnsignedShortType > hyperSphere =
-							new HyperSphere<UnsignedShortType>( img, ranac, 1 );
+
+					HyperSphere<UnsignedShortType> hyperSphere = new HyperSphere<UnsignedShortType>(img, ranac, 1);
 					int maxval = 0;
-					for (UnsignedShortType val: hyperSphere) {
-						
-						if(maxval < val.get())
+					for (UnsignedShortType val : hyperSphere) {
+
+						if (maxval < val.get())
 							maxval = val.get();
 					}
-							
+
 					int labelID = maxval;
 
 					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
@@ -626,10 +657,9 @@ public class TrackCorrectorRunner {
 						Trackapoptosis.put(trackID, pair);
 
 					}
-					}
 				}
+			}
 
-			
 		}
 
 		logger.log("Verifying lineage trees.\n");
@@ -638,8 +668,6 @@ public class TrackCorrectorRunner {
 		return Trackapoptosis;
 	}
 
-	
-	
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, final Model model,
 			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
@@ -653,8 +681,7 @@ public class TrackCorrectorRunner {
 
 		int ndim = img.numDimensions() - 1;
 		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-		RandomAccess<UnsignedShortType> ranac   = img.randomAccess();
-		
+		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 
 		logger.log("Matching with oneat mitosis spots.\n");
 		logger.setProgress(0.);
@@ -678,15 +705,14 @@ public class TrackCorrectorRunner {
 						ranac.setPosition(location[d], d);
 					}
 					ranac.setPosition(frame, ndim);
-					HyperSphere< UnsignedShortType > hyperSphere =
-							new HyperSphere<UnsignedShortType>( img, ranac, 1 );
+					HyperSphere<UnsignedShortType> hyperSphere = new HyperSphere<UnsignedShortType>(img, ranac, 1);
 					int maxval = 0;
-					for (UnsignedShortType val: hyperSphere) {
-						
-						if(maxval < val.get())
+					for (UnsignedShortType val : hyperSphere) {
+
+						if (maxval < val.get())
 							maxval = val.get();
 					}
-							
+
 					int labelID = maxval;
 
 					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
@@ -700,7 +726,7 @@ public class TrackCorrectorRunner {
 						Pair<Boolean, Pair<Spot, Spot>> isDividingTMspot = isDividingTrack(spot, trackID, tmoneatdeltat,
 								model);
 						Boolean isDividing = isDividingTMspot.getA();
-					
+
 						// If isDividing is true oneat does not need to correct the track else it has to
 						// correct the trackid
 						if (!isDividing) {
@@ -731,7 +757,7 @@ public class TrackCorrectorRunner {
 						}
 
 					}
-					
+
 				}
 
 			}
