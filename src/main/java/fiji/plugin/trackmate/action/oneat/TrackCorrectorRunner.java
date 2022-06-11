@@ -231,7 +231,8 @@ public class TrackCorrectorRunner {
 		SpotCollection allspots = model.getSpots();
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
-		double searchdistance = (double) settings.get(KEY_LINKING_MAX_DISTANCE);
+		
+		double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE)!=null? (double) settings.get(KEY_LINKING_MAX_DISTANCE): 10);
 		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
@@ -516,7 +517,7 @@ public class TrackCorrectorRunner {
 		model.setTracks(graph, true);
 		logger.log( "New tracks: " + model.getTrackModel().nTracks(true));
 		model.endUpdate();
-		graph = removeTracklets(model,graph,settings);
+		
 		return graph;
 
 	}

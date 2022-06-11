@@ -55,6 +55,7 @@ public class OneatExporterPanel extends JPanel {
 	private  int tracklet = 1;
 	private boolean createlinks = true;
 	private boolean breaklinks = true;
+	private boolean mariprinciple = true;
 	
 	private JButton Loaddivisioncsvbutton;
 	private JButton Loadcelldeathcsvbutton;
@@ -64,8 +65,7 @@ public class OneatExporterPanel extends JPanel {
 	private JFormattedTextField MotherDaughterLinkDist;
 	private JFormattedTextField DetectionThreshold;
 
-	private JCheckBox CreateNewLinks;
-	private JCheckBox BreakCurrentLinks;
+	private JCheckBox CreateNewLinks, BreakCurrentLinks, MariPrinciple;
 	
 	public OneatExporterPanel(final Settings settings,final Map<String, Object> trackmapsettings, 
 			final Map<String, Object> detectorsettings, final Model model) {
@@ -148,6 +148,13 @@ public class OneatExporterPanel extends JPanel {
 		BreakCurrentLinks.setSelected(breaklinks);
 		BreakCurrentLinks.setHorizontalTextPosition(SwingConstants.LEFT);
 		add(BreakCurrentLinks, gbc);
+		gbc.gridy++;
+		
+		MariPrinciple = new JCheckBox("Use Mari's exclusion principle ");
+		MariPrinciple.setSelected(mariprinciple);
+		MariPrinciple.setHorizontalTextPosition(SwingConstants.LEFT);
+		add(MariPrinciple, gbc);
+		
 
 		Loaddivisioncsvbutton.addActionListener(new ActionListener() {
 
@@ -277,7 +284,19 @@ public class OneatExporterPanel extends JPanel {
 			}
 		});
 		
+		MariPrinciple.addItemListener(new ItemListener() {
+					
+					@Override
+					public void itemStateChanged(ItemEvent e) {
+						
+						if (e.getStateChange() == ItemEvent.SELECTED)
+							  mariprinciple = true;
+						if (e.getStateChange() == ItemEvent.DESELECTED)
+							  mariprinciple = false;
+					}
+				});
 		
+
 		
 		
 		
@@ -333,6 +352,11 @@ public class OneatExporterPanel extends JPanel {
 	public boolean getCreateLinks() {
 		
 		return createlinks;
+	}
+	
+	public boolean getMariPrinciple() {
+		
+		return mariprinciple;
 	}
 	
 	public int getTimeGap() {
