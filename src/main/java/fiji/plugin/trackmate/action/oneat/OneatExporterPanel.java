@@ -5,6 +5,8 @@ import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 
+import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -13,12 +15,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -64,7 +69,12 @@ public class OneatExporterPanel extends JPanel {
 	private JFormattedTextField TimeGap;
 	private JFormattedTextField MotherDaughterLinkDist;
 	private JFormattedTextField DetectionThreshold;
+	
+	public static final String WIKI = "https://imagej.net/plugins/trackmate/trackmate-oneat";
 
+	public static final JLabel WIKI_TXT = new JLabel("<html>" + "<b> Varun Kapoor & Mari Tolonen </b>"
+			+ "<p>"
+			+ "Auto Track Correction of Lineage trees.");
 	private JCheckBox CreateNewLinks, BreakCurrentLinks, MariPrinciple;
 	
 	public OneatExporterPanel(final Settings settings,final Map<String, Object> trackmapsettings, 
@@ -86,7 +96,34 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		
-
+		gbc.fill = GridBagConstraints.BOTH;
+		
+		add( WIKI_TXT, gbc );
+		gbc.gridy++;
+		
+		final JLabel wikilink = new JLabel( "<html>"
+				+ "<a href=" + WIKI + ">Manual on Fiji wiki</a></html>" );
+		wikilink.setFont( SMALL_FONT );
+		wikilink.setCursor( new Cursor( Cursor.HAND_CURSOR ) );
+		wikilink.addMouseListener( new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked( final java.awt.event.MouseEvent e )
+			{
+				try
+				{
+					Desktop.getDesktop().browse( new URI( WIKI ) );
+				}
+				catch ( URISyntaxException | IOException ex )
+				{
+					ex.printStackTrace();
+				}
+			}
+		} );
+		
+		add(wikilink, gbc);
+		gbc.gridy++;
+		
 		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections From CSV");
 		add(Loaddivisioncsvbutton, gbc);
 		gbc.gridy++;
@@ -96,7 +133,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		gbc.gridy++;
 		
-		final JLabel lblDetectionThreshold = new JLabel( "Detection threshold veto" );
+		final JLabel lblDetectionThreshold = new JLabel("Detection threshold veto" );
 		add( lblDetectionThreshold, gbc );
 		gbc.gridx++;
 		
@@ -123,7 +160,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridx--;
 		
 		*/
-		final JLabel lblTimeGap = new JLabel( "Allowed timegap between oneat & TM events :" );
+		final JLabel lblTimeGap = new JLabel("Allowed timegap between oneat & TM events :" );
 		add( lblTimeGap, gbc );
 		gbc.gridx++;
 		
@@ -150,7 +187,7 @@ public class OneatExporterPanel extends JPanel {
 		add(BreakCurrentLinks, gbc);
 		gbc.gridy++;
 		
-		MariPrinciple = new JCheckBox("Use Mari's exclusion principle ");
+		MariPrinciple = new JCheckBox("Use Mari's exclusion principle (Please refer to wiki for further info) ");
 		MariPrinciple.setSelected(mariprinciple);
 		MariPrinciple.setHorizontalTextPosition(SwingConstants.LEFT);
 		add(MariPrinciple, gbc);
