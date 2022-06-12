@@ -4,7 +4,7 @@ package fiji.plugin.trackmate.action.oneat;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
-
+import static fiji.plugin.trackmate.action.oneat.gui.Icons.KAPOORLABS_ICON;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Font;
@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
@@ -75,6 +76,8 @@ public class OneatExporterPanel extends JPanel {
 	public static final JLabel WIKI_TXT = new JLabel("<html>" + "<b> Varun Kapoor & Mari Tolonen </b>"
 			+ "<p>"
 			+ "Auto Track Correction of Lineage trees.");
+	
+	public static final JLabel Kapooricon = new JLabel(KAPOORLABS_ICON);
 	private JCheckBox CreateNewLinks, BreakCurrentLinks, MariPrinciple;
 	
 	public OneatExporterPanel(final Settings settings,final Map<String, Object> trackmapsettings, 
@@ -99,6 +102,8 @@ public class OneatExporterPanel extends JPanel {
 		gbc.fill = GridBagConstraints.BOTH;
 		
 		add( WIKI_TXT, gbc );
+		gbc.gridy++;
+		add(Kapooricon, gbc);
 		gbc.gridy++;
 		
 		final JLabel wikilink = new JLabel( "<html>"

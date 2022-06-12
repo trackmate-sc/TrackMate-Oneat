@@ -97,7 +97,9 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 			
 			
 			final OneatExporterPanel panel = new OneatExporterPanel(settings,trackmapsettings,detectorsettings, model);
-			final int userInput = JOptionPane.showConfirmDialog(gui, panel, "Launch Oneat track corrector", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, ONEAT_BIG_ICON);
+			final int userInput = JOptionPane.showConfirmDialog(gui, panel, "Launch Oneat track corrector",
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, ONEAT_BIG_ICON);
+			
 			if ( userInput != JOptionPane.OK_OPTION )
 				return;
 			

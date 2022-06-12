@@ -8,5 +8,5 @@ public class Icons {
 
 		public static final ImageIcon ONEAT_ICON = new ImageIcon( Icons.class.getResource( "images/trackmate-oneat-logo.png" ) );
 		public static final ImageIcon ONEAT_BIG_ICON = new ImageIcon( Icons.class.getResource( "images/trackmate-oneat-big-logo.png" ) );
-
+		public static final ImageIcon KAPOORLABS_ICON = new ImageIcon( Icons.class.getResource( "images/kapoorlogo.png" ) );
 }
