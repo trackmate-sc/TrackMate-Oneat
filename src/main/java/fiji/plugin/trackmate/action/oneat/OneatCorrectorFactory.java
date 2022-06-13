@@ -43,6 +43,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
     
     public static final String KEY_BREAK_LINKS = "BREAK_LINKS";
     
+    public static final String KEY_USE_MARI_PRINCIPLE = "USE MARI PRINCIPLE";
     
     protected ImgPlus< IntType > img;
 	

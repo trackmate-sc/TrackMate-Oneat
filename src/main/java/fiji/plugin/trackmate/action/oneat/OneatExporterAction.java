@@ -13,6 +13,7 @@ import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.DIVISION_
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
+import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_USE_MARI_PRINCIPLE;
 import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_ICON;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
@@ -77,6 +78,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 	
 	private boolean createlinks = false;
 	
+	private boolean mariprinciple = true;
 	@Override
 	public void execute(TrackMate trackmate, SelectionModel selectionModel, DisplaySettings displaySettings,
 			Frame gui) {
@@ -112,6 +114,8 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 			detchannel = panel.getDetectionChannel();
 			linkdist = panel.getLinkDist();
 			probthreshold = panel.getProbThreshold();
+			mariprinciple = panel.getMariPrinciple();
+			
 			Map<String, Object> mapsettings = getSettings(oneatdivisionfile,oneatapotosisfile,trackmapsettings);
 			OneatCorrectorFactory corrector = new OneatCorrectorFactory();
 			ImgPlus <T> detectionimg =  img;
@@ -157,6 +161,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 		settings.put(KEY_TRACKLET_LENGTH, tracklet);
 		settings.put(KEY_BREAK_LINKS, breaklinks);
 		settings.put(KEY_CREATE_LINKS, createlinks);
+		settings.put(KEY_USE_MARI_PRINCIPLE, mariprinciple);
 		settings.put(KEY_TARGET_CHANNEL, detchannel);
 		settings.put(KEY_SPLITTING_MAX_DISTANCE, linkdist);
 		settings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, deltat);

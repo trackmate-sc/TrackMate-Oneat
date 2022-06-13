@@ -58,6 +58,7 @@ import static fiji.plugin.trackmate.Spot.RADIUS;
 
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
+import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_USE_MARI_PRINCIPLE;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
@@ -236,6 +237,7 @@ public class TrackCorrectorRunner {
 		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
+		boolean mariprinciple = (boolean) settings.get(KEY_USE_MARI_PRINCIPLE);
 		Set<Integer> MitosisIDs = new HashSet<Integer>();
 		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
 
@@ -351,6 +353,7 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
 			
+			/*
 			HashMap<String, Double> qu = new HashMap<String, Double>();
 			qu.put(QUALITY, 1.0);
 			qu.put(POSITION_Z, 1.0);
@@ -358,6 +361,7 @@ public class TrackCorrectorRunner {
 			
 			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qu);
 		
+			*/
 			
 		    if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
@@ -421,7 +425,10 @@ public class TrackCorrectorRunner {
 							if (frame > 0) {
 
 								SpotCollection regionspots = regionspot(allspots, motherspot, (int) frame,
-										searchdistance);
+										searchdistance,mariprinciple);
+								
+								
+								
 								if (regionspots.getNSpots((int) frame, false) > 0)
 									for (Spot spot : regionspots.iterable((int) frame, false)) {
 
@@ -484,6 +491,8 @@ public class TrackCorrectorRunner {
 									graph.removeEdge(targetsource, target);
 								}
 
+								
+								
 								final double cost = costs.get(source);
 
 								
@@ -535,7 +544,7 @@ public class TrackCorrectorRunner {
 		return breaklink;
 	}
 
-	private static SpotCollection regionspot(SpotCollection allspots, Spot motherspot, int frame, double region) {
+	private static SpotCollection regionspot(SpotCollection allspots, Spot motherspot, int frame, double region, boolean mariprinciple) {
 
 		SpotCollection regionspots = new SpotCollection();
 		final int Nspots = allspots.getNSpots(frame, false);
@@ -546,6 +555,13 @@ public class TrackCorrectorRunner {
 
 					regionspots.add(spot, frame);
 
+				}
+				
+				if(mariprinciple) {
+					
+					
+					//Invoke Mari principle calculation
+					
 				}
 
 			}
