@@ -12,6 +12,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.DecompositionSolver;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.traverse.BreadthFirstIterator;
@@ -21,6 +27,8 @@ import org.scijava.app.StatusService;
 import org.scijava.log.LogService;
 import org.scijava.options.OptionsService;
 
+import Jama.EigenvalueDecomposition;
+import Jama.Matrix;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Logger.SlaveLogger;
 import fiji.plugin.trackmate.Model;
@@ -36,6 +44,8 @@ import net.imglib2.util.Util;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
+import net.imglib2.Cursor;
+import net.imglib2.Localizable;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
@@ -46,6 +56,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
@@ -232,8 +243,9 @@ public class TrackCorrectorRunner {
 		SpotCollection allspots = model.getSpots();
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
-		
-		double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE)!=null? (double) settings.get(KEY_LINKING_MAX_DISTANCE): 10);
+		double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE) != null
+				? (double) settings.get(KEY_LINKING_MAX_DISTANCE)
+				: 10);
 		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
@@ -302,46 +314,46 @@ public class TrackCorrectorRunner {
 			// Gap closing.
 
 			int maxFrameInterval = tmoneatdeltat;
-			if(settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null)
-					maxFrameInterval =  (Integer) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
+			if (settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP) != null)
+				maxFrameInterval = (Integer) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 			double gcMaxDistance = searchdistance;
-		
-					if(settings.get(KEY_GAP_CLOSING_MAX_DISTANCE)!=null)
-						
-						gcMaxDistance = (double) settings.get(KEY_GAP_CLOSING_MAX_DISTANCE);
+
+			if (settings.get(KEY_GAP_CLOSING_MAX_DISTANCE) != null)
+
+				gcMaxDistance = (double) settings.get(KEY_GAP_CLOSING_MAX_DISTANCE);
 			boolean allowGapClosing = false;
-			if(settings.get(KEY_ALLOW_GAP_CLOSING)!=null) {
-			allowGapClosing = (Boolean) settings.get(KEY_ALLOW_GAP_CLOSING);
+			if (settings.get(KEY_ALLOW_GAP_CLOSING) != null) {
+				allowGapClosing = (Boolean) settings.get(KEY_ALLOW_GAP_CLOSING);
 			}
 			boolean allowTrackMerging = false;
-			if(settings.get(KEY_ALLOW_TRACK_MERGING)!=null)
+			if (settings.get(KEY_ALLOW_TRACK_MERGING) != null)
 				allowTrackMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
 			boolean allowTrackSplitting = true;
-			if(settings.get(KEY_ALLOW_TRACK_SPLITTING)!=null)
+			if (settings.get(KEY_ALLOW_TRACK_SPLITTING) != null)
 				allowTrackSplitting = (Boolean) settings.get(KEY_ALLOW_TRACK_SPLITTING);
 			// Merging
 			double mMaxDistance = Double.MAX_VALUE;
 			double sMaxDistance = Double.MAX_VALUE;
 			boolean allowMerging = false;
-			if(settings.get(KEY_ALLOW_TRACK_MERGING)!=null)
+			if (settings.get(KEY_ALLOW_TRACK_MERGING) != null)
 				allowMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
 			if (allowTrackMerging)
 				mMaxDistance = (Double) settings.get(KEY_MERGING_MAX_DISTANCE);
 			else
 				mMaxDistance = searchdistance;
-			
+
 			if (allowTrackSplitting)
 				// Splitting
 				sMaxDistance = (Double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
 			else
 				sMaxDistance = searchdistance;
 			// Alternative cost
-		    double alternativeCostFactor = 1.05d;
-			if(settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR)!=null)
+			double alternativeCostFactor = 1.05d;
+			if (settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR) != null)
 				alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
 			double percentile = 0.9d;
-					if(settings.get(KEY_CUTOFF_PERCENTILE)!=null)
-						percentile  = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
+			if (settings.get(KEY_CUTOFF_PERCENTILE) != null)
+				percentile = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
 
 			cmsettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
 			cmsettings.put(KEY_SPLITTING_MAX_DISTANCE, sMaxDistance);
@@ -352,18 +364,16 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
 			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
-			
+
 			/*
-			HashMap<String, Double> qu = new HashMap<String, Double>();
-			qu.put(QUALITY, 1.0);
-			qu.put(POSITION_Z, 1.0);
-			qu.put(RADIUS, 1.0);
-			
-			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qu);
-		
-			*/
-			
-		    if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
+			 * HashMap<String, Double> qu = new HashMap<String, Double>(); qu.put(QUALITY,
+			 * 1.0); qu.put(POSITION_Z, 1.0); qu.put(RADIUS, 1.0);
+			 * 
+			 * cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qu);
+			 * 
+			 */
+
+			if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
 			else
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
@@ -384,6 +394,9 @@ public class TrackCorrectorRunner {
 					Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
 
 					ArrayList<Spot> mitosismotherspots = trackspots.getB();
+					
+					// Create the pixel list for mother cells
+					
 					count++;
 
 					// Remove edges corresponding to mitotic trajectories
@@ -424,11 +437,9 @@ public class TrackCorrectorRunner {
 							double frame = motherspot.getFeature(FRAME) + i;
 							if (frame > 0) {
 
-								SpotCollection regionspots = regionspot(allspots, motherspot, (int) frame,
-										searchdistance,mariprinciple);
-								
-								
-								
+								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,  (int) frame,
+										searchdistance, mariprinciple);
+
 								if (regionspots.getNSpots((int) frame, false) > 0)
 									for (Spot spot : regionspots.iterable((int) frame, false)) {
 
@@ -440,9 +451,8 @@ public class TrackCorrectorRunner {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
 
-												if (source.getFeature(FRAME) == frame && motherspot.getFeature(QUALITY) > 
-												source.getFeature(QUALITY)
-														) {
+												if (source.getFeature(FRAME) == frame && motherspot
+														.getFeature(QUALITY) > source.getFeature(QUALITY)) {
 													final Spot target = trackmodel.getEdgeTarget(localedge);
 													final double linkcost = trackmodel.getEdgeWeight(localedge);
 
@@ -491,62 +501,44 @@ public class TrackCorrectorRunner {
 									graph.removeEdge(targetsource, target);
 								}
 
-								
-								
 								final double cost = costs.get(source);
 
-								
-							
-									graph.addVertex(source);
-									graph.addVertex(target);
-									final DefaultWeightedEdge edge = graph.addEdge(source, target);
-									// if (edge != null)
-									graph.setEdgeWeight(edge, cost);
+								graph.addVertex(source);
+								graph.addVertex(target);
+								final DefaultWeightedEdge edge = graph.addEdge(source, target);
+								// if (edge != null)
+								graph.setEdgeWeight(edge, cost);
 
-								
 							}
 
 					}
 
 				}
-				
-			
 
 			}
 
 		}
-		
+
 		logger.setProgress(1d);
 		logger.flush();
 		logger.log("Done, please review the TrackScheme by going back.\n");
 
 		model.beginUpdate();
-		
+
 		model.clearTracks(true);
 		model.setTracks(graph, true);
-		logger.log( "New tracks: " + model.getTrackModel().nTracks(true));
+		logger.log("New tracks: " + model.getTrackModel().nTracks(true));
 		model.endUpdate();
-		
+
 		return graph;
 
 	}
 
-	private static boolean Validlinks(SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, Spot source, Spot target) {
-
-		boolean breaklink = true;
-		int sourcedegree = graph.degreeOf(source);
-		int targetdegree = graph.degreeOf(target);
-
-		System.out.println(sourcedegree + " " + targetdegree + " " + "SS" + source.ID() + " " + target.ID());
-		if (sourcedegree > 2 && targetdegree > 2)
-			breaklink = true;
-
-		return breaklink;
-	}
-
-	private static SpotCollection regionspot(SpotCollection allspots, Spot motherspot, int frame, double region, boolean mariprinciple) {
+	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
+			final Spot motherspot, final Logger logger, final double[] calibration, final int frame, final double region, final boolean mariprinciple) {
 
 		SpotCollection regionspots = new SpotCollection();
+		
 		final int Nspots = allspots.getNSpots(frame, false);
 		if (Nspots > 0)
 			for (Spot spot : allspots.iterable(frame, false)) {
@@ -556,18 +548,196 @@ public class TrackCorrectorRunner {
 					regionspots.add(spot, frame);
 
 				}
-				
-				if(mariprinciple) {
-					
-					
-					//Invoke Mari principle calculation
-					
-				}
 
 			}
+		if (mariprinciple) {
+
+			
+			// Invoke Mari principle calculation
+			int ndim = img.numDimensions() - 1;
+			RandomAccess<UnsignedShortType> ranac = img.randomAccess();
+			HashMap<Integer, ArrayList<Localizable>> mothermap = getPixelList(img, ranac, motherspot, calibration, ndim); 
+				
+			for (Spot spot : regionspots.iterable(frame, false)) {
+				
+				if (frame < img.dimension(ndim) - 1) {
+					
+					
+					
+					
+					
+			}
+		}
+		
+		}
 
 		return regionspots;
 	}
+	
+	
+	
+	
+	
+	private static HashMap<Integer, Ellipsoid> getEllipsoid(HashMap<Integer, ArrayList<Localizable>> pixelmap) {
+		
+		
+		HashMap<Integer, Ellipsoid> labelellipsoid = new HashMap<Integer, Ellipsoid>();
+		for (Map.Entry<Integer, ArrayList<Localizable>> currentpixelmap: pixelmap.entrySet()) {
+			
+			ArrayList<Localizable> points = currentpixelmap.getValue();
+			int label = currentpixelmap.getKey();
+			int ndim = points.iterator().next().numDimensions();
+			int nPoints = points.size();
+			if (ndim == 3) {
+				if ( nPoints < 9 ) 
+					throw new IllegalArgumentException( "Too few points; need at least 9 to calculate a unique ellipsoid" );
+
+			
+				RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 9);
+			int i = 0;	
+			for(Localizable point: points) {
+			
+				
+					final double x = point.getDoublePosition(0);
+					final double y = point.getDoublePosition(1);
+					final double z = point.getDoublePosition(2);
+					double xx = x*x;
+					double yy =y*y;
+					double zz = z*z;
+					double xy = 2 * x *y;
+					double xz = 2 * x * z;
+					double yz = 2 * y * z;
+					MatrixD.setEntry(i, 0, xx);
+					MatrixD.setEntry(i, 1, yy);
+					MatrixD.setEntry(i, 2, zz);
+					MatrixD.setEntry(i, 3, xy);
+					MatrixD.setEntry(i, 4, xz);
+					MatrixD.setEntry(i, 5, yz);
+					MatrixD.setEntry(i, 6, 2 * x);
+					MatrixD.setEntry(i, 7, 2 * y);
+					MatrixD.setEntry(i, 8, 2 * z);
+					
+					i = i + 1;
+				}
+			RealMatrix dtd = MatrixD.transpose().multiply(MatrixD);
+			
+			
+	       // Create a vector of ones.
+			RealVector ones = new ArrayRealVector(nPoints);
+			ones.mapAddToSelf(1);
+
+			// Multiply: d' * ones.mapAddToSelf(1)
+			RealVector dtOnes = MatrixD.transpose().operate(ones);
+
+			// Find ( d' * d )^-1
+			DecompositionSolver solver = new SingularValueDecomposition(dtd)
+					.getSolver();
+			RealMatrix dtdi = solver.getInverse();
+
+			// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
+			RealVector v = dtdi.operate(dtOnes);
+			Ellipsoid currentellipsoid =  ellipsoidFromEquation( v );
+			labelellipsoid.put(label, currentellipsoid);
+			
+			}
+			
+		}
+		
+		return labelellipsoid;
+	}
+	
+	private static Ellipsoid ellipsoidFromEquation( final RealVector V )
+	{
+		final double a = V.getEntry(0);
+		final double b = V.getEntry( 1);
+		final double c = V.getEntry( 2);
+		final double d = V.getEntry( 3);
+		final double e = V.getEntry( 4);
+		final double f = V.getEntry( 5);
+		final double g = V.getEntry( 6);
+		final double h = V.getEntry( 7);
+		final double i = V.getEntry( 8);
+
+		double[] Coefficents = V.toArray();
+		
+		
+		final double[][] aa = new double[][] {
+				{ a, d, e },
+				{ d, b, f },
+				{ e, f, c } };
+		final double[] bb = new double[] { g, h, i };
+		final double[] cc = new Matrix( aa ).solve( new Matrix( bb, 3 ) ).getRowPackedCopy();
+		LinAlgHelpers.scale( cc, -1, cc );
+
+		final double[] At = new double[ 3 ];
+		LinAlgHelpers.mult( aa, cc, At );
+		final double r33 = LinAlgHelpers.dot( cc, At ) + 2 * LinAlgHelpers.dot( bb, cc ) - 1;
+		LinAlgHelpers.scale( aa, -1 / r33, aa );
+		int n = cc.length;
+		double[][] covariance = new Matrix(aa).inverse().getArray();	
+		return (new Ellipsoid( cc, covariance , aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents ));
+	}
+	
+	private static double[] computeAxisAndRadiiFromCovariance(double[][] covariance, int n)
+	{
+		final EigenvalueDecomposition eig = new Matrix( covariance ).eig();
+		final Matrix ev = eig.getD();
+		double[] radii = new double[ n ];
+		for ( int d = 0; d < n; ++d )
+			radii[ d ] = Math.sqrt( ev.get( d, d ) );
+		return radii;
+	}
+	
+	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img, RandomAccess<UnsignedShortType> ranac, Spot spot, double[] calibration,  int ndim) {
+		
+		ArrayList<Localizable> CurrentLabelList = new ArrayList<Localizable>();
+		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
+		
+		long[] location = new long[ndim];
+		for (int d = 0; d < ndim; ++d) {
+			location[d] = (long) (spot.getDoublePosition(d) / calibration[d]);
+			ranac.setPosition(location[d], d);
+		}
+
+		int frame = spot.getFeature(FRAME).intValue();
+		ranac.setPosition(frame, ndim);
+		int label = ranac.get().get();
+		
+		Cursor<UnsignedShortType> cur = img.localizingCursor();
+		
+		while(cur.hasNext()) {
+			
+			cur.fwd();
+			if(cur.get().get() == label) {
+				
+				
+				HyperSphere<UnsignedShortType> sphere = new HyperSphere<UnsignedShortType>(img, cur, 2);
+				double max = 0;
+				double min = Double.MAX_VALUE;
+				
+				for(UnsignedShortType intensity: sphere) {
+					
+				   if(intensity.get() > max)
+					   max = intensity.get();
+				   if(intensity.get() < min)
+					   min = intensity.get();
+					
+				}
+				if(Math.abs(max - min) > 0)
+				CurrentLabelList.add(cur);
+				
+			}
+			
+		}
+		
+		CurrentLabelMap.put(label, CurrentLabelList);
+		
+		return CurrentLabelMap;
+	}
+	
+	
+	
+	
 
 	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getfirstTrackMateobject(
 			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
