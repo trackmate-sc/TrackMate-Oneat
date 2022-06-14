@@ -641,11 +641,83 @@ public class TrackCorrectorRunner {
 			
 			}
 			
+			if (ndim == 2) {
+				
+				if ( nPoints < 6 ) 
+					throw new IllegalArgumentException( "Too few points; need at least 5 to calculate a unique ellipse" );
+
+			
+				RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 5);
+				int i = 0;	
+				for(Localizable point: points) {
+				
+					
+						final double x = point.getDoublePosition(0);
+						final double y = point.getDoublePosition(1);
+						
+						double xx = x*x;
+						double yy =y*y;
+						double xy = 2 * x *y;
+						MatrixD.setEntry(i, 0, xx);
+						MatrixD.setEntry(i, 1, yy);
+						MatrixD.setEntry(i, 2, xy);
+						MatrixD.setEntry(i, 3, 2 * x);
+						MatrixD.setEntry(i, 4, 2 * y);
+						
+						i = i + 1;
+					}
+				RealMatrix dtd = MatrixD.transpose().multiply(MatrixD);
+				
+				
+				// Create a vector of ones.
+				RealVector ones = new ArrayRealVector(nPoints);
+				ones.mapAddToSelf(1);
+
+				// Multiply: d' * ones.mapAddToSelf(1)
+				RealVector dtOnes = MatrixD.transpose().operate(ones);
+
+				// Find ( d' * d )^-1
+				DecompositionSolver solver = new SingularValueDecomposition(dtd)
+						.getSolver();
+				RealMatrix dtdi = solver.getInverse();
+
+				// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
+				RealVector v = dtdi.operate(dtOnes);
+				Ellipsoid currentellipsoid =  ellipsoidFromEquation2D( v );
+				labelellipsoid.put(label, currentellipsoid);
+				
+				
+			}
+			
 		}
 		
 		return labelellipsoid;
 	}
 	
+	private static Ellipsoid ellipsoidFromEquation2D( final RealVector V )
+	{
+		final double a = V.getEntry(0);
+		final double b = V.getEntry( 1);
+		final double c = V.getEntry( 2);
+		final double d = V.getEntry( 3);
+		final double e = V.getEntry( 4);
+		double[] Coefficents = V.toArray();
+
+		
+		final double[][] aa = new double[][] {
+				{ a, c },
+				{ c, b } };
+		final double[] bb = new double[] { d, e };
+		final double[] cc = new Matrix( aa ).solve( new Matrix( bb, 2 ) ).getRowPackedCopy();
+		LinAlgHelpers.scale( cc, -1, cc );
+		final double[] At = new double[ 2 ];
+		LinAlgHelpers.mult( aa, cc, At );
+		final double r33 = LinAlgHelpers.dot( cc, At ) + 2 * LinAlgHelpers.dot( bb, cc ) - 1;
+		LinAlgHelpers.scale( aa, -1 / r33, aa );
+		int n = cc.length;
+		double[][] covariance = new Matrix(aa).inverse().getArray();	
+		return (new Ellipsoid( cc, covariance , aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents ));
+	}
 	private static Ellipsoid ellipsoidFromEquation( final RealVector V )
 	{
 		final double a = V.getEntry(0);
