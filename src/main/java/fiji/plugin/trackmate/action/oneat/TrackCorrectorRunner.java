@@ -557,14 +557,14 @@ public class TrackCorrectorRunner {
 			int ndim = img.numDimensions() - 1;
 			RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 			HashMap<Integer, ArrayList<Localizable>> mothermap = getPixelList(img, ranac, motherspot, calibration, ndim); 
-				
+			HashMap<Integer, Ellipsoid> motherellipsoid = getEllipsoid(mothermap);		
 			for (Spot spot : regionspots.iterable(frame, false)) {
 				
 				if (frame < img.dimension(ndim) - 1) {
 					
 					
-					
-					
+					HashMap<Integer, ArrayList<Localizable>> kidsmap = getPixelList(img, ranac, spot, calibration, ndim);
+					HashMap<Integer, Ellipsoid> kidsellipsoid = getEllipsoid(kidsmap);
 					
 			}
 		}
