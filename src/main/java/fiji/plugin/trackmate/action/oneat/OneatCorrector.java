@@ -150,7 +150,7 @@ public class OneatCorrector implements TrackCorrector {
 				TrackCorrectorRunner.run(oneatdivision, oneatapoptosis, settings, ndims, calibration);
 		
 		// Get first TrackMate object as in blue print
-		Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> Tmobject =  TrackCorrectorRunner.getfirstTrackMateobject(model, img, logger, 
+		Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> Tmobject =  TrackCorrectorRunner.getfirstTrackMateobject(model, img, logger, 
 				calibration);
 		
 		

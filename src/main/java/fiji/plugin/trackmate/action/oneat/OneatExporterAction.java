@@ -130,11 +130,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 				 
 				detectionimg = ImgPlusViews.hyperSlice( img, 2, (int) detchannel );
 			}
-			AxisType[] axes = new AxisType[] {
-						Axes.X,
-						Axes.Y,
-						Axes.Z,
-						Axes.TIME };
+			
 			final ImgPlus< UnsignedShortType > intimg = (ImgPlus<UnsignedShortType>) detectionimg;
 			
 			OneatCorrector oneatcorrector = corrector.create(intimg, model, trackmate, settings, mapsettings, logger, calibration );

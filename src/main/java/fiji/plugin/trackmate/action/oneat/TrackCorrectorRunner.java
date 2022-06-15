@@ -230,7 +230,7 @@ public class TrackCorrectorRunner {
 	}
 
 	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
-			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
+			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
 			HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim,
@@ -557,7 +557,13 @@ public class TrackCorrectorRunner {
 			int ndim = img.numDimensions() - 1;
 			RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 			HashMap<Integer, ArrayList<Localizable>> mothermap = getPixelList(img, ranac, motherspot, calibration, ndim); 
-			HashMap<Integer, Ellipsoid> motherellipsoid = getEllipsoid(mothermap);		
+			HashMap<Integer, Ellipsoid> motherellipsoid = getEllipsoid(mothermap);	
+			
+			if(motherellipsoid.size() > 0) {
+				
+			//	getEigen( motherellipsoid., ndim );
+			}
+			
 			for (Spot spot : regionspots.iterable(frame, false)) {
 				
 				if (frame < img.dimension(ndim) - 1) {
@@ -565,6 +571,12 @@ public class TrackCorrectorRunner {
 					
 					HashMap<Integer, ArrayList<Localizable>> kidsmap = getPixelList(img, ranac, spot, calibration, ndim);
 					HashMap<Integer, Ellipsoid> kidsellipsoid = getEllipsoid(kidsmap);
+					
+					if(kidsellipsoid.size() > 0) {
+						
+						
+					}
+					
 					
 			}
 		}
@@ -576,7 +588,18 @@ public class TrackCorrectorRunner {
 	
 	
 	
-	
+	private static void getEigen( final Ellipsoid ellipsoid, int ndim ){
+		
+		double[][] covariance = ellipsoid.getCovariance();
+		double[] mean = ellipsoid.getCenter();
+		final EigenvalueDecomposition eig = new Matrix( covariance ).eig();
+		final double[] Eigenvalues = eig.getRealEigenvalues();
+		final Matrix Eigenvector = eig.getV();
+		
+		System.out.println(Eigenvalues);
+		
+		
+	}
 	
 	private static HashMap<Integer, Ellipsoid> getEllipsoid(HashMap<Integer, ArrayList<Localizable>> pixelmap) {
 		
@@ -589,9 +612,8 @@ public class TrackCorrectorRunner {
 			int ndim = points.iterator().next().numDimensions();
 			int nPoints = points.size();
 			if (ndim == 3) {
-				if ( nPoints < 9 ) 
-					throw new IllegalArgumentException( "Too few points; need at least 9 to calculate a unique ellipsoid" );
-
+				if ( nPoints >= 9 ) {
+					
 			
 				RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 9);
 			int i = 0;	
@@ -640,13 +662,11 @@ public class TrackCorrectorRunner {
 			labelellipsoid.put(label, currentellipsoid);
 			
 			}
-			
+			}
 			if (ndim == 2) {
 				
-				if ( nPoints < 6 ) 
-					throw new IllegalArgumentException( "Too few points; need at least 5 to calculate a unique ellipse" );
-
-			
+				if ( nPoints >= 6 ) {
+					
 				RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 5);
 				int i = 0;	
 				for(Localizable point: points) {
@@ -686,7 +706,7 @@ public class TrackCorrectorRunner {
 				Ellipsoid currentellipsoid =  ellipsoidFromEquation2D( v );
 				labelellipsoid.put(label, currentellipsoid);
 				
-				
+				}
 			}
 			
 		}
@@ -760,7 +780,24 @@ public class TrackCorrectorRunner {
 		return radii;
 	}
 	
-	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img, RandomAccess<UnsignedShortType> ranac, Spot spot, double[] calibration,  int ndim) {
+	private static HashMap<Integer, ArrayList<Localizable>>getPixelList(final ImgPlus<UnsignedShortType> img, 
+			RandomAccess<UnsignedShortType> ranac, ArrayList<Spot> spotlist, double[] calibration,  int ndim) {
+		
+		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
+        
+		Cursor<UnsignedShortType> cur = img.localizingCursor();
+		
+		while(cur.hasNext()) {
+			
+			cur.fwd();
+			int label = cur.get().get();
+		}
+		
+		return CurrentLabelMap;
+	}
+	
+	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img, 
+			RandomAccess<UnsignedShortType> ranac, Spot spot, double[] calibration,  int ndim) {
 		
 		ArrayList<Localizable> CurrentLabelList = new ArrayList<Localizable>();
 		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
@@ -811,7 +848,7 @@ public class TrackCorrectorRunner {
 	
 	
 
-	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getfirstTrackMateobject(
+	public static Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> , Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getfirstTrackMateobject(
 			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
 
 		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(
@@ -820,6 +857,7 @@ public class TrackCorrectorRunner {
 		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(true);
 		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
+		HashMap<Spot, Integer> uniqueSpot = new HashMap<Spot, Integer>();
 		logger.flush();
 		logger.log("Collecting tracks, in total " + AllTrackIds.size() + ".\n");
 		int count = 0;
@@ -845,18 +883,20 @@ public class TrackCorrectorRunner {
 
 					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
 							new ValuePair<Spot, Integer>(spot, trackID));
+					uniqueSpot.put(spot, label);
 
 				}
 			}
 		}
-
-		return new ValuePair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>>(
-				uniquelabelID, DividingStartspots);
+		Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelIDSpot = 
+				new ValuePair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>(uniquelabelID, uniqueSpot);
+		return new ValuePair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>>(
+				uniquelabelIDSpot, DividingStartspots);
 
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
-			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, final Model model,
+			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelID, final Model model,
 			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
 
@@ -904,8 +944,8 @@ public class TrackCorrectorRunner {
 
 					int labelID = maxval;
 
-					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
-						Pair<Spot, Integer> spotandtrackID = uniquelabelID
+					if (uniquelabelID.getA().containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
+						Pair<Spot, Integer> spotandtrackID = uniquelabelID.getA()
 								.get(new ValuePair<Integer, Integer>(labelID, frame));
 						// Now get the spot ID
 
@@ -939,7 +979,7 @@ public class TrackCorrectorRunner {
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
-			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID, final Model model,
+			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>,HashMap<Spot, Integer>> uniquelabelID, final Model model,
 			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
 
@@ -985,8 +1025,8 @@ public class TrackCorrectorRunner {
 
 					int labelID = maxval;
 
-					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
-						Pair<Spot, Integer> spotandtrackID = uniquelabelID
+					if (uniquelabelID.getA().containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
+						Pair<Spot, Integer> spotandtrackID = uniquelabelID.getA()
 								.get(new ValuePair<Integer, Integer>(labelID, frame));
 						// Now get the spot ID
 
@@ -1040,7 +1080,7 @@ public class TrackCorrectorRunner {
 	}
 
 	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> BreakLinksTrack(final Model model,
-			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
+			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots,
 			HashMap<Integer, ArrayList<Spot>> framespots, final ImgPlus<UnsignedShortType> img, final Logger logger,
 			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, double[] calibration, int N) {
@@ -1076,8 +1116,8 @@ public class TrackCorrectorRunner {
 					// Get the label ID of the current interesting spot
 					int labelID = ranac.get().get();
 
-					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
-						Pair<Spot, Integer> spotandtrackID = uniquelabelID
+					if (uniquelabelID.getA().containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
+						Pair<Spot, Integer> spotandtrackID = uniquelabelID.getA()
 								.get(new ValuePair<Integer, Integer>(labelID, frame));
 						// Now get the spot ID
 
