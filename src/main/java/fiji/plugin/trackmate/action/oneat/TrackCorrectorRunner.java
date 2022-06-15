@@ -630,6 +630,7 @@ public class TrackCorrectorRunner {
 	private static ArrayList<Ellipsoid> getEllipsoid(ArrayList<Spot> pixelmap, ImgPlus<UnsignedShortType> img, double[] calibration) {
 
 		ArrayList<Ellipsoid> labelellipsoid = new ArrayList<Ellipsoid>();
+		int ndim = img.numDimensions();
 		for ( Spot currentspot : pixelmap) {
 			 long[] center = new long[currentspot.numDimensions()];
 			for ( int d = 0; d < center.length; d++ )
@@ -644,7 +645,7 @@ public class TrackCorrectorRunner {
 			}
 		
 			final OutOfBoundsMirrorExpWindowingFactory< UnsignedShortType, RandomAccessibleInterval< UnsignedShortType >> oob = new OutOfBoundsMirrorExpWindowingFactory<>();
-			AbstractNeighborhood< UnsignedShortType > neighborhood = new EllipsoidNeighborhood< >( img, center, span, oob );
+			AbstractNeighborhood< UnsignedShortType > neighborhood = new EllipsoidNeighborhood< >( ImgPlusViews.hyperSlice( img, ndim - 1, (int) currentspot.getFeature(Spot.FRAME).intValue() ), center, span, oob );
 			Cursor<UnsignedShortType> iterator = neighborhood.localizingCursor();
 			
 			ArrayList<Localizable> points = new ArrayList<Localizable>();
@@ -653,9 +654,8 @@ public class TrackCorrectorRunner {
 				points.add(iterator);
 				
 			}
-			int ndim = img.numDimensions();
 			int nPoints = points.size();
-			if (ndim == 3) {
+			if (ndim == 4) {
 				if (nPoints >= 9) {
 
 					RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 9);
@@ -703,7 +703,7 @@ public class TrackCorrectorRunner {
 
 				}
 			}
-			if (ndim == 2) {
+			if (ndim == 3) {
 
 				if (nPoints >= 6) {
 
