@@ -129,11 +129,11 @@ public class OneatExporterPanel extends JPanel {
 		add(wikilink, gbc);
 		gbc.gridy++;
 		
-		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections From CSV");
+		Loaddivisioncsvbutton = new JButton("Load Oneat mitosis detections file");
 		add(Loaddivisioncsvbutton, gbc);
 		gbc.gridy++;
        
-		Loadcelldeathcsvbutton = new JButton("Load Oneat cell death detections From CSV");
+		Loadcelldeathcsvbutton = new JButton("Load Oneat cell death detections file");
 		add(Loadcelldeathcsvbutton, gbc);
 		
 		gbc.gridy++;

@@ -390,7 +390,8 @@ public class TrackCorrectorRunner {
 			// Lets take care of mitosis
 			if (Mitosisspots != null) {
 				logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
-         
+				if(mariprinciple)
+					logger.log("Using Mari's priniciple for track linking.\n");
                
 			
 				int trackcount = 0;
@@ -425,13 +426,17 @@ public class TrackCorrectorRunner {
 					}
 
 					int maricount = 0;
+					Ellipsoid ellipsoid = null;
+					
 					for (Spot motherspot : mitosismotherspots) {
 
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
-						Ellipsoid ellipsoid = getEllipsoid(motherspot, img, calibration);
-						logger.setProgress(maricount / mitosismotherspots.size());
-						logger.flush();
-						logger.log("Using Mari's priniciple for track linking.\n");
+						if(mariprinciple) {
+								ellipsoid = getEllipsoid(motherspot, img, calibration);
+								
+								logger.setProgress(maricount / mitosismotherspots.size());
+						}
+						
 						maricount++;
 						SimpleWeightedGraph<Spot, DefaultWeightedEdge> localgraph = new SimpleWeightedGraph<>(
 								DefaultWeightedEdge.class);
@@ -576,7 +581,7 @@ public class TrackCorrectorRunner {
          
             
 			
-				
+				if(ellipsoid!=null)
 				getEigen(ellipsoid,ndim);
 		
 			
@@ -603,7 +608,8 @@ public class TrackCorrectorRunner {
 		final double[] Eigenvalues = eig.getRealEigenvalues();
 		final Matrix Eigenvector = eig.getV();
 
-		System.out.println(Eigenvalues);
+		for(int i = 0; i < Eigenvalues.length; ++i)
+		System.out.println("Eigenvalues" + Eigenvalues[i]);
 
 	}
 
@@ -632,10 +638,12 @@ public class TrackCorrectorRunner {
 			while(iterator.hasNext()) {
 				
 				iterator.next();
+				
 				points.add(iterator);
 				
 			}
 			int nPoints = points.size();
+			
 			if (ndim == 4) {
 				if (nPoints >= 9) {
 
@@ -721,6 +729,7 @@ public class TrackCorrectorRunner {
 
 					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
 					RealVector v = dtdi.operate(dtOnes);
+				
 					currentellipsoid = ellipsoidFromEquation2D(v);
 					
 				}
@@ -772,6 +781,9 @@ public class TrackCorrectorRunner {
 
 		final double[][] aa = new double[][] { { a, d, e }, { d, b, f }, { e, f, c } };
 		final double[] bb = new double[] { g, h, i };
+		double det = new Matrix(aa).det();
+		System.out.println("determinant" + det);
+		if(det > 1.0E-15) {
 		final double[] cc = new Matrix(aa).solve(new Matrix(bb, 3)).getRowPackedCopy();
 		LinAlgHelpers.scale(cc, -1, cc);
 
@@ -782,14 +794,19 @@ public class TrackCorrectorRunner {
 		int n = cc.length;
 		double[][] covariance = new Matrix(aa).inverse().getArray();
 		return (new Ellipsoid(cc, covariance, aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents));
+		}
+		else
+			return null;
 	}
 
 	private static double[] computeAxisAndRadiiFromCovariance(double[][] covariance, int n) {
 		final EigenvalueDecomposition eig = new Matrix(covariance).eig();
 		final Matrix ev = eig.getD();
 		double[] radii = new double[n];
-		for (int d = 0; d < n; ++d)
+		for (int d = 0; d < n; ++d) {
 			radii[d] = Math.sqrt(ev.get(d, d));
+		    System.out.println("radii" + radii[d]);
+		}
 		return radii;
 	}
 
