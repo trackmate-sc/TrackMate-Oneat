@@ -381,9 +381,32 @@ public class TrackCorrectorRunner {
 			logger.log("Removing mitotic edges.\n");
 			// Lets take care of mitosis
 			if (Mitosisspots != null) {
-			logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
-			
+				logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
 
+				HashMap<Integer, Ellipsoid> motherellipsoid = new HashMap<Integer, Ellipsoid>();
+				if (mariprinciple) {
+					HashMap<Spot, Integer> allspotlabels = uniquelabelID.getB();
+
+					HashMap<Spot, Integer> interestingspotlabels = new HashMap<Spot, Integer>();
+
+					ArrayList<Spot> allmitosismotherspots = new ArrayList<Spot>();
+					for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
+						Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
+						ArrayList<Spot> mitosismotherspots = trackspots.getB();
+						allmitosismotherspots.addAll(mitosismotherspots);
+					}
+
+					for (Spot interestingspot : allmitosismotherspots) {
+
+						int label = allspotlabels.get(interestingspot);
+						interestingspotlabels.put(interestingspot, label);
+
+					}
+					RandomAccess<UnsignedShortType> ranac = img.randomAccess();
+					HashMap<Integer, ArrayList<Localizable>> mothermap = getPixelList(img, ranac, interestingspotlabels,
+							calibration, ndim);
+					motherellipsoid = getEllipsoid(mothermap);
+				}
 				int trackcount = 0;
 				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
 
@@ -396,9 +419,11 @@ public class TrackCorrectorRunner {
 					Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
 
 					ArrayList<Spot> mitosismotherspots = trackspots.getB();
-					
+
+					// Create a new map of spot and label
+
 					// Create the pixel list for mother cells
-					
+
 					count++;
 
 					// Remove edges corresponding to mitotic trajectories
@@ -439,8 +464,8 @@ public class TrackCorrectorRunner {
 							double frame = motherspot.getFeature(FRAME) + i;
 							if (frame > 0) {
 
-								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,  (int) frame,
-										searchdistance, mariprinciple);
+								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,
+										(int) frame, searchdistance, motherellipsoid, mariprinciple);
 
 								if (regionspots.getNSpots((int) frame, false) > 0)
 									for (Spot spot : regionspots.iterable((int) frame, false)) {
@@ -537,10 +562,11 @@ public class TrackCorrectorRunner {
 	}
 
 	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
-			final Spot motherspot, final Logger logger, final double[] calibration, final int frame, final double region, final boolean mariprinciple) {
+			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,
+			final double region, HashMap<Integer, Ellipsoid> motherellipsoid, final boolean mariprinciple) {
 
 		SpotCollection regionspots = new SpotCollection();
-		
+
 		final int Nspots = allspots.getNSpots(frame, false);
 		if (Nspots > 0)
 			for (Spot spot : allspots.iterable(frame, false)) {
@@ -554,284 +580,246 @@ public class TrackCorrectorRunner {
 			}
 		if (mariprinciple) {
 
-			
 			// Invoke Mari principle calculation
 			int ndim = img.numDimensions() - 1;
-			RandomAccess<UnsignedShortType> ranac = img.randomAccess();
-			HashMap<Integer, ArrayList<Localizable>> mothermap = getPixelList(img, ranac, motherspot, calibration, ndim); 
-			HashMap<Integer, Ellipsoid> motherellipsoid = getEllipsoid(mothermap);	
-			
-			if(motherellipsoid.size() > 0) {
-				
-			//	getEigen( motherellipsoid., ndim );
-			}
-			
-			for (Spot spot : regionspots.iterable(frame, false)) {
-				
-				if (frame < img.dimension(ndim) - 1) {
-					
-					
-					HashMap<Integer, ArrayList<Localizable>> kidsmap = getPixelList(img, ranac, spot, calibration, ndim);
-					HashMap<Integer, Ellipsoid> kidsellipsoid = getEllipsoid(kidsmap);
-					
-					if(kidsellipsoid.size() > 0) {
-						
-						
+
+			if (motherellipsoid.size() > 0) {
+
+				for (Spot spot : regionspots.iterable(frame, false)) {
+
+					if (frame < img.dimension(ndim) - 1) {
+
 					}
-					
-					
+				}
 			}
-		}
-		
 		}
 
 		return regionspots;
 	}
-	
-	
-	
-	private static void getEigen( final Ellipsoid ellipsoid, int ndim ){
-		
+
+	private static void getEigen(final Ellipsoid ellipsoid, int ndim) {
+
 		double[][] covariance = ellipsoid.getCovariance();
 		double[] mean = ellipsoid.getCenter();
-		final EigenvalueDecomposition eig = new Matrix( covariance ).eig();
+		final EigenvalueDecomposition eig = new Matrix(covariance).eig();
 		final double[] Eigenvalues = eig.getRealEigenvalues();
 		final Matrix Eigenvector = eig.getV();
-		
+
 		System.out.println(Eigenvalues);
-		
-		
+
 	}
-	
+
 	private static HashMap<Integer, Ellipsoid> getEllipsoid(HashMap<Integer, ArrayList<Localizable>> pixelmap) {
-		
-		
+
 		HashMap<Integer, Ellipsoid> labelellipsoid = new HashMap<Integer, Ellipsoid>();
-		for (Map.Entry<Integer, ArrayList<Localizable>> currentpixelmap: pixelmap.entrySet()) {
-			
+		for (Map.Entry<Integer, ArrayList<Localizable>> currentpixelmap : pixelmap.entrySet()) {
+
 			ArrayList<Localizable> points = currentpixelmap.getValue();
 			int label = currentpixelmap.getKey();
 			int ndim = points.iterator().next().numDimensions();
 			int nPoints = points.size();
 			if (ndim == 3) {
-				if ( nPoints >= 9 ) {
-					
-			
-				RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 9);
-			int i = 0;	
-			for(Localizable point: points) {
-			
-				
-					final double x = point.getDoublePosition(0);
-					final double y = point.getDoublePosition(1);
-					final double z = point.getDoublePosition(2);
-					double xx = x*x;
-					double yy =y*y;
-					double zz = z*z;
-					double xy = 2 * x *y;
-					double xz = 2 * x * z;
-					double yz = 2 * y * z;
-					MatrixD.setEntry(i, 0, xx);
-					MatrixD.setEntry(i, 1, yy);
-					MatrixD.setEntry(i, 2, zz);
-					MatrixD.setEntry(i, 3, xy);
-					MatrixD.setEntry(i, 4, xz);
-					MatrixD.setEntry(i, 5, yz);
-					MatrixD.setEntry(i, 6, 2 * x);
-					MatrixD.setEntry(i, 7, 2 * y);
-					MatrixD.setEntry(i, 8, 2 * z);
-					
-					i = i + 1;
-				}
-			RealMatrix dtd = MatrixD.transpose().multiply(MatrixD);
-			
-			
-	       // Create a vector of ones.
-			RealVector ones = new ArrayRealVector(nPoints);
-			ones.mapAddToSelf(1);
+				if (nPoints >= 9) {
 
-			// Multiply: d' * ones.mapAddToSelf(1)
-			RealVector dtOnes = MatrixD.transpose().operate(ones);
+					RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 9);
+					int i = 0;
+					for (Localizable point : points) {
 
-			// Find ( d' * d )^-1
-			DecompositionSolver solver = new SingularValueDecomposition(dtd)
-					.getSolver();
-			RealMatrix dtdi = solver.getInverse();
-
-			// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
-			RealVector v = dtdi.operate(dtOnes);
-			Ellipsoid currentellipsoid =  ellipsoidFromEquation( v );
-			labelellipsoid.put(label, currentellipsoid);
-			
-			}
-			}
-			if (ndim == 2) {
-				
-				if ( nPoints >= 6 ) {
-					
-				RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 5);
-				int i = 0;	
-				for(Localizable point: points) {
-				
-					
 						final double x = point.getDoublePosition(0);
 						final double y = point.getDoublePosition(1);
-						
-						double xx = x*x;
-						double yy =y*y;
-						double xy = 2 * x *y;
+						final double z = point.getDoublePosition(2);
+						double xx = x * x;
+						double yy = y * y;
+						double zz = z * z;
+						double xy = 2 * x * y;
+						double xz = 2 * x * z;
+						double yz = 2 * y * z;
+						MatrixD.setEntry(i, 0, xx);
+						MatrixD.setEntry(i, 1, yy);
+						MatrixD.setEntry(i, 2, zz);
+						MatrixD.setEntry(i, 3, xy);
+						MatrixD.setEntry(i, 4, xz);
+						MatrixD.setEntry(i, 5, yz);
+						MatrixD.setEntry(i, 6, 2 * x);
+						MatrixD.setEntry(i, 7, 2 * y);
+						MatrixD.setEntry(i, 8, 2 * z);
+
+						i = i + 1;
+					}
+					RealMatrix dtd = MatrixD.transpose().multiply(MatrixD);
+
+					// Create a vector of ones.
+					RealVector ones = new ArrayRealVector(nPoints);
+					ones.mapAddToSelf(1);
+
+					// Multiply: d' * ones.mapAddToSelf(1)
+					RealVector dtOnes = MatrixD.transpose().operate(ones);
+
+					// Find ( d' * d )^-1
+					DecompositionSolver solver = new SingularValueDecomposition(dtd).getSolver();
+					RealMatrix dtdi = solver.getInverse();
+
+					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
+					RealVector v = dtdi.operate(dtOnes);
+					Ellipsoid currentellipsoid = ellipsoidFromEquation(v);
+					labelellipsoid.put(label, currentellipsoid);
+
+				}
+			}
+			if (ndim == 2) {
+
+				if (nPoints >= 6) {
+
+					RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 5);
+					int i = 0;
+					for (Localizable point : points) {
+
+						final double x = point.getDoublePosition(0);
+						final double y = point.getDoublePosition(1);
+
+						double xx = x * x;
+						double yy = y * y;
+						double xy = 2 * x * y;
 						MatrixD.setEntry(i, 0, xx);
 						MatrixD.setEntry(i, 1, yy);
 						MatrixD.setEntry(i, 2, xy);
 						MatrixD.setEntry(i, 3, 2 * x);
 						MatrixD.setEntry(i, 4, 2 * y);
-						
+
 						i = i + 1;
 					}
-				RealMatrix dtd = MatrixD.transpose().multiply(MatrixD);
-				
-				
-				// Create a vector of ones.
-				RealVector ones = new ArrayRealVector(nPoints);
-				ones.mapAddToSelf(1);
+					RealMatrix dtd = MatrixD.transpose().multiply(MatrixD);
 
-				// Multiply: d' * ones.mapAddToSelf(1)
-				RealVector dtOnes = MatrixD.transpose().operate(ones);
+					// Create a vector of ones.
+					RealVector ones = new ArrayRealVector(nPoints);
+					ones.mapAddToSelf(1);
 
-				// Find ( d' * d )^-1
-				DecompositionSolver solver = new SingularValueDecomposition(dtd)
-						.getSolver();
-				RealMatrix dtdi = solver.getInverse();
+					// Multiply: d' * ones.mapAddToSelf(1)
+					RealVector dtOnes = MatrixD.transpose().operate(ones);
 
-				// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
-				RealVector v = dtdi.operate(dtOnes);
-				Ellipsoid currentellipsoid =  ellipsoidFromEquation2D( v );
-				labelellipsoid.put(label, currentellipsoid);
-				
+					// Find ( d' * d )^-1
+					DecompositionSolver solver = new SingularValueDecomposition(dtd).getSolver();
+					RealMatrix dtdi = solver.getInverse();
+
+					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
+					RealVector v = dtdi.operate(dtOnes);
+					Ellipsoid currentellipsoid = ellipsoidFromEquation2D(v);
+					labelellipsoid.put(label, currentellipsoid);
+
 				}
 			}
-			
+
 		}
-		
+
 		return labelellipsoid;
 	}
-	
-	private static Ellipsoid ellipsoidFromEquation2D( final RealVector V )
-	{
+
+	private static Ellipsoid ellipsoidFromEquation2D(final RealVector V) {
 		final double a = V.getEntry(0);
-		final double b = V.getEntry( 1);
-		final double c = V.getEntry( 2);
-		final double d = V.getEntry( 3);
-		final double e = V.getEntry( 4);
+		final double b = V.getEntry(1);
+		final double c = V.getEntry(2);
+		final double d = V.getEntry(3);
+		final double e = V.getEntry(4);
 		double[] Coefficents = V.toArray();
 
-		
-		final double[][] aa = new double[][] {
-				{ a, c },
-				{ c, b } };
+		final double[][] aa = new double[][] { { a, c }, { c, b } };
 		final double[] bb = new double[] { d, e };
-		final double[] cc = new Matrix( aa ).solve( new Matrix( bb, 2 ) ).getRowPackedCopy();
-		LinAlgHelpers.scale( cc, -1, cc );
-		final double[] At = new double[ 2 ];
-		LinAlgHelpers.mult( aa, cc, At );
-		final double r33 = LinAlgHelpers.dot( cc, At ) + 2 * LinAlgHelpers.dot( bb, cc ) - 1;
-		LinAlgHelpers.scale( aa, -1 / r33, aa );
+		final double[] cc = new Matrix(aa).solve(new Matrix(bb, 2)).getRowPackedCopy();
+		LinAlgHelpers.scale(cc, -1, cc);
+		final double[] At = new double[2];
+		LinAlgHelpers.mult(aa, cc, At);
+		final double r33 = LinAlgHelpers.dot(cc, At) + 2 * LinAlgHelpers.dot(bb, cc) - 1;
+		LinAlgHelpers.scale(aa, -1 / r33, aa);
 		int n = cc.length;
-		double[][] covariance = new Matrix(aa).inverse().getArray();	
-		return (new Ellipsoid( cc, covariance , aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents ));
+		double[][] covariance = new Matrix(aa).inverse().getArray();
+		return (new Ellipsoid(cc, covariance, aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents));
 	}
-	private static Ellipsoid ellipsoidFromEquation( final RealVector V )
-	{
+
+	private static Ellipsoid ellipsoidFromEquation(final RealVector V) {
 		final double a = V.getEntry(0);
-		final double b = V.getEntry( 1);
-		final double c = V.getEntry( 2);
-		final double d = V.getEntry( 3);
-		final double e = V.getEntry( 4);
-		final double f = V.getEntry( 5);
-		final double g = V.getEntry( 6);
-		final double h = V.getEntry( 7);
-		final double i = V.getEntry( 8);
+		final double b = V.getEntry(1);
+		final double c = V.getEntry(2);
+		final double d = V.getEntry(3);
+		final double e = V.getEntry(4);
+		final double f = V.getEntry(5);
+		final double g = V.getEntry(6);
+		final double h = V.getEntry(7);
+		final double i = V.getEntry(8);
 
 		double[] Coefficents = V.toArray();
-		
-		
-		final double[][] aa = new double[][] {
-				{ a, d, e },
-				{ d, b, f },
-				{ e, f, c } };
-		final double[] bb = new double[] { g, h, i };
-		final double[] cc = new Matrix( aa ).solve( new Matrix( bb, 3 ) ).getRowPackedCopy();
-		LinAlgHelpers.scale( cc, -1, cc );
 
-		final double[] At = new double[ 3 ];
-		LinAlgHelpers.mult( aa, cc, At );
-		final double r33 = LinAlgHelpers.dot( cc, At ) + 2 * LinAlgHelpers.dot( bb, cc ) - 1;
-		LinAlgHelpers.scale( aa, -1 / r33, aa );
+		final double[][] aa = new double[][] { { a, d, e }, { d, b, f }, { e, f, c } };
+		final double[] bb = new double[] { g, h, i };
+		final double[] cc = new Matrix(aa).solve(new Matrix(bb, 3)).getRowPackedCopy();
+		LinAlgHelpers.scale(cc, -1, cc);
+
+		final double[] At = new double[3];
+		LinAlgHelpers.mult(aa, cc, At);
+		final double r33 = LinAlgHelpers.dot(cc, At) + 2 * LinAlgHelpers.dot(bb, cc) - 1;
+		LinAlgHelpers.scale(aa, -1 / r33, aa);
 		int n = cc.length;
-		double[][] covariance = new Matrix(aa).inverse().getArray();	
-		return (new Ellipsoid( cc, covariance , aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents ));
+		double[][] covariance = new Matrix(aa).inverse().getArray();
+		return (new Ellipsoid(cc, covariance, aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents));
 	}
-	
-	private static double[] computeAxisAndRadiiFromCovariance(double[][] covariance, int n)
-	{
-		final EigenvalueDecomposition eig = new Matrix( covariance ).eig();
+
+	private static double[] computeAxisAndRadiiFromCovariance(double[][] covariance, int n) {
+		final EigenvalueDecomposition eig = new Matrix(covariance).eig();
 		final Matrix ev = eig.getD();
-		double[] radii = new double[ n ];
-		for ( int d = 0; d < n; ++d )
-			radii[ d ] = Math.sqrt( ev.get( d, d ) );
+		double[] radii = new double[n];
+		for (int d = 0; d < n; ++d)
+			radii[d] = Math.sqrt(ev.get(d, d));
 		return radii;
 	}
-	
-	private static HashMap<Integer, ArrayList<Localizable>>getPixelList(final ImgPlus<UnsignedShortType> img, 
-			RandomAccess<UnsignedShortType> ranac, HashMap<Spot, Integer> spotmap, double[] calibration,  int ndim) {
-		
+
+	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img,
+			RandomAccess<UnsignedShortType> ranac, HashMap<Spot, Integer> spotmap, double[] calibration, int ndim) {
+
 		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
-        
+
 		Cursor<UnsignedShortType> cur = img.localizingCursor();
-		
-		while(cur.hasNext()) {
-			
+
+		while (cur.hasNext()) {
+
 			cur.fwd();
-			for(Map.Entry<Spot, Integer> spotlabelmap : spotmap.entrySet()) {
-			
+			for (Map.Entry<Spot, Integer> spotlabelmap : spotmap.entrySet()) {
+
 				Spot spot = spotlabelmap.getKey();
 				int spotlabel = spotlabelmap.getValue();
 				int currentframe = spot.getFeature(FRAME).intValue();
-				
+
 				int frame = cur.getIntPosition(ndim);
 				int label = cur.get().get();
-			
-				if(frame == currentframe & label == spotlabel) {
-					
-					if(CurrentLabelMap.get(label)!=null) {
-					ArrayList<Localizable> CurrentLabelList = CurrentLabelMap.get(label);
-					Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
-					if(point!=null)
-					CurrentLabelList.add(point);
-					
-					CurrentLabelMap.put(label, CurrentLabelList);
-					}
-					else {
+
+				if (frame == currentframe & label == spotlabel) {
+
+					if (CurrentLabelMap.get(label) != null) {
+						ArrayList<Localizable> CurrentLabelList = CurrentLabelMap.get(label);
+						Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
+						if (point != null)
+							CurrentLabelList.add(point);
+
+						CurrentLabelMap.put(label, CurrentLabelList);
+					} else {
 						ArrayList<Localizable> CurrentLabelList = new ArrayList<Localizable>();
 						Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
-						if(point!=null)
-						CurrentLabelList.add(point);
+						if (point != null)
+							CurrentLabelList.add(point);
 						CurrentLabelMap.put(label, CurrentLabelList);
 					}
 				}
-			
+
 			}
 		}
-		
+
 		return CurrentLabelMap;
 	}
-	
-	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img, 
-			RandomAccess<UnsignedShortType> ranac, Spot spot, double[] calibration,  int ndim) {
-		
+
+	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img,
+			RandomAccess<UnsignedShortType> ranac, Spot spot, double[] calibration, int ndim) {
+
 		ArrayList<Localizable> CurrentLabelList = new ArrayList<Localizable>();
 		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
-		
+
 		long[] location = new long[ndim];
 		for (int d = 0; d < ndim; ++d) {
 			location[d] = (long) (spot.getDoublePosition(d) / calibration[d]);
@@ -841,66 +829,59 @@ public class TrackCorrectorRunner {
 		int frame = spot.getFeature(FRAME).intValue();
 		ranac.setPosition(frame, ndim);
 		int label = ranac.get().get();
-		
+
 		Cursor<UnsignedShortType> cur = img.localizingCursor();
-		
-		while(cur.hasNext()) {
-			
+
+		while (cur.hasNext()) {
+
 			cur.fwd();
-			if(cur.get().get() == label & cur.getIntPosition(ndim) == frame) {
-				
+			if (cur.get().get() == label & cur.getIntPosition(ndim) == frame) {
+
 				Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
-				if(point!=null)
-				CurrentLabelList.add(point);
-				
+				if (point != null)
+					CurrentLabelList.add(point);
+
 			}
-			
+
 		}
-		
+
 		CurrentLabelMap.put(label, CurrentLabelList);
-		
+
 		return CurrentLabelMap;
 	}
-	
-	
-	public static Point getBoundaryLabelPoint(final ImgPlus<UnsignedShortType> img, Cursor<UnsignedShortType> cur, int frame, int label, int ndim) {
-		
-     
-				
-				
-				HyperSphere<UnsignedShortType> sphere = new HyperSphere<UnsignedShortType>(img, cur, 2);
-				double max = 0;
-				double min = Double.MAX_VALUE;
-				
-				for(UnsignedShortType intensity: sphere) {
-					
-				   if(intensity.get() > max)
-					   max = intensity.get();
-				   if(intensity.get() < min)
-					   min = intensity.get();
-					
-				}
-				if(Math.abs(max - min) > 0) {
-					
-					long[] position = new long[ndim - 1];
-					for(int d = 0; d < ndim - 1; d++ )
-						position[d] = cur.getLongPosition(d);
-					// the point is XYZ or XY
-					Point point = new Point(ndim - 1);
-					point.setPosition(position);
-					return point;
-				}
-				
-				else
-					return null;
-			
-			
-		
-		
-	}
-	
 
-	public static Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> , Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getFirstTrackMateobject(
+	public static Point getBoundaryLabelPoint(final ImgPlus<UnsignedShortType> img, Cursor<UnsignedShortType> cur,
+			int frame, int label, int ndim) {
+
+		HyperSphere<UnsignedShortType> sphere = new HyperSphere<UnsignedShortType>(img, cur, 2);
+		double max = 0;
+		double min = Double.MAX_VALUE;
+
+		for (UnsignedShortType intensity : sphere) {
+
+			if (intensity.get() > max)
+				max = intensity.get();
+			if (intensity.get() < min)
+				min = intensity.get();
+
+		}
+		if (Math.abs(max - min) > 0) {
+
+			long[] position = new long[ndim - 1];
+			for (int d = 0; d < ndim - 1; d++)
+				position[d] = cur.getLongPosition(d);
+			// the point is XYZ or XY
+			Point point = new Point(ndim - 1);
+			point.setPosition(position);
+			return point;
+		}
+
+		else
+			return null;
+
+	}
+
+	public static Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getFirstTrackMateobject(
 			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
 
 		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(
@@ -940,16 +921,16 @@ public class TrackCorrectorRunner {
 				}
 			}
 		}
-		Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelIDSpot = 
-				new ValuePair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>(uniquelabelID, uniqueSpot);
+		Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelIDSpot = new ValuePair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>(
+				uniquelabelID, uniqueSpot);
 		return new ValuePair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>>(
 				uniquelabelIDSpot, DividingStartspots);
 
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
-			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelID, final Model model,
-			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelID,
+			final Model model, final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
 
 		HashMap<Integer, Spot> Apoptosisspots = new HashMap<Integer, Spot>();
@@ -1031,8 +1012,8 @@ public class TrackCorrectorRunner {
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
-			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>,HashMap<Spot, Integer>> uniquelabelID, final Model model,
-			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelID,
+			final Model model, final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, double[] calibration) {
 
 		HashMap<Integer, ArrayList<Spot>> Mitosisspots = new HashMap<Integer, ArrayList<Spot>>();
