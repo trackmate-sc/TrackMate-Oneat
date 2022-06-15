@@ -46,6 +46,7 @@ import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imglib2.Cursor;
 import net.imglib2.Localizable;
+import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RealPoint;
@@ -379,8 +380,9 @@ public class TrackCorrectorRunner {
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
 			logger.log("Removing mitotic edges.\n");
 			// Lets take care of mitosis
-			logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
 			if (Mitosisspots != null) {
+			logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
+			
 
 				int trackcount = 0;
 				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
@@ -781,7 +783,7 @@ public class TrackCorrectorRunner {
 	}
 	
 	private static HashMap<Integer, ArrayList<Localizable>>getPixelList(final ImgPlus<UnsignedShortType> img, 
-			RandomAccess<UnsignedShortType> ranac, ArrayList<Spot> spotlist, double[] calibration,  int ndim) {
+			RandomAccess<UnsignedShortType> ranac, HashMap<Spot, Integer> spotmap, double[] calibration,  int ndim) {
 		
 		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
         
@@ -790,7 +792,35 @@ public class TrackCorrectorRunner {
 		while(cur.hasNext()) {
 			
 			cur.fwd();
-			int label = cur.get().get();
+			for(Map.Entry<Spot, Integer> spotlabelmap : spotmap.entrySet()) {
+			
+				Spot spot = spotlabelmap.getKey();
+				int spotlabel = spotlabelmap.getValue();
+				int currentframe = spot.getFeature(FRAME).intValue();
+				
+				int frame = cur.getIntPosition(ndim);
+				int label = cur.get().get();
+			
+				if(frame == currentframe & label == spotlabel) {
+					
+					if(CurrentLabelMap.get(label)!=null) {
+					ArrayList<Localizable> CurrentLabelList = CurrentLabelMap.get(label);
+					Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
+					if(point!=null)
+					CurrentLabelList.add(point);
+					
+					CurrentLabelMap.put(label, CurrentLabelList);
+					}
+					else {
+						ArrayList<Localizable> CurrentLabelList = new ArrayList<Localizable>();
+						Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
+						if(point!=null)
+						CurrentLabelList.add(point);
+						CurrentLabelMap.put(label, CurrentLabelList);
+					}
+				}
+			
+			}
 		}
 		
 		return CurrentLabelMap;
@@ -817,7 +847,25 @@ public class TrackCorrectorRunner {
 		while(cur.hasNext()) {
 			
 			cur.fwd();
-			if(cur.get().get() == label) {
+			if(cur.get().get() == label & cur.getIntPosition(ndim) == frame) {
+				
+				Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
+				if(point!=null)
+				CurrentLabelList.add(point);
+				
+			}
+			
+		}
+		
+		CurrentLabelMap.put(label, CurrentLabelList);
+		
+		return CurrentLabelMap;
+	}
+	
+	
+	public static Point getBoundaryLabelPoint(final ImgPlus<UnsignedShortType> img, Cursor<UnsignedShortType> cur, int frame, int label, int ndim) {
+		
+     
 				
 				
 				HyperSphere<UnsignedShortType> sphere = new HyperSphere<UnsignedShortType>(img, cur, 2);
@@ -832,23 +880,27 @@ public class TrackCorrectorRunner {
 					   min = intensity.get();
 					
 				}
-				if(Math.abs(max - min) > 0)
-				CurrentLabelList.add(cur);
+				if(Math.abs(max - min) > 0) {
+					
+					long[] position = new long[ndim - 1];
+					for(int d = 0; d < ndim - 1; d++ )
+						position[d] = cur.getLongPosition(d);
+					// the point is XYZ or XY
+					Point point = new Point(ndim - 1);
+					point.setPosition(position);
+					return point;
+				}
 				
-			}
+				else
+					return null;
 			
-		}
+			
 		
-		CurrentLabelMap.put(label, CurrentLabelList);
 		
-		return CurrentLabelMap;
 	}
 	
-	
-	
-	
 
-	public static Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> , Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getfirstTrackMateobject(
+	public static Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> , Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getFirstTrackMateobject(
 			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
 
 		Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots = getTMDividing(

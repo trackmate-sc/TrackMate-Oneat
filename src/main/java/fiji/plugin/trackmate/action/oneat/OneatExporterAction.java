@@ -132,6 +132,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 			}
 			
 			final ImgPlus< UnsignedShortType > intimg = (ImgPlus<UnsignedShortType>) detectionimg;
+		
 			
 			OneatCorrector oneatcorrector = corrector.create(intimg, model, trackmate, settings, mapsettings, logger, calibration );
 			oneatcorrector.checkInput();
