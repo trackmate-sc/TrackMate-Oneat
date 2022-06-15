@@ -433,7 +433,9 @@ public class TrackCorrectorRunner {
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
 						if(mariprinciple) {
 								ellipsoid = getEllipsoid(motherspot, img, calibration);
-								
+								System.out.println("trackID " + trackID + " " + motherspot.ID());
+								if(ellipsoid!=null)
+									getEigen(ellipsoid,ndim);
 								logger.setProgress(maricount / mitosismotherspots.size());
 						}
 						
@@ -461,7 +463,7 @@ public class TrackCorrectorRunner {
 							if (frame > 0) {
 
 								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,
-										(int) frame, searchdistance, ellipsoid, mariprinciple);
+										(int) frame, searchdistance,  mariprinciple);
 
 								if (regionspots.getNSpots((int) frame, false) > 0)
 									for (Spot spot : regionspots.iterable((int) frame, false)) {
@@ -559,7 +561,7 @@ public class TrackCorrectorRunner {
 
 	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
 			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,
-			final double region, final Ellipsoid ellipsoid,  final boolean mariprinciple) {
+			final double region,  final boolean mariprinciple) {
 
 		SpotCollection regionspots = new SpotCollection();
 
@@ -581,8 +583,7 @@ public class TrackCorrectorRunner {
          
             
 			
-				if(ellipsoid!=null)
-				getEigen(ellipsoid,ndim);
+				
 		
 			
 			
@@ -609,7 +610,7 @@ public class TrackCorrectorRunner {
 		final Matrix Eigenvector = eig.getV();
 
 		for(int i = 0; i < Eigenvalues.length; ++i)
-		System.out.println("Eigenvalues" + Eigenvalues[i]);
+		System.out.println("Eigenvalues" + " " +  Eigenvalues[i]);
 
 	}
 
@@ -623,76 +624,65 @@ public class TrackCorrectorRunner {
 			{
 				center[ d ] = Math.round( currentspot.getFeature( Spot.POSITION_FEATURES[ d ] ).doubleValue() / calibration[ d ] );
 			}
-			// Span
-			final long[] span = new long[ currentspot.numDimensions() ];
-			for ( int d = 0; d < span.length; d++ )
-			{
-				span[ d ] = Math.round( currentspot.getFeature( Spot.RADIUS ) / calibration[ d ] );
-			}
+			
 		
 			final OutOfBoundsMirrorExpWindowingFactory< UnsignedShortType, RandomAccessibleInterval< UnsignedShortType >> oob = new OutOfBoundsMirrorExpWindowingFactory<>();
-			AbstractNeighborhood< UnsignedShortType > neighborhood = new EllipsoidNeighborhood< >( ImgPlusViews.hyperSlice( img, ndim - 1, (int) currentspot.getFeature(Spot.FRAME).intValue() ), center, span, oob );
+			ImgPlus<UnsignedShortType> frameimg = ImgPlusViews.hyperSlice( img, ndim - 1, (int) currentspot.getFeature(Spot.FRAME).intValue() );
+			
+			long[] location = new long[ndim - 1];
+			RandomAccess<UnsignedShortType> ranac = frameimg.randomAccess();
+			for (int d = 0; d < ndim - 1; ++d) {
+				location[d] = (long) (currentspot.getDoublePosition(d) / calibration[d]);
+				ranac.setPosition(location[d], d);
+			}
+
+			
+			int label = ranac.get().get();
+			
+			Cursor<UnsignedShortType> cur = frameimg.localizingCursor();
+			double[] mind = new double[frameimg.numDimensions()];
+			double[] maxd = new double[frameimg.numDimensions()];
+			while(cur.hasNext()) {
+				
+				cur.fwd();
+				
+				if(cur.get().get() == label) {
+					for(int d = 0; d < frameimg.numDimensions(); ++d) {
+					if(cur.getDoublePosition(d) > maxd[d])
+						maxd[d] = cur.getDoublePosition(d);
+					if(cur.getDoublePosition(d) < mind[d])
+						mind[d] = cur.getDoublePosition(d);
+						
+					}
+					
+				}
+				
+			}
+			// Span
+						final long[] span = new long[ currentspot.numDimensions() ];
+						for ( int d = 0; d < span.length; d++ )
+						{
+							span[ d ] = Math.round( maxd[d] - mind[d] );
+						}
+			AbstractNeighborhood< UnsignedShortType > neighborhood = new EllipsoidNeighborhood< >( frameimg, center, span, oob );
 			Cursor<UnsignedShortType> iterator = neighborhood.localizingCursor();
 			
 			ArrayList<Localizable> points = new ArrayList<Localizable>();
 			while(iterator.hasNext()) {
 				
 				iterator.next();
-				
-				points.add(iterator);
+				long[] point = new long[center.length];
+				for ( int d = 0; d < center.length; d++ )
+				{
+					point[d] = iterator.getLongPosition(d) - center[d];
+					
+				}
+				points.add(new Point(point));
 				
 			}
 			int nPoints = points.size();
 			
-			if (ndim == 4) {
-				if (nPoints >= 9) {
-
-					RealMatrix MatrixD = new Array2DRowRealMatrix(nPoints, 9);
-					int i = 0;
-					for (Localizable point : points) {
-
-						final double x = point.getDoublePosition(0);
-						final double y = point.getDoublePosition(1);
-						final double z = point.getDoublePosition(2);
-						double xx = x * x;
-						double yy = y * y;
-						double zz = z * z;
-						double xy = 2 * x * y;
-						double xz = 2 * x * z;
-						double yz = 2 * y * z;
-						MatrixD.setEntry(i, 0, xx);
-						MatrixD.setEntry(i, 1, yy);
-						MatrixD.setEntry(i, 2, zz);
-						MatrixD.setEntry(i, 3, xy);
-						MatrixD.setEntry(i, 4, xz);
-						MatrixD.setEntry(i, 5, yz);
-						MatrixD.setEntry(i, 6, 2 * x);
-						MatrixD.setEntry(i, 7, 2 * y);
-						MatrixD.setEntry(i, 8, 2 * z);
-
-						i = i + 1;
-					}
-					RealMatrix dtd = MatrixD.transpose().multiply(MatrixD);
-
-					// Create a vector of ones.
-					RealVector ones = new ArrayRealVector(nPoints);
-					ones.mapAddToSelf(1);
-
-					// Multiply: d' * ones.mapAddToSelf(1)
-					RealVector dtOnes = MatrixD.transpose().operate(ones);
-
-					// Find ( d' * d )^-1
-					DecompositionSolver solver = new SingularValueDecomposition(dtd).getSolver();
-					RealMatrix dtdi = solver.getInverse();
-
-					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
-					RealVector v = dtdi.operate(dtOnes);
-					currentellipsoid = ellipsoidFromEquation(v);
-					
-
-				}
-			}
-			if (ndim == 3) {
+			
 
 				if (nPoints >= 6) {
 
@@ -703,6 +693,7 @@ public class TrackCorrectorRunner {
 						final double x = point.getDoublePosition(0);
 						final double y = point.getDoublePosition(1);
 
+						
 						double xx = x * x;
 						double yy = y * y;
 						double xy = 2 * x * y;
@@ -731,12 +722,6 @@ public class TrackCorrectorRunner {
 					RealVector v = dtdi.operate(dtOnes);
 				
 					currentellipsoid = ellipsoidFromEquation2D(v);
-					
-				}
-			
-					
-					
-					
 				
 			}
 
@@ -782,7 +767,7 @@ public class TrackCorrectorRunner {
 		final double[][] aa = new double[][] { { a, d, e }, { d, b, f }, { e, f, c } };
 		final double[] bb = new double[] { g, h, i };
 		double det = new Matrix(aa).det();
-		System.out.println("determinant" + det);
+		System.out.println("determinant" + " " +  det);
 		if(det > 1.0E-15) {
 		final double[] cc = new Matrix(aa).solve(new Matrix(bb, 3)).getRowPackedCopy();
 		LinAlgHelpers.scale(cc, -1, cc);
@@ -805,7 +790,7 @@ public class TrackCorrectorRunner {
 		double[] radii = new double[n];
 		for (int d = 0; d < n; ++d) {
 			radii[d] = Math.sqrt(ev.get(d, d));
-		    System.out.println("radii" + radii[d]);
+		    System.out.println("radii" + " " +  radii[d]);
 		}
 		return radii;
 	}
