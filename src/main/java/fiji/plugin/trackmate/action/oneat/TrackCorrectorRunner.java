@@ -45,21 +45,29 @@ import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imglib2.Cursor;
+import net.imglib2.Interval;
 import net.imglib2.Localizable;
 import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
+import net.imglib2.algorithm.region.localneighborhood.AbstractNeighborhood;
+import net.imglib2.algorithm.region.localneighborhood.EllipsoidNeighborhood;
+import net.imglib2.algorithm.region.localneighborhood.RectangleNeighborhoodGPL;
 import net.imglib2.img.display.imagej.ImgPlusViews;
 import net.imglib2.loops.LoopBuilder;
+import net.imglib2.outofbounds.OutOfBoundsMirrorExpWindowingFactory;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 import static fiji.plugin.trackmate.Spot.POSITION_X;
@@ -382,14 +390,19 @@ public class TrackCorrectorRunner {
 			// Lets take care of mitosis
 			if (Mitosisspots != null) {
 				logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
-
-				HashMap<Integer, Ellipsoid> motherellipsoid = new HashMap<Integer, Ellipsoid>();
+                int maricount = 0;
+                ArrayList<Ellipsoid> motherellipsoid = new ArrayList<Ellipsoid>();
 				if (mariprinciple) {
 					HashMap<Spot, Integer> allspotlabels = uniquelabelID.getB();
 
 					HashMap<Spot, Integer> interestingspotlabels = new HashMap<Spot, Integer>();
 
 					ArrayList<Spot> allmitosismotherspots = new ArrayList<Spot>();
+					
+					logger.setProgress(maricount / Mitosisspots.entrySet().size());
+					logger.flush();
+					logger.log("Computing ellipsoids for Mari's priniciple.\n");
+					maricount++;
 					for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
 						Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
 						ArrayList<Spot> mitosismotherspots = trackspots.getB();
@@ -402,10 +415,7 @@ public class TrackCorrectorRunner {
 						interestingspotlabels.put(interestingspot, label);
 
 					}
-					RandomAccess<UnsignedShortType> ranac = img.randomAccess();
-					HashMap<Integer, ArrayList<Localizable>> mothermap = getPixelList(img, ranac, interestingspotlabels,
-							calibration, ndim);
-					motherellipsoid = getEllipsoid(mothermap);
+					motherellipsoid = getEllipsoid(allmitosismotherspots, img, calibration);
 				}
 				int trackcount = 0;
 				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
@@ -563,7 +573,7 @@ public class TrackCorrectorRunner {
 
 	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
 			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,
-			final double region, HashMap<Integer, Ellipsoid> motherellipsoid, final boolean mariprinciple) {
+			final double region, ArrayList<Ellipsoid> motherellipsoid, final boolean mariprinciple) {
 
 		SpotCollection regionspots = new SpotCollection();
 
@@ -582,16 +592,24 @@ public class TrackCorrectorRunner {
 
 			// Invoke Mari principle calculation
 			int ndim = img.numDimensions() - 1;
-
-			if (motherellipsoid.size() > 0) {
-
-				for (Spot spot : regionspots.iterable(frame, false)) {
-
-					if (frame < img.dimension(ndim) - 1) {
-
-					}
-				}
+            int count = 0;
+			for(Ellipsoid ellipsoid: motherellipsoid) {
+				logger.setProgress(count / motherellipsoid.size());
+				logger.flush();
+				logger.log("Using Mari's priniciple for track linking.\n");
+				getEigen(ellipsoid,ndim);
+				count++;
 			}
+			
+		//	if (motherellipsoid.size() > 0) {
+
+				//for (Spot spot : regionspots.iterable(frame, false)) {
+
+					//if (frame < img.dimension(ndim) - 1) {
+
+				//	}
+				//}
+			//}
 		}
 
 		return regionspots;
@@ -609,14 +627,33 @@ public class TrackCorrectorRunner {
 
 	}
 
-	private static HashMap<Integer, Ellipsoid> getEllipsoid(HashMap<Integer, ArrayList<Localizable>> pixelmap) {
+	private static ArrayList<Ellipsoid> getEllipsoid(ArrayList<Spot> pixelmap, ImgPlus<UnsignedShortType> img, double[] calibration) {
 
-		HashMap<Integer, Ellipsoid> labelellipsoid = new HashMap<Integer, Ellipsoid>();
-		for (Map.Entry<Integer, ArrayList<Localizable>> currentpixelmap : pixelmap.entrySet()) {
-
-			ArrayList<Localizable> points = currentpixelmap.getValue();
-			int label = currentpixelmap.getKey();
-			int ndim = points.iterator().next().numDimensions();
+		ArrayList<Ellipsoid> labelellipsoid = new ArrayList<Ellipsoid>();
+		for ( Spot currentspot : pixelmap) {
+			 long[] center = new long[currentspot.numDimensions()];
+			for ( int d = 0; d < center.length; d++ )
+			{
+				center[ d ] = Math.round( currentspot.getFeature( Spot.POSITION_FEATURES[ d ] ).doubleValue() / calibration[ d ] );
+			}
+			// Span
+			final long[] span = new long[ currentspot.numDimensions() ];
+			for ( int d = 0; d < span.length; d++ )
+			{
+				span[ d ] = Math.round( currentspot.getFeature( Spot.RADIUS ) / calibration[ d ] );
+			}
+		
+			final OutOfBoundsMirrorExpWindowingFactory< UnsignedShortType, RandomAccessibleInterval< UnsignedShortType >> oob = new OutOfBoundsMirrorExpWindowingFactory<>();
+			AbstractNeighborhood< UnsignedShortType > neighborhood = new EllipsoidNeighborhood< >( img, center, span, oob );
+			Cursor<UnsignedShortType> iterator = neighborhood.localizingCursor();
+			
+			ArrayList<Localizable> points = new ArrayList<Localizable>();
+			while(iterator.hasNext()) {
+				
+				points.add(iterator);
+				
+			}
+			int ndim = img.numDimensions();
 			int nPoints = points.size();
 			if (ndim == 3) {
 				if (nPoints >= 9) {
@@ -662,7 +699,7 @@ public class TrackCorrectorRunner {
 					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
 					RealVector v = dtdi.operate(dtOnes);
 					Ellipsoid currentellipsoid = ellipsoidFromEquation(v);
-					labelellipsoid.put(label, currentellipsoid);
+					labelellipsoid.add(currentellipsoid);
 
 				}
 			}
@@ -704,7 +741,7 @@ public class TrackCorrectorRunner {
 					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
 					RealVector v = dtdi.operate(dtOnes);
 					Ellipsoid currentellipsoid = ellipsoidFromEquation2D(v);
-					labelellipsoid.put(label, currentellipsoid);
+					labelellipsoid.add(currentellipsoid);
 
 				}
 			}
@@ -771,116 +808,10 @@ public class TrackCorrectorRunner {
 		return radii;
 	}
 
-	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img,
-			RandomAccess<UnsignedShortType> ranac, HashMap<Spot, Integer> spotmap, double[] calibration, int ndim) {
+	
+	
 
-		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
-
-		Cursor<UnsignedShortType> cur = img.localizingCursor();
-
-		while (cur.hasNext()) {
-
-			cur.fwd();
-			for (Map.Entry<Spot, Integer> spotlabelmap : spotmap.entrySet()) {
-
-				Spot spot = spotlabelmap.getKey();
-				int spotlabel = spotlabelmap.getValue();
-				int currentframe = spot.getFeature(FRAME).intValue();
-
-				int frame = cur.getIntPosition(ndim);
-				int label = cur.get().get();
-
-				if (frame == currentframe & label == spotlabel) {
-
-					if (CurrentLabelMap.get(label) != null) {
-						ArrayList<Localizable> CurrentLabelList = CurrentLabelMap.get(label);
-						Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
-						if (point != null)
-							CurrentLabelList.add(point);
-
-						CurrentLabelMap.put(label, CurrentLabelList);
-					} else {
-						ArrayList<Localizable> CurrentLabelList = new ArrayList<Localizable>();
-						Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
-						if (point != null)
-							CurrentLabelList.add(point);
-						CurrentLabelMap.put(label, CurrentLabelList);
-					}
-				}
-
-			}
-		}
-
-		return CurrentLabelMap;
-	}
-
-	private static HashMap<Integer, ArrayList<Localizable>> getPixelList(final ImgPlus<UnsignedShortType> img,
-			RandomAccess<UnsignedShortType> ranac, Spot spot, double[] calibration, int ndim) {
-
-		ArrayList<Localizable> CurrentLabelList = new ArrayList<Localizable>();
-		HashMap<Integer, ArrayList<Localizable>> CurrentLabelMap = new HashMap<>();
-
-		long[] location = new long[ndim];
-		for (int d = 0; d < ndim; ++d) {
-			location[d] = (long) (spot.getDoublePosition(d) / calibration[d]);
-			ranac.setPosition(location[d], d);
-		}
-
-		int frame = spot.getFeature(FRAME).intValue();
-		ranac.setPosition(frame, ndim);
-		int label = ranac.get().get();
-
-		Cursor<UnsignedShortType> cur = img.localizingCursor();
-
-		while (cur.hasNext()) {
-
-			cur.fwd();
-			if (cur.get().get() == label & cur.getIntPosition(ndim) == frame) {
-
-				Point point = getBoundaryLabelPoint(img, cur, frame, label, ndim);
-				if (point != null)
-					CurrentLabelList.add(point);
-
-			}
-
-		}
-
-		CurrentLabelMap.put(label, CurrentLabelList);
-
-		return CurrentLabelMap;
-	}
-
-	public static Point getBoundaryLabelPoint(final ImgPlus<UnsignedShortType> img, Cursor<UnsignedShortType> cur,
-			int frame, int label, int ndim) {
-
-		HyperSphere<UnsignedShortType> sphere = new HyperSphere<UnsignedShortType>(img, cur, 2);
-		double max = 0;
-		double min = Double.MAX_VALUE;
-
-		for (UnsignedShortType intensity : sphere) {
-
-			if (intensity.get() > max)
-				max = intensity.get();
-			if (intensity.get() < min)
-				min = intensity.get();
-
-		}
-		if (Math.abs(max - min) > 0) {
-
-			long[] position = new long[ndim - 1];
-			for (int d = 0; d < ndim - 1; d++)
-				position[d] = cur.getLongPosition(d);
-			// the point is XYZ or XY
-			Point point = new Point(ndim - 1);
-			point.setPosition(position);
-			return point;
-		}
-
-		else
-			return null;
-
-	}
-
+	
 	public static Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> getFirstTrackMateobject(
 			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
 
