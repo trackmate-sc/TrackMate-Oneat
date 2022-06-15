@@ -386,37 +386,13 @@ public class TrackCorrectorRunner {
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
 			else
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
-			logger.log("Removing mitotic edges.\n");
+			
 			// Lets take care of mitosis
 			if (Mitosisspots != null) {
 				logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
-                int maricount = 0;
-                ArrayList<Ellipsoid> motherellipsoid = new ArrayList<Ellipsoid>();
-				if (mariprinciple) {
-					HashMap<Spot, Integer> allspotlabels = uniquelabelID.getB();
-
-					HashMap<Spot, Integer> interestingspotlabels = new HashMap<Spot, Integer>();
-
-					ArrayList<Spot> allmitosismotherspots = new ArrayList<Spot>();
-					
-					logger.setProgress(maricount / Mitosisspots.entrySet().size());
-					logger.flush();
-					logger.log("Computing ellipsoids for Mari's priniciple.\n");
-					maricount++;
-					for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
-						Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
-						ArrayList<Spot> mitosismotherspots = trackspots.getB();
-						allmitosismotherspots.addAll(mitosismotherspots);
-					}
-
-					for (Spot interestingspot : allmitosismotherspots) {
-
-						int label = allspotlabels.get(interestingspot);
-						interestingspotlabels.put(interestingspot, label);
-
-					}
-					motherellipsoid = getEllipsoid(allmitosismotherspots, img, calibration);
-				}
+         
+               
+			
 				int trackcount = 0;
 				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
 
@@ -448,10 +424,15 @@ public class TrackCorrectorRunner {
 
 					}
 
+					int maricount = 0;
 					for (Spot motherspot : mitosismotherspots) {
 
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
-
+						Ellipsoid ellipsoid = getEllipsoid(motherspot, img, calibration);
+						logger.setProgress(maricount / mitosismotherspots.size());
+						logger.flush();
+						logger.log("Using Mari's priniciple for track linking.\n");
+						maricount++;
 						SimpleWeightedGraph<Spot, DefaultWeightedEdge> localgraph = new SimpleWeightedGraph<>(
 								DefaultWeightedEdge.class);
 						for (DefaultWeightedEdge localedge : mothertrack) {
@@ -465,7 +446,7 @@ public class TrackCorrectorRunner {
 								localgraph.addVertex(target);
 								localgraph.addEdge(source, target);
 								localgraph.setEdgeWeight(localedge, linkcost);
-
+								
 							}
 						}
 
@@ -475,7 +456,7 @@ public class TrackCorrectorRunner {
 							if (frame > 0) {
 
 								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,
-										(int) frame, searchdistance, motherellipsoid, mariprinciple);
+										(int) frame, searchdistance, ellipsoid, mariprinciple);
 
 								if (regionspots.getNSpots((int) frame, false) > 0)
 									for (Spot spot : regionspots.iterable((int) frame, false)) {
@@ -573,7 +554,7 @@ public class TrackCorrectorRunner {
 
 	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
 			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,
-			final double region, ArrayList<Ellipsoid> motherellipsoid, final boolean mariprinciple) {
+			final double region, final Ellipsoid ellipsoid,  final boolean mariprinciple) {
 
 		SpotCollection regionspots = new SpotCollection();
 
@@ -592,14 +573,13 @@ public class TrackCorrectorRunner {
 
 			// Invoke Mari principle calculation
 			int ndim = img.numDimensions() - 1;
-            int count = 0;
-			for(Ellipsoid ellipsoid: motherellipsoid) {
-				logger.setProgress(count / motherellipsoid.size());
-				logger.flush();
-				logger.log("Using Mari's priniciple for track linking.\n");
+         
+            
+			
+				
 				getEigen(ellipsoid,ndim);
-				count++;
-			}
+		
+			
 			
 		//	if (motherellipsoid.size() > 0) {
 
@@ -627,11 +607,11 @@ public class TrackCorrectorRunner {
 
 	}
 
-	private static ArrayList<Ellipsoid> getEllipsoid(ArrayList<Spot> pixelmap, ImgPlus<UnsignedShortType> img, double[] calibration) {
+	private static Ellipsoid getEllipsoid(Spot currentspot, ImgPlus<UnsignedShortType> img, double[] calibration) {
 
-		ArrayList<Ellipsoid> labelellipsoid = new ArrayList<Ellipsoid>();
+		
 		int ndim = img.numDimensions();
-		for ( Spot currentspot : pixelmap) {
+		Ellipsoid currentellipsoid = null;
 			 long[] center = new long[currentspot.numDimensions()];
 			for ( int d = 0; d < center.length; d++ )
 			{
@@ -651,6 +631,7 @@ public class TrackCorrectorRunner {
 			ArrayList<Localizable> points = new ArrayList<Localizable>();
 			while(iterator.hasNext()) {
 				
+				iterator.next();
 				points.add(iterator);
 				
 			}
@@ -698,8 +679,8 @@ public class TrackCorrectorRunner {
 
 					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
 					RealVector v = dtdi.operate(dtOnes);
-					Ellipsoid currentellipsoid = ellipsoidFromEquation(v);
-					labelellipsoid.add(currentellipsoid);
+					currentellipsoid = ellipsoidFromEquation(v);
+					
 
 				}
 			}
@@ -740,15 +721,19 @@ public class TrackCorrectorRunner {
 
 					// v = (( d' * d )^-1) * ( d' * ones.mapAddToSelf(1));
 					RealVector v = dtdi.operate(dtOnes);
-					Ellipsoid currentellipsoid = ellipsoidFromEquation2D(v);
-					labelellipsoid.add(currentellipsoid);
-
+					currentellipsoid = ellipsoidFromEquation2D(v);
+					
 				}
+			
+					
+					
+					
+				
 			}
 
-		}
+	
 
-		return labelellipsoid;
+		return currentellipsoid;
 	}
 
 	private static Ellipsoid ellipsoidFromEquation2D(final RealVector V) {
