@@ -608,10 +608,34 @@ public class TrackCorrectorRunner {
 		final EigenvalueDecomposition eig = new Matrix(covariance).eig();
 		final double[] Eigenvalues = eig.getRealEigenvalues();
 		final Matrix Eigenvector = eig.getV();
+		
 
-		for(int i = 0; i < Eigenvalues.length; ++i)
-		System.out.println("Eigenvalues" + " " +  Eigenvalues[i]);
-
+		double smallesteigenval = Double.MAX_VALUE;
+		int index = -1;
+		for(int i = 0; i < Eigenvalues.length; ++i) { 
+		 
+		    if(Eigenvalues[i] < smallesteigenval) {
+		    	
+		    	smallesteigenval = Eigenvalues[i];
+		    	index = i;
+		    }
+			System.out.println("Eigenvalues" + " " +  Eigenvalues[i]);
+		
+		}
+		
+		System.out.println("Smallest Eigenvalues" + " " +  smallesteigenval + " at " + index);
+		for(int i = 0; i < Eigenvector.getRowDimension(); ++i) {
+			
+			for(int j = 0; j < Eigenvector.getColumnDimension(); ++j) {
+		System.out.println("Eigenvector" + " " + i + " " + j +  Eigenvector.get(i, j));
+		
+		
+		
+		}
+			
+			
+		}
+		
 	}
 
 	private static Ellipsoid getEllipsoid(Spot currentspot, ImgPlus<UnsignedShortType> img, double[] calibration) {
@@ -626,7 +650,6 @@ public class TrackCorrectorRunner {
 			}
 			
 		
-			final OutOfBoundsMirrorExpWindowingFactory< UnsignedShortType, RandomAccessibleInterval< UnsignedShortType >> oob = new OutOfBoundsMirrorExpWindowingFactory<>();
 			ImgPlus<UnsignedShortType> frameimg = ImgPlusViews.hyperSlice( img, ndim - 1, (int) currentspot.getFeature(Spot.FRAME).intValue() );
 			
 			long[] location = new long[ndim - 1];
@@ -640,46 +663,29 @@ public class TrackCorrectorRunner {
 			int label = ranac.get().get();
 			
 			Cursor<UnsignedShortType> cur = frameimg.localizingCursor();
-			double[] mind = new double[frameimg.numDimensions()];
-			double[] maxd = new double[frameimg.numDimensions()];
+			ArrayList<Localizable> points = new ArrayList<Localizable>();
 			while(cur.hasNext()) {
 				
 				cur.fwd();
 				
 				if(cur.get().get() == label) {
-					for(int d = 0; d < frameimg.numDimensions(); ++d) {
-					if(cur.getDoublePosition(d) > maxd[d])
-						maxd[d] = cur.getDoublePosition(d);
-					if(cur.getDoublePosition(d) < mind[d])
-						mind[d] = cur.getDoublePosition(d);
+					
+					
+					
+					long[] point = new long[center.length];
+					for ( int d = 0; d < center.length; d++ )
+					{
+						point[d] = cur.getLongPosition(d) - center[d];
 						
 					}
+					points.add(new Point(point));
+					
+				
 					
 				}
 				
 			}
-			// Span
-						final long[] span = new long[ currentspot.numDimensions() ];
-						for ( int d = 0; d < span.length; d++ )
-						{
-							span[ d ] = Math.round( maxd[d] - mind[d] );
-						}
-			AbstractNeighborhood< UnsignedShortType > neighborhood = new EllipsoidNeighborhood< >( frameimg, center, span, oob );
-			Cursor<UnsignedShortType> iterator = neighborhood.localizingCursor();
 			
-			ArrayList<Localizable> points = new ArrayList<Localizable>();
-			while(iterator.hasNext()) {
-				
-				iterator.next();
-				long[] point = new long[center.length];
-				for ( int d = 0; d < center.length; d++ )
-				{
-					point[d] = iterator.getLongPosition(d) - center[d];
-					
-				}
-				points.add(new Point(point));
-				
-			}
 			int nPoints = points.size();
 			
 			
@@ -738,8 +744,13 @@ public class TrackCorrectorRunner {
 		final double e = V.getEntry(4);
 		double[] Coefficents = V.toArray();
 
+		
 		final double[][] aa = new double[][] { { a, c }, { c, b } };
+		
 		final double[] bb = new double[] { d, e };
+        double det = new Matrix(aa).det();
+		
+		if(det > 1.0E-15) {
 		final double[] cc = new Matrix(aa).solve(new Matrix(bb, 2)).getRowPackedCopy();
 		LinAlgHelpers.scale(cc, -1, cc);
 		final double[] At = new double[2];
@@ -748,10 +759,17 @@ public class TrackCorrectorRunner {
 		LinAlgHelpers.scale(aa, -1 / r33, aa);
 		int n = cc.length;
 		double[][] covariance = new Matrix(aa).inverse().getArray();
+	
+				
+		
+
 		return (new Ellipsoid(cc, covariance, aa, null, computeAxisAndRadiiFromCovariance(covariance, n), Coefficents));
+		}
+		else
+			return null;
 	}
 
-	private static Ellipsoid ellipsoidFromEquation(final RealVector V) {
+	private static Ellipsoid ellipsoidFromEquation3D(final RealVector V) {
 		final double a = V.getEntry(0);
 		final double b = V.getEntry(1);
 		final double c = V.getEntry(2);
@@ -767,7 +785,7 @@ public class TrackCorrectorRunner {
 		final double[][] aa = new double[][] { { a, d, e }, { d, b, f }, { e, f, c } };
 		final double[] bb = new double[] { g, h, i };
 		double det = new Matrix(aa).det();
-		System.out.println("determinant" + " " +  det);
+		
 		if(det > 1.0E-15) {
 		final double[] cc = new Matrix(aa).solve(new Matrix(bb, 3)).getRowPackedCopy();
 		LinAlgHelpers.scale(cc, -1, cc);
