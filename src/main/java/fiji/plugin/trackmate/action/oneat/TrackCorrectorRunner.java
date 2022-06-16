@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.commons.math3.analysis.function.Atan2;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.DecompositionSolver;
@@ -427,7 +428,8 @@ public class TrackCorrectorRunner {
 
 					int maricount = 0;
 					Ellipsoid ellipsoid = null;
-					
+					double[] motherslope = new double[2];
+					Double motherangle = null;
 					for (Spot motherspot : mitosismotherspots) {
 
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
@@ -435,7 +437,9 @@ public class TrackCorrectorRunner {
 								ellipsoid = getEllipsoid(motherspot, img, calibration);
 								System.out.println("trackID " + trackID + " " + motherspot.ID());
 								if(ellipsoid!=null)
-									getEigen(ellipsoid,ndim);
+									motherslope = getEigen(ellipsoid,ndim);
+								    motherangle = ((180/3.14) * Math.atan2(motherslope[1], motherslope[0]) + 360) % 360;
+								    System.out.println("mother slope " + " " + motherslope[1]/motherslope[0] + " " + " angle " + motherangle);
 								logger.setProgress(maricount / mitosismotherspots.size());
 						}
 						
@@ -601,7 +605,7 @@ public class TrackCorrectorRunner {
 		return regionspots;
 	}
 
-	private static void getEigen(final Ellipsoid ellipsoid, int ndim) {
+	private static double[] getEigen(final Ellipsoid ellipsoid, int ndim) {
 
 		double[][] covariance = ellipsoid.getCovariance();
 		double[] mean = ellipsoid.getCenter();
@@ -619,22 +623,20 @@ public class TrackCorrectorRunner {
 		    	smallesteigenval = Eigenvalues[i];
 		    	index = i;
 		    }
-			System.out.println("Eigenvalues" + " " +  Eigenvalues[i]);
+			
 		
 		}
 		
-		System.out.println("Smallest Eigenvalues" + " " +  smallesteigenval + " at " + index);
-		for(int i = 0; i < Eigenvector.getRowDimension(); ++i) {
+
+		double[] smallvec = new double[Eigenvalues.length];
+		
+		for(int i = 0; i <Eigenvector.getRowDimension(); ++i) {
 			
-			for(int j = 0; j < Eigenvector.getColumnDimension(); ++j) {
-		System.out.println("Eigenvector" + " " + i + " " + j +  Eigenvector.get(i, j));
-		
-		
-		
-		}
-			
+			smallvec[i] = Eigenvector.get(i, index);
 			
 		}
+		
+		return smallvec;
 		
 	}
 
