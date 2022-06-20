@@ -29,22 +29,13 @@ public class OneatCorrector implements TrackCorrector {
 
 	private final File oneatapoptosis;
 
-    private final int mintrackletlength;
-    
-    private final int detectionchannel;
-    
-    private final int timegap;
-    
-    
-    private final double linkingdistance;
+   
 	
 	private final Model model;
 	
 	private final TrackMate trackmate;
 	
-	private final boolean createlinks;
-	
-	private final boolean breaklinks;
+
 	
 	private final double[] calibration;
 
@@ -83,12 +74,7 @@ public class OneatCorrector implements TrackCorrector {
 			final File oneatdivision, 
 			final File oneatapoptosis, 
 			final ImgPlus<UnsignedShortType> intimg, 
-			final int mintrackletlength,
-			final int timegap,
-			final int detectionchannel,
-			final double linkingdistance,
-			final boolean createlinks, 
-			final boolean breaklinks, final Model model, final TrackMate trackmate, final Settings modelsettings, double[] calibration,
+			final Model model, final TrackMate trackmate, final Settings modelsettings, double[] calibration,
 			Map<String, Object> settings, final Logger logger) {
 
 		this.oneatdivision = oneatdivision;
@@ -97,19 +83,7 @@ public class OneatCorrector implements TrackCorrector {
 
 		this.img = intimg;
 		
-		this.mintrackletlength = mintrackletlength;
-		
-		this.timegap = timegap;
-		
-		this.detectionchannel = detectionchannel;
-		
-	    this.trackmate = trackmate;
-		
-		this.linkingdistance = linkingdistance;
-
-		this.createlinks = createlinks;
-		
-		this.breaklinks = breaklinks;
+		this.trackmate = trackmate;
 		
 		this.model = model;
 		

@@ -45,6 +45,8 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
     
     public static final String KEY_USE_MARI_PRINCIPLE = "USE MARI PRINCIPLE";
     
+    public static final String KEY_MARI_ANGLE = "MARI ANGLE";
+    
     protected ImgPlus< IntType > img;
 	
 
@@ -95,21 +97,8 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  
 		  File oneatapoptosisfile = (File) settings.get(APOPTOSIS_FILE);
 		  
-		  int mintrackletlength = (int) settings.get(KEY_TRACKLET_LENGTH);
-		  
-		  int timegap = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-		  
-		  double linkingdistance = (double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
-				  
-		  final boolean createlinks = ( boolean ) settings.get( KEY_CREATE_LINKS );
-		  
-		  final boolean breaklinks = ( boolean ) settings.get( KEY_BREAK_LINKS );
-		  
-		  
-		  
-		  int detectionchannel = (int) settings.get(KEY_TARGET_CHANNEL);
-		  assert detectionchannel <= img.numDimensions(): "Channel can not exceed the image dimension";
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg, (int) mintrackletlength, (int) timegap, detectionchannel, linkingdistance, createlinks, breaklinks, model, trackmate, modelsettings, calibration, settings, logger);
+	
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg,  model, trackmate, modelsettings, calibration, settings, logger);
 	}
 
 	@Override

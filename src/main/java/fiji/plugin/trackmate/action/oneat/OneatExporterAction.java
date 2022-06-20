@@ -74,6 +74,8 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 	
 	private double probthreshold = 0.9;
 	
+	private double angle = 30;
+	
 	private boolean breaklinks = true;
 	
 	private boolean createlinks = false;
@@ -115,7 +117,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 			linkdist = panel.getLinkDist();
 			probthreshold = panel.getProbThreshold();
 			mariprinciple = panel.getMariPrinciple();
-			
+			angle = panel.getMariAngle();
 			Map<String, Object> mapsettings = getSettings(oneatdivisionfile,oneatapotosisfile,trackmapsettings);
 			OneatCorrectorFactory corrector = new OneatCorrectorFactory();
 			ImgPlus <T> detectionimg =  img;

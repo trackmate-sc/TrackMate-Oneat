@@ -59,6 +59,7 @@ public class OneatExporterPanel extends JPanel {
 	private double linkdist = 250;
 	private  int deltat = 4;
 	private  int tracklet = 1;
+	private double angle = 30;
 	private boolean createlinks = true;
 	private boolean breaklinks = true;
 	private boolean mariprinciple = true;
@@ -68,6 +69,7 @@ public class OneatExporterPanel extends JPanel {
 	private JFormattedTextField MinTracklet;
 	private JFormattedTextField DetectionChannel;
 	private JFormattedTextField TimeGap;
+	private JFormattedTextField Angle;
 	private JFormattedTextField MotherDaughterLinkDist;
 	private JFormattedTextField DetectionThreshold;
 	
@@ -177,7 +179,12 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
-		
+		Angle = new JFormattedTextField();
+		Angle.setValue(angle);
+		Angle.setColumns( 3 );
+		add(Angle, gbc);
+		gbc.gridy++;
+		gbc.gridx--;
 		
 		
 		CreateNewLinks = new JCheckBox("Create new mitosis events (Verified by oneat, missed by TM) ");
@@ -353,7 +360,14 @@ public class OneatExporterPanel extends JPanel {
 			}
 		});
 		
-	
+       Angle.addPropertyChangeListener(new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				angle = ((Number) Angle.getValue()).doubleValue();
+				
+			}
+		});
 		
 	}
 
@@ -405,6 +419,11 @@ public class OneatExporterPanel extends JPanel {
 		
 		return deltat;
 	}
+	
+	public double getMariAngle() {
+			
+			return angle;
+		}
 	
 	public File getMistosisFile() {
 		

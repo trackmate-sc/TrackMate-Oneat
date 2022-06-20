@@ -82,6 +82,7 @@ import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREAT
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_USE_MARI_PRINCIPLE;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
+import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_MARI_ANGLE;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.Spot.QUALITY;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
@@ -260,6 +261,7 @@ public class TrackCorrectorRunner {
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
 		boolean mariprinciple = (boolean) settings.get(KEY_USE_MARI_PRINCIPLE);
+		double mariangle = (double) settings.get(KEY_MARI_ANGLE);
 		Set<Integer> MitosisIDs = new HashSet<Integer>();
 		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
 
@@ -429,7 +431,6 @@ public class TrackCorrectorRunner {
 					int maricount = 0;
 					Ellipsoid ellipsoid = null;
 					double[] motherslope = new double[2];
-					Double motherangle = null;
 					for (Spot motherspot : mitosismotherspots) {
 
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
@@ -438,8 +439,7 @@ public class TrackCorrectorRunner {
 								System.out.println("trackID " + trackID + " " + motherspot.ID());
 								if(ellipsoid!=null)
 									motherslope = getEigen(ellipsoid,ndim);
-								    motherangle = ((180/3.14) * Math.atan2(motherslope[1], motherslope[0]) + 360) % 360;
-								    System.out.println("mother slope " + " " + motherslope[1]/motherslope[0] + " " + " angle " + motherangle);
+								    
 								logger.setProgress(maricount / mitosismotherspots.size());
 						}
 						
@@ -467,7 +467,7 @@ public class TrackCorrectorRunner {
 							if (frame > 0) {
 
 								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,
-										(int) frame, searchdistance,  mariprinciple);
+										(int) frame, searchdistance, motherslope, mariangle, mariprinciple);
 
 								if (regionspots.getNSpots((int) frame, false) > 0)
 									for (Spot spot : regionspots.iterable((int) frame, false)) {
@@ -565,7 +565,7 @@ public class TrackCorrectorRunner {
 
 	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
 			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,
-			final double region,  final boolean mariprinciple) {
+			final double region, final double[] motherslope, final double mariangle,  final boolean mariprinciple) {
 
 		SpotCollection regionspots = new SpotCollection();
 
@@ -573,34 +573,37 @@ public class TrackCorrectorRunner {
 		if (Nspots > 0)
 			for (Spot spot : allspots.iterable(frame, false)) {
 
-				if (motherspot.squareDistanceTo(spot) <= region * region) {
+				if(mariprinciple) {
+					
+					
+					
+					double motheraxis = motherslope[1] / motherslope[0];
+					
+					double daughtermotheraxis = ( motherspot.getDoublePosition(1) - spot.getDoublePosition(1) ) / ( motherspot.getDoublePosition(0) - spot.getDoublePosition(0) );
+					
+					double daughtermotherangle = Math.abs((180/3.14) * Math.atan((motheraxis - daughtermotheraxis) / (1 + motheraxis * daughtermotheraxis)));
+					
+					if (motherspot.squareDistanceTo(spot) <= region * region && daughtermotherangle <= mariangle) {
 
-					regionspots.add(spot, frame);
+						regionspots.add(spot, frame);
 
+					}
+					
 				}
+				
+				else {
+					
+					if (motherspot.squareDistanceTo(spot) <= region * region) {
+
+						regionspots.add(spot, frame);
+
+					}
+					
+				}
+				
 
 			}
-		if (mariprinciple) {
-
-			// Invoke Mari principle calculation
-			int ndim = img.numDimensions() - 1;
-         
-            
-			
-				
-		
-			
-			
-		//	if (motherellipsoid.size() > 0) {
-
-				//for (Spot spot : regionspots.iterable(frame, false)) {
-
-					//if (frame < img.dimension(ndim) - 1) {
-
-				//	}
-				//}
-			//}
-		}
+	
 
 		return regionspots;
 	}
@@ -1303,7 +1306,7 @@ public class TrackCorrectorRunner {
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
 
 		double probthreshold = (double) settings.get(KEY_PROB_THRESHOLD);
-
+        
 		if (oneatdivisionfile != null) {
 			String line = "";
 			String cvsSplitBy = ",";
