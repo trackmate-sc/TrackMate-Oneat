@@ -42,8 +42,10 @@ import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
 import fiji.plugin.trackmate.tracking.sparselap.costmatrix.JaqamanSegmentCostMatrixCreator;
 import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
 import fiji.plugin.trackmate.util.TMUtils;
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
+import ij.plugin.frame.RoiManager;
 import net.imglib2.util.Util;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -155,7 +157,6 @@ public class TrackCorrectorRunner {
 			for (Pair<Integer, Spot> sid : Sources) {
 
 				if (!TargetsID.contains(sid.getA())) {
-
 					Starts.add(sid);
 
 				}
@@ -324,6 +325,7 @@ public class TrackCorrectorRunner {
 		count = 0;
 
 		if (createlinks) {
+			int roiindex = 0;
 			Map<String, Object> cmsettings = new HashMap<>();
 			// Gap closing.
 
@@ -436,18 +438,19 @@ public class TrackCorrectorRunner {
 					for (Spot motherspot : mitosismotherspots) {
 
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
-						if(mariprinciple) {
+						
 								ellipsoid = getEllipsoid(motherspot, img, calibration);
 								
 								if(ellipsoid!=null)
 									motherslope = getEigen(ellipsoid,ndim);
 								    
 								logger.setProgress(maricount / mitosismotherspots.size());
-						}
+					
 						
 						maricount++;
 						SimpleWeightedGraph<Spot, DefaultWeightedEdge> localgraph = new SimpleWeightedGraph<>(
 								DefaultWeightedEdge.class);
+						
 						for (DefaultWeightedEdge localedge : mothertrack) {
 
 							if (!graph.containsEdge(localedge)) {
@@ -543,12 +546,14 @@ public class TrackCorrectorRunner {
 								Set<DefaultWeightedEdge> drawlinkslinks = trackmodel.edgesOf(source);
 								OneatOverlay oneatOverlayFirst = new OneatOverlay(motherspot, source, target, motherslope, trackmate.getSettings().imp);
 
-								addOverlay(oneatOverlayFirst, trackmate.getSettings().imp);
+								addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, roiindex);
+								roiindex++;
 								for (DefaultWeightedEdge targetedge : drawlinkslinks) {
 									Spot targetsource = trackmodel.getEdgeTarget(targetedge);
 								OneatOverlay oneatOverlay = new OneatOverlay(motherspot, source, targetsource, motherslope, trackmate.getSettings().imp);
 
-								addOverlay(oneatOverlay, trackmate.getSettings().imp);
+								addOverlay(oneatOverlay, trackmate.getSettings().imp,roiindex);
+								roiindex++;
 								}
 							}
 
@@ -574,9 +579,12 @@ public class TrackCorrectorRunner {
 		return graph;
 
 	}
-	private static void addOverlay( final Roi overlay, final ImagePlus imp )
+	private static void addOverlay( final Roi overlay, final ImagePlus imp, int index )
 	{
+		
 		imp.getOverlay().add( overlay );
+		
+		
 	}
 	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
 			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,

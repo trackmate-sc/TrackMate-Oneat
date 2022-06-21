@@ -19,6 +19,7 @@ import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -89,7 +90,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 	
 
 	@Override
-	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> intimg,  Model model, TrackMate trackmate, Settings modelsettings,
+	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> intimg,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
 			Map<String, Object> settings, final Logger logger, double[] calibration) {
 		
 		 
@@ -98,7 +99,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  File oneatapoptosisfile = (File) settings.get(APOPTOSIS_FILE);
 		  
 	
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg,  model, trackmate, modelsettings, calibration, settings, logger);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg,  model, trackmate, modelsettings, displaysettings, calibration, settings, logger);
 	}
 
 	@Override

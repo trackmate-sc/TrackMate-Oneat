@@ -35,6 +35,7 @@ import fiji.plugin.trackmate.action.TrackMateAction;
 import fiji.plugin.trackmate.action.TrackMateActionFactory;
 import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import fiji.plugin.trackmate.util.TMUtils;
+import ij.plugin.frame.RoiManager;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
@@ -86,6 +87,8 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 	public void execute(TrackMate trackmate, SelectionModel selectionModel, DisplaySettings displaySettings,
 			Frame gui) {
 
+	
+		
 		Settings settings = trackmate.getSettings();
 	    
 		Map<String, Object> trackmapsettings = settings.trackerSettings;
@@ -137,7 +140,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 			final ImgPlus< UnsignedShortType > intimg = (ImgPlus<UnsignedShortType>) detectionimg;
 		
 			
-			OneatCorrector oneatcorrector = corrector.create(intimg, model, trackmate, settings, mapsettings, logger, calibration );
+			OneatCorrector oneatcorrector = corrector.create(intimg, model, trackmate, settings, displaySettings, mapsettings, logger, calibration );
 			oneatcorrector.checkInput();
 			oneatcorrector.process();
 		}

@@ -17,6 +17,10 @@ import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
+import fiji.plugin.trackmate.visualization.hyperstack.SpotOverlay;
+import fiji.plugin.trackmate.visualization.hyperstack.TrackOverlay;
+import ij.ImagePlus;
 import net.imagej.ImgPlus;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.IntType;
@@ -55,6 +59,8 @@ public class OneatCorrector implements TrackCorrector {
 	
 	private final Map<String, Object> settings;
 	
+	private final DisplaySettings displaySettings;
+	
 	private final Settings modelsettings;
 	
 	private Logger logger;
@@ -74,7 +80,7 @@ public class OneatCorrector implements TrackCorrector {
 			final File oneatdivision, 
 			final File oneatapoptosis, 
 			final ImgPlus<UnsignedShortType> intimg, 
-			final Model model, final TrackMate trackmate, final Settings modelsettings, double[] calibration,
+			final Model model, final TrackMate trackmate, final Settings modelsettings, final DisplaySettings displaySettings, double[] calibration,
 			Map<String, Object> settings, final Logger logger) {
 
 		this.oneatdivision = oneatdivision;
@@ -90,6 +96,8 @@ public class OneatCorrector implements TrackCorrector {
 		this.settings = settings;
 		
 		this.modelsettings = modelsettings;
+		
+		this.displaySettings = displaySettings;
 		
 		this.logger = logger;
 		
@@ -113,6 +121,14 @@ public class OneatCorrector implements TrackCorrector {
 	public boolean process() {
 
 		
+		trackmate.getSettings().imp.getOverlay().clear();
+		SpotOverlay spotOverlay = createSpotOverlay( displaySettings,trackmate.getSettings().imp );
+		TrackOverlay trackOverlay = createTrackOverlay( displaySettings, trackmate.getSettings().imp );
+		trackmate.getSettings().imp.getOverlay().add( spotOverlay );
+		
+		trackmate.getSettings().imp.getOverlay().add( trackOverlay );
+		
+		displaySettings.listeners().add( () -> refresh(trackmate.getSettings().imp) );
 		final long start = System.currentTimeMillis();
 		divisionspots = new SpotCollection();
 		divisionframespots = new HashMap<Integer, ArrayList<Spot>>();
@@ -183,7 +199,30 @@ public class OneatCorrector implements TrackCorrector {
 
 		return true;
 	}
+	
+	public void refresh(ImagePlus imp)
+	{
+		if ( null != imp )
+			imp.updateAndDraw();
+	}
+	
+	
+	protected SpotOverlay createSpotOverlay(final DisplaySettings displaySettings, ImagePlus imp)
+	{
+		return new SpotOverlay( model, imp, displaySettings );
+	}
 
+	/**
+	 * Hook for subclassers. Instantiate here the overlay you want to use for
+	 * the spots.
+	 * @param displaySettings
+	 *
+	 * @return the track overlay
+	 */
+	protected TrackOverlay createTrackOverlay(final DisplaySettings displaySettings, ImagePlus imp)
+	{
+		return new TrackOverlay( model, imp, displaySettings );
+	}
 	@Override
 	public String getErrorMessage() {
 		
