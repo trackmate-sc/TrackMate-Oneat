@@ -119,6 +119,8 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & writeAttribute( settings, element, KEY_CREATE_LINKS, Boolean.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_BREAK_LINKS, Boolean.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_TARGET_CHANNEL, Integer.class, str );
+		ok = ok & writeAttribute( settings, element, KEY_USE_MARI_PRINCIPLE, Boolean.class, str );
+		ok = ok & writeAttribute( settings, element, KEY_MARI_ANGLE, Double.class, str );
 		return ok;
 	}
 
@@ -134,6 +136,8 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & readBooleanAttribute( element, settings, KEY_CREATE_LINKS, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_BREAK_LINKS, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_TARGET_CHANNEL, errorHolder );
+		ok = ok & readDoubleAttribute( element, settings, KEY_MARI_ANGLE, errorHolder );
+		ok = ok & readBooleanAttribute( element, settings, KEY_USE_MARI_PRINCIPLE, errorHolder );
 		return ok;
 	}
 
@@ -156,6 +160,11 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		
 		final String detectionchannel = (String) settings.get(KEY_TARGET_CHANNEL);
 		
+		final String mariprinciple = (String) settings.get(KEY_USE_MARI_PRINCIPLE);
+		
+		final String mariangle = (String) settings.get(KEY_MARI_ANGLE);
+		
+		
 		final StringBuilder str = new StringBuilder();
 
 		str.append( String.format( "  - oneat division detection file: %.1f\n", oneatdivisionfile));
@@ -165,7 +174,8 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		str.append( String.format( "  -Create new links: %.1f\n", createlinks));
 		str.append( String.format( "  - Breal links: %.1f\n", breaklinks));
 		str.append( String.format( "  - Detection Channel: %.1f\n", detectionchannel));
-		
+		str.append( String.format( "  - Use Mari Principle: %.1f\n", mariprinciple));
+		str.append( String.format( "  - Use Mari Angle: %.1f\n", mariangle));
 		
 		return str.toString();
 	}
@@ -195,6 +205,11 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & checkParameter( settings, KEY_BREAK_LINKS, Boolean.class, str );
 		
 		ok = ok & checkParameter( settings, KEY_TARGET_CHANNEL, Integer.class, str );
+		
+        ok = ok & checkParameter( settings, KEY_USE_MARI_PRINCIPLE, Boolean.class, str );
+		
+		ok = ok & checkParameter( settings, KEY_MARI_ANGLE, Double.class, str );
+		
 		
 
 		if ( !ok )

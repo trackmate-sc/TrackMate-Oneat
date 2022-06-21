@@ -179,6 +179,10 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
+		
+		final JLabel MariAngle = new JLabel("Mari Principle angle veto (degrees)" );
+		add( MariAngle, gbc );
+		gbc.gridx++;
 		Angle = new JFormattedTextField();
 		Angle.setValue(angle);
 		Angle.setColumns( 3 );

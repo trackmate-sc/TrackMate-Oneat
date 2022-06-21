@@ -262,8 +262,6 @@ public class TrackCorrectorRunner {
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
 		boolean mariprinciple = (boolean) settings.get(KEY_USE_MARI_PRINCIPLE);
 		double mariangle = (double) settings.get(KEY_MARI_ANGLE);
-		Set<Integer> MitosisIDs = new HashSet<Integer>();
-		Set<Integer> ApoptosisIDs = new HashSet<Integer>();
 
 		// Generate the default graph
 		for (final Integer trackID : trackmodel.trackIDs(true)) {
@@ -295,7 +293,6 @@ public class TrackCorrectorRunner {
 				// Get the current trackID
 				int trackID = trackidspots.getKey();
 				Pair<Spot, Spot> trackspots = trackidspots.getValue();
-				ApoptosisIDs.add(trackID);
 
 				// Apoptosis cell can not be source of an edge
 				Spot killerspot = trackspots.getB();
@@ -436,7 +433,7 @@ public class TrackCorrectorRunner {
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
 						if(mariprinciple) {
 								ellipsoid = getEllipsoid(motherspot, img, calibration);
-								System.out.println("trackID " + trackID + " " + motherspot.ID());
+								
 								if(ellipsoid!=null)
 									motherslope = getEigen(ellipsoid,ndim);
 								    
@@ -463,7 +460,7 @@ public class TrackCorrectorRunner {
 
 						for (int i = 1; i < tmoneatdeltat; ++i) {
 
-							double frame = motherspot.getFeature(FRAME) + i;
+							double frame = motherspot.getFeature(Spot.FRAME) + i;
 							if (frame > 0) {
 
 								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,
@@ -480,8 +477,8 @@ public class TrackCorrectorRunner {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
 
-												if (source.getFeature(FRAME) == frame && motherspot
-														.getFeature(QUALITY) > source.getFeature(QUALITY)) {
+												if (source.getFeature(Spot.FRAME) == frame && motherspot
+														.getFeature(Spot.QUALITY) > source.getFeature(Spot.QUALITY)) {
 													final Spot target = trackmodel.getEdgeTarget(localedge);
 													final double linkcost = trackmodel.getEdgeWeight(localedge);
 
@@ -583,8 +580,10 @@ public class TrackCorrectorRunner {
 					
 					double daughtermotherangle = Math.abs((180/3.14) * Math.atan((motheraxis - daughtermotheraxis) / (1 + motheraxis * daughtermotheraxis)));
 					
-					if (motherspot.squareDistanceTo(spot) <= region * region && daughtermotherangle <= mariangle) {
-
+					
+					
+					if (motherspot.squareDistanceTo(spot) <= region * region && daughtermotherangle <= mariangle 
+							&& motherspot.getFeature(Spot.RADIUS) > spot.getFeature(Spot.RADIUS)) {
 						regionspots.add(spot, frame);
 
 					}
@@ -593,7 +592,7 @@ public class TrackCorrectorRunner {
 				
 				else {
 					
-					if (motherspot.squareDistanceTo(spot) <= region * region) {
+					if (motherspot.squareDistanceTo(spot) <= region * region && motherspot.getFeature(Spot.RADIUS) > spot.getFeature(Spot.RADIUS)) {
 
 						regionspots.add(spot, frame);
 
@@ -813,7 +812,6 @@ public class TrackCorrectorRunner {
 		double[] radii = new double[n];
 		for (int d = 0; d < n; ++d) {
 			radii[d] = Math.sqrt(ev.get(d, d));
-		    System.out.println("radii" + " " +  radii[d]);
 		}
 		return radii;
 	}
@@ -844,7 +842,7 @@ public class TrackCorrectorRunner {
 
 				logger.setProgress((float) (count) / (AllTrackIds.size() + 1));
 
-				int frame = spot.getFeature(FRAME).intValue();
+				int frame = spot.getFeature(Spot.FRAME).intValue();
 				if (frame < img.dimension(ndim) - 1) {
 					long[] location = new long[ndim];
 					for (int d = 0; d < ndim; ++d) {
@@ -1373,12 +1371,12 @@ public class TrackCorrectorRunner {
 
 					Spot currentspot = new Spot(x, y, z, radius, quality);
 					// Put spot features so we can get it back by feature name
-					currentspot.putFeature(POSITION_X, Double.valueOf(x));
-					currentspot.putFeature(POSITION_Y, Double.valueOf(y));
-					currentspot.putFeature(POSITION_Z, Double.valueOf(z));
-					currentspot.putFeature(FRAME, Double.valueOf(frame));
-					currentspot.putFeature(RADIUS, Double.valueOf(radius));
-					currentspot.putFeature(QUALITY, Double.valueOf(quality));
+					currentspot.putFeature(Spot.POSITION_X, Double.valueOf(x));
+					currentspot.putFeature(Spot.POSITION_Y, Double.valueOf(y));
+					currentspot.putFeature(Spot.POSITION_Z, Double.valueOf(z));
+					currentspot.putFeature(Spot.FRAME, Double.valueOf(frame));
+					currentspot.putFeature(Spot.RADIUS, Double.valueOf(radius));
+					currentspot.putFeature(Spot.QUALITY, Double.valueOf(quality));
 
 					currentspots.add(currentspot);
 					divisionspots.add(currentspot, frame);
@@ -1454,12 +1452,12 @@ public class TrackCorrectorRunner {
 							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
 
 					Spot currentspot = new Spot(x, y, z, radius, quality);
-					currentspot.putFeature(POSITION_X, Double.valueOf(x));
-					currentspot.putFeature(POSITION_Y, Double.valueOf(y));
-					currentspot.putFeature(POSITION_Z, Double.valueOf(z));
-					currentspot.putFeature(FRAME, Double.valueOf(frame));
-					currentspot.putFeature(RADIUS, Double.valueOf(radius));
-					currentspot.putFeature(QUALITY, Double.valueOf(quality));
+					currentspot.putFeature(Spot.POSITION_X, Double.valueOf(x));
+					currentspot.putFeature(Spot.POSITION_Y, Double.valueOf(y));
+					currentspot.putFeature(Spot.POSITION_Z, Double.valueOf(z));
+					currentspot.putFeature(Spot.FRAME, Double.valueOf(frame));
+					currentspot.putFeature(Spot.RADIUS, Double.valueOf(radius));
+					currentspot.putFeature(Spot.QUALITY, Double.valueOf(quality));
 					currentspots.add(currentspot);
 					apoptosisspots.add(currentspot, frame);
 					ApoptosisSpotListFrame.put(frame, currentspots);
