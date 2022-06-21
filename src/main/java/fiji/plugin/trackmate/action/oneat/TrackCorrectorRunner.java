@@ -36,11 +36,14 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.TrackModel;
 import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
 import fiji.plugin.trackmate.tracking.sparselap.costmatrix.JaqamanSegmentCostMatrixCreator;
 import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
 import fiji.plugin.trackmate.util.TMUtils;
+import ij.ImagePlus;
+import ij.gui.Roi;
 import net.imglib2.util.Util;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -240,7 +243,7 @@ public class TrackCorrectorRunner {
 		return connectedSet;
 	}
 
-	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
+	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model, final TrackMate trackmate,
 			Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>> DividingStartspots,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
@@ -252,6 +255,8 @@ public class TrackCorrectorRunner {
 		// create a new graph
 		TrackModel trackmodel = model.getTrackModel();
 		SpotCollection allspots = model.getSpots();
+		
+		
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
 		double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE) != null
@@ -534,7 +539,17 @@ public class TrackCorrectorRunner {
 								final DefaultWeightedEdge edge = graph.addEdge(source, target);
 								// if (edge != null)
 								graph.setEdgeWeight(edge, cost);
+								
+								Set<DefaultWeightedEdge> drawlinkslinks = trackmodel.edgesOf(source);
+								OneatOverlay oneatOverlayFirst = new OneatOverlay(motherspot, source, target, motherslope, trackmate.getSettings().imp);
 
+								addOverlay(oneatOverlayFirst, trackmate.getSettings().imp);
+								for (DefaultWeightedEdge targetedge : drawlinkslinks) {
+									Spot targetsource = trackmodel.getEdgeTarget(targetedge);
+								OneatOverlay oneatOverlay = new OneatOverlay(motherspot, source, targetsource, motherslope, trackmate.getSettings().imp);
+
+								addOverlay(oneatOverlay, trackmate.getSettings().imp);
+								}
 							}
 
 					}
@@ -559,7 +574,10 @@ public class TrackCorrectorRunner {
 		return graph;
 
 	}
-
+	private static void addOverlay( final Roi overlay, final ImagePlus imp )
+	{
+		imp.getOverlay().add( overlay );
+	}
 	private static SpotCollection regionspot(final ImgPlus<UnsignedShortType> img, final SpotCollection allspots,
 			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,
 			final double region, final double[] motherslope, final double mariangle,  final boolean mariprinciple) {

@@ -1,5 +1,7 @@
 package fiji.plugin.trackmate.action.oneat;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.Collection;
@@ -32,7 +34,7 @@ public class OneatOverlay extends Roi {
 	
 	protected final double[] motherslope;
 
-	public OneatOverlay(final Spot motherspot, final Spot source, final Spot target, final double[] motherslope, final ImagePlus imp, final DisplaySettings displaySettings) {
+	public OneatOverlay(final Spot motherspot, final Spot source, final Spot target, final double[] motherslope, final ImagePlus imp) {
 		super(0, 0, imp);
 		this.motherspot = motherspot;
 		this.source = source;
@@ -40,19 +42,46 @@ public class OneatOverlay extends Roi {
 		this.motherslope = motherslope;
 		this.calibration = TMUtils.getSpatialCalibration( imp );
 		this.imp = imp;
-		this.displaySettings = displaySettings;
+	
 	}
 	@Override
 	public final synchronized void drawOverlay( final Graphics g )
 	{
 		final Graphics2D g2d = ( Graphics2D ) g;
+		final double magnification = getMagnification();
+
+		// Painted clip in window coordinates.
+		final int xcorner = ic.offScreenX( 0 );
+		final int ycorner = ic.offScreenY( 0 );
+		
+		drawSlope(g2d, motherspot, motherslope, xcorner, ycorner, magnification); 
+		drawEdge(g2d,source,target,xcorner,ycorner,magnification );
+		
 				
 	}
 	
-	protected void drawSlope(final Graphics2D g2d, final Spot motherspot, final double[] motherslope) {
+	protected void drawSlope(final Graphics2D g2d, final Spot motherspot, final double[] motherslope, final int xcorner, final int ycorner, final double magnification) {
 		
 		double length = motherspot.getFeature(Spot.RADIUS);
+		final double x0i = motherspot.getFeature( Spot.POSITION_X );
+		final double y0i = motherspot.getFeature( Spot.POSITION_Y );
+		final double x0p = x0i / calibration[ 0 ] + 0.5f;
+		final double y0p = y0i / calibration[ 1 ] + 0.5f;
+		final double x0s = ( x0p - xcorner ) * magnification;
+		final double y0s = ( y0p - ycorner ) * magnification;
+		final int x0 = ( int ) Math.round( x0s );
+		final int y0 = ( int ) Math.round( y0s );
+		final double slope = motherslope[1] / motherslope[0];
+		final int x1 = (int) ( x0 - length / Math.sqrt(1 + slope * slope) ); 
+		final int y1 = (int) ( y0 -  length * slope / Math.sqrt(1 + slope * slope) );
+		g2d.setColor( Color.ORANGE );
 		
+		g2d.setStroke(new BasicStroke(2));
+		g2d.drawLine( x0, y0, x1, y1 );
+		final int x2 = (int) ( x0 +length / Math.sqrt(1 + slope * slope) ); 
+		final int y2 = (int) ( y0 +  length * slope / Math.sqrt(1 + slope * slope) );
+		g2d.setColor( Color.ORANGE );
+		g2d.drawLine( x0, y0, x2, y2 );
 	}
 	
 	
@@ -78,7 +107,8 @@ public class OneatOverlay extends Roi {
 		final int y0 = ( int ) Math.round( y0s );
 		final int x1 = ( int ) Math.round( x1s );
 		final int y1 = ( int ) Math.round( y1s );
-
+		g2d.setStroke(new BasicStroke(2));
+		g2d.setColor( Color.BLUE );
 		g2d.drawLine( x0, y0, x1, y1 );
 	}
 }

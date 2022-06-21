@@ -155,7 +155,7 @@ public class OneatCorrector implements TrackCorrector {
 			
 			// To be safe let us sort the dead points in ascending order of frame
 		
-			graph = TrackCorrectorRunner.getCorrectedTracks(model, Tmobject.getA(), Tmobject.getB(), Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads,
+			graph = TrackCorrectorRunner.getCorrectedTracks(model, trackmate, Tmobject.getA(), Tmobject.getB(), Mitossisspots, Apoptosisspots, settings, ndims, logger, numThreads,
 					img,divisionframespots, calibration ); 	
 			
 			
