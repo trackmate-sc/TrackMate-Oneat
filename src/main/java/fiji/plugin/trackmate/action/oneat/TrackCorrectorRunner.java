@@ -435,15 +435,20 @@ public class TrackCorrectorRunner {
 					int maricount = 0;
 					Ellipsoid ellipsoid = null;
 					double[] motherslope = new double[2];
+					double[] largemotherslope = new double[2];
+					Pair<double[], double[]> slope = new ValuePair<double[], double[]>(motherslope, largemotherslope);
 					for (Spot motherspot : mitosismotherspots) {
 
 						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
 						
 								ellipsoid = getEllipsoid(motherspot, img, calibration);
 								
-								if(ellipsoid!=null)
-									motherslope = getEigen(ellipsoid,ndim);
-								    
+								if(ellipsoid!=null) {
+									slope = getEigen(ellipsoid,ndim);
+								    motherslope = slope.getA();
+								    largemotherslope = slope.getB();
+									
+								}
 								logger.setProgress(maricount / mitosismotherspots.size());
 					
 						
@@ -544,13 +549,13 @@ public class TrackCorrectorRunner {
 								graph.setEdgeWeight(edge, cost);
 								
 								Set<DefaultWeightedEdge> drawlinkslinks = trackmodel.edgesOf(source);
-								OneatOverlay oneatOverlayFirst = new OneatOverlay(motherspot, source, target, motherslope, trackmate.getSettings().imp);
+								OneatOverlay oneatOverlayFirst = new OneatOverlay(motherspot, source, target, motherslope, largemotherslope, trackmate.getSettings().imp);
 
 								addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, roiindex);
 								roiindex++;
 								for (DefaultWeightedEdge targetedge : drawlinkslinks) {
 									Spot targetsource = trackmodel.getEdgeTarget(targetedge);
-								OneatOverlay oneatOverlay = new OneatOverlay(motherspot, source, targetsource, motherslope, trackmate.getSettings().imp);
+								OneatOverlay oneatOverlay = new OneatOverlay(motherspot, source, targetsource, motherslope, largemotherslope, trackmate.getSettings().imp);
 
 								addOverlay(oneatOverlay, trackmate.getSettings().imp,roiindex);
 								roiindex++;
@@ -604,12 +609,15 @@ public class TrackCorrectorRunner {
 					
 					double daughtermotheraxis = ( motherspot.getDoublePosition(1) - spot.getDoublePosition(1) ) / ( motherspot.getDoublePosition(0) - spot.getDoublePosition(0) );
 					
-					double daughtermotherangle = Math.abs((180/3.14) * Math.atan((motheraxis - daughtermotheraxis) / (1 + motheraxis * daughtermotheraxis)));
+					double signeddaughtermotherangle = ((180/3.14) * Math.atan((motheraxis - daughtermotheraxis) / (1 + motheraxis * daughtermotheraxis)));
 					
+					double daughtermotherangle = Math.abs(signeddaughtermotherangle);
 					
 					
 					if (motherspot.squareDistanceTo(spot) <= region * region && daughtermotherangle <= mariangle 
 							&& motherspot.getFeature(Spot.RADIUS) > spot.getFeature(Spot.RADIUS)) {
+						
+						System.out.println(motherspot.ID() + " " + "signed angle" + " " + signeddaughtermotherangle);
 						regionspots.add(spot, frame);
 
 					}
@@ -633,7 +641,7 @@ public class TrackCorrectorRunner {
 		return regionspots;
 	}
 
-	private static double[] getEigen(final Ellipsoid ellipsoid, int ndim) {
+	private static Pair<double[], double[]> getEigen(final Ellipsoid ellipsoid, int ndim) {
 
 		double[][] covariance = ellipsoid.getCovariance();
 		double[] mean = ellipsoid.getCenter();
@@ -643,7 +651,9 @@ public class TrackCorrectorRunner {
 		
 
 		double smallesteigenval = Double.MAX_VALUE;
+		double largesteigenval = -Double.MAX_VALUE;
 		int index = -1;
+		int largeindex = -1;
 		for(int i = 0; i < Eigenvalues.length; ++i) { 
 		 
 		    if(Eigenvalues[i] < smallesteigenval) {
@@ -652,19 +662,23 @@ public class TrackCorrectorRunner {
 		    	index = i;
 		    }
 			
-		
+             if(Eigenvalues[i] > largesteigenval) {
+		    	
+            	 largesteigenval = Eigenvalues[i];
+		    	 largeindex = i;
+		    }
 		}
 		
 
 		double[] smallvec = new double[Eigenvalues.length];
-		
+		double[] largevec = new double[Eigenvalues.length];
 		for(int i = 0; i <Eigenvector.getRowDimension(); ++i) {
 			
 			smallvec[i] = Eigenvector.get(i, index);
-			
+			largevec[i] = Eigenvector.get(i, largeindex);
 		}
 		
-		return smallvec;
+		return new ValuePair<double[], double[]>(smallvec, largevec);
 		
 	}
 

@@ -128,7 +128,7 @@ public class OneatCorrector implements TrackCorrector {
 		
 		trackmate.getSettings().imp.getOverlay().add( trackOverlay );
 		
-		displaySettings.listeners().add( () -> refresh(trackmate.getSettings().imp) );
+		
 		final long start = System.currentTimeMillis();
 		divisionspots = new SpotCollection();
 		divisionframespots = new HashMap<Integer, ArrayList<Spot>>();

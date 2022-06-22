@@ -33,13 +33,16 @@ public class OneatOverlay extends Roi {
 	protected final Spot target;
 	
 	protected final double[] motherslope;
+	
+	protected final double[] largemotherslope;
 
-	public OneatOverlay(final Spot motherspot, final Spot source, final Spot target, final double[] motherslope, final ImagePlus imp) {
+	public OneatOverlay(final Spot motherspot, final Spot source, final Spot target, final double[] motherslope, final double[] largemotherslope, final ImagePlus imp) {
 		super(0, 0, imp);
 		this.motherspot = motherspot;
 		this.source = source;
 		this.target = target;
 		this.motherslope = motherslope;
+		this.largemotherslope = largemotherslope;
 		this.calibration = TMUtils.getSpatialCalibration( imp );
 		this.imp = imp;
 	
@@ -54,15 +57,15 @@ public class OneatOverlay extends Roi {
 		final int xcorner = ic.offScreenX( 0 );
 		final int ycorner = ic.offScreenY( 0 );
 		
-		drawSlope(g2d, motherspot, motherslope, xcorner, ycorner, magnification); 
+		drawSlope(g2d, motherspot, motherslope, largemotherslope, xcorner, ycorner, magnification); 
 		drawEdge(g2d,source,target,xcorner,ycorner,magnification );
 		
 				
 	}
 	
-	protected void drawSlope(final Graphics2D g2d, final Spot motherspot, final double[] motherslope, final int xcorner, final int ycorner, final double magnification) {
+	protected void drawSlope(final Graphics2D g2d, final Spot motherspot, final double[] motherslope, final double[] largemotherslope, final int xcorner, final int ycorner, final double magnification) {
 		
-		double length = motherspot.getFeature(Spot.RADIUS);
+		double length = 10;
 		final double x0i = motherspot.getFeature( Spot.POSITION_X );
 		final double y0i = motherspot.getFeature( Spot.POSITION_Y );
 		final double x0p = x0i / calibration[ 0 ] + 0.5f;
@@ -71,6 +74,7 @@ public class OneatOverlay extends Roi {
 		final double y0s = ( y0p - ycorner ) * magnification;
 		final int x0 = ( int ) Math.round( x0s );
 		final int y0 = ( int ) Math.round( y0s );
+		
 		final double slope = motherslope[1] / motherslope[0];
 		final int x1 = (int) ( x0 - length / Math.sqrt(1 + slope * slope) ); 
 		final int y1 = (int) ( y0 -  length * slope / Math.sqrt(1 + slope * slope) );
@@ -82,6 +86,26 @@ public class OneatOverlay extends Roi {
 		final int y2 = (int) ( y0 +  length * slope / Math.sqrt(1 + slope * slope) );
 		g2d.setColor( Color.ORANGE );
 		g2d.drawLine( x0, y0, x2, y2 );
+		
+		
+		
+		final double largeslope = largemotherslope[1] / largemotherslope[0];
+		final int largex1 = (int) ( x0 - length / Math.sqrt(1 + largeslope * largeslope) ); 
+		final int largey1 = (int) ( y0 -  length * largeslope / Math.sqrt(1 + largeslope * largeslope) );
+		g2d.setColor( Color.RED );
+		
+		g2d.setStroke(new BasicStroke(2));
+		g2d.drawLine( x0, y0, largex1, largey1 );
+		final int largex2 = (int) ( x0 +length / Math.sqrt(1 + largeslope * largeslope) ); 
+		final int largey2 = (int) ( y0 +  length * largeslope / Math.sqrt(1 + largeslope * largeslope) );
+		g2d.setColor( Color.RED );
+		g2d.drawLine( x0, y0, largex2, largey2 );
+		
+		
+		
+		
+		
+		
 	}
 	
 	
