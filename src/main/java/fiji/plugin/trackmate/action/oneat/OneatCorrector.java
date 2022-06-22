@@ -121,12 +121,6 @@ public class OneatCorrector implements TrackCorrector {
 	public boolean process() {
 
 		
-		trackmate.getSettings().imp.getOverlay().clear();
-		SpotOverlay spotOverlay = createSpotOverlay( displaySettings,trackmate.getSettings().imp );
-		TrackOverlay trackOverlay = createTrackOverlay( displaySettings, trackmate.getSettings().imp );
-		trackmate.getSettings().imp.getOverlay().add( spotOverlay );
-		
-		trackmate.getSettings().imp.getOverlay().add( trackOverlay );
 		
 		
 		final long start = System.currentTimeMillis();

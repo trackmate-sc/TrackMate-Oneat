@@ -65,18 +65,18 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 
 	public static final String NAME = "Launch Oneat track corrector";
 	
-	private static int detchannel = 1;
+	private static int detchannel;
 	
 	
-	private double linkdist = 50;
+	private double linkdist;
 	
-	private int deltat = 4;
+	private int deltat;
 	
-	private int tracklet = 2;
+	private int tracklet;
 	
-	private double probthreshold = 0.9;
+	private double probthreshold ;
 	
-	private double angle = 30;
+	private double angle;
 	
 	private boolean breaklinks = true;
 	
