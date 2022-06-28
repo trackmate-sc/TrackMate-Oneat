@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-
+import fiji.plugin.trackmate.visualization.hyperstack.HyperStackDisplayer;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.APOPTOSIS_FILE;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.DIVISION_FILE;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
@@ -35,6 +35,9 @@ import fiji.plugin.trackmate.action.TrackMateAction;
 import fiji.plugin.trackmate.action.TrackMateActionFactory;
 import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import fiji.plugin.trackmate.util.TMUtils;
+import fiji.plugin.trackmate.visualization.hyperstack.SpotOverlay;
+import fiji.plugin.trackmate.visualization.hyperstack.TrackOverlay;
+import ij.ImagePlus;
 import ij.plugin.frame.RoiManager;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -67,6 +70,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 	
 	private static int detchannel;
 	
+	private Model model;
 	
 	private double linkdist;
 	
@@ -87,7 +91,16 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 	public void execute(TrackMate trackmate, SelectionModel selectionModel, DisplaySettings displaySettings,
 			Frame gui) {
 
-	
+     	model = trackmate.getModel();
+
+		
+		trackmate.getSettings().imp.getOverlay().clear();
+		
+		
+		
+		HyperStackDisplayer displayer = new  HyperStackDisplayer( model, selectionModel, trackmate.getSettings().imp, displaySettings );
+		displayer.render();
+		displayer.refresh();
 		
 		Settings settings = trackmate.getSettings();
 	    
@@ -149,7 +162,29 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 		
 		
 	}
+	public void refresh(ImagePlus imp)
+	{
+		if ( null != imp )
+			imp.updateAndDraw();
+	}
 	
+	
+	protected SpotOverlay createSpotOverlay(final DisplaySettings displaySettings, ImagePlus imp)
+	{
+		return new SpotOverlay( model, imp, displaySettings );
+	}
+
+	/**
+	 * Hook for subclassers. Instantiate here the overlay you want to use for
+	 * the spots.
+	 * @param displaySettings
+	 *
+	 * @return the track overlay
+	 */
+	protected TrackOverlay createTrackOverlay(final DisplaySettings displaySettings, ImagePlus imp)
+	{
+		return new TrackOverlay( model, imp, displaySettings );
+	}
 	public Map<String, Object> getSettings(File oneatdivisionfile, File oneatapoptosisfile, Map<String, Object> trackmapsettings ) {
 		final Map<String, Object> settings = new HashMap<>();
 

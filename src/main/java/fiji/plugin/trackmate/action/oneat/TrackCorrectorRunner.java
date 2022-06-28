@@ -450,6 +450,12 @@ public class TrackCorrectorRunner {
 											addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, roiindex);
 											addOverlay(oneatOverlay, trackmate.getSettings().imp, roiindex);
 										}
+										if(!mariprinciple) {
+											addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, roiindex);
+											addOverlay(oneatOverlay, trackmate.getSettings().imp, roiindex);
+											
+										}
+											
 										roiindex++;
 									}
 								}
