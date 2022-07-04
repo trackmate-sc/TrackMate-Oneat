@@ -118,10 +118,6 @@ selectionModel = SelectionModel( model )
 # Read the default display settings.
 ds = DisplaySettingsIO.readUserDefault()
 
-displayer =  HyperStackDisplayer( model, selectionModel, imp, ds )
-displayer.render()
-displayer.refresh()
-
 # Echo results with the logger we set at start:
 model.getLogger().log( str( model ) )
 savename = imp.getShortTitle()
@@ -137,14 +133,13 @@ trackmapsettings = settings.trackerSettings
 detectorsettings = settings.detectorSettings
 
 if img.dimensionIndex(Axes.CHANNEL) > 0:
-			     detectionimg = ImgPlusViews.hyperSlice( img, img.dimensionIndex( Axes.CHANNEL ),  integer_channel - 1 )
+		detectionimg = ImgPlusViews.hyperSlice( img, img.dimensionIndex( Axes.CHANNEL ),  integer_channel - 1 )
+		
 elif (img.dimensionIndex(Axes.CHANNEL) < 0 and img.numDimensions() < 5):
-				  
-				  detectionimg = img
-			
+	    detectionimg = img
+	    
 elif (img.numDimensions() == 5):
-				 
-				detectionimg = ImgPlusViews.hyperSlice( img, 2, integer_channel )
+		detectionimg = ImgPlusViews.hyperSlice( img, 2, integer_channel )
 			
 			
 intimg =  detectionimg;
