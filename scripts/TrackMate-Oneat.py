@@ -122,10 +122,8 @@ ds = DisplaySettingsIO.readUserDefault()
 model.getLogger().log( str( model ) )
 savename = imp.getShortTitle()
 img = TMUtils.rawWraps( settings.imp )
-composite = WindowManager.getCurrentImage()
-if composite is not None:
-   done = composite.close()
-IJ.run("Collect Garbage");  
+
+ 
 
 #Lets start the oneat part of track linking
 settings = trackmate.getSettings()
