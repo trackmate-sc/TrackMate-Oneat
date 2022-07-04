@@ -105,6 +105,7 @@ displayer.refresh()
 
 # Echo results with the logger we set at start:
 model.getLogger().log( str( model ) )
-composite = WindowManager.getFrontWindow()
+composite = WindowManager.getCurrentImage()
 if composite is not None:
    done = composite.close()
+IJ.run("Collect Garbage");   
