@@ -6,11 +6,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
@@ -22,8 +19,6 @@ import fiji.plugin.trackmate.visualization.hyperstack.SpotOverlay;
 import fiji.plugin.trackmate.visualization.hyperstack.TrackOverlay;
 import ij.ImagePlus;
 import net.imagej.ImgPlus;
-import net.imglib2.img.Img;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Pair;
 

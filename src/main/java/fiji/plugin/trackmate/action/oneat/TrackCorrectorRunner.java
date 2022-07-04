@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.math3.analysis.function.Atan2;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.DecompositionSolver;
@@ -24,75 +22,38 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import org.jgrapht.traverse.BreadthFirstIterator;
-import org.jgrapht.traverse.GraphIterator;
-import org.scijava.Context;
-import org.scijava.app.StatusService;
-import org.scijava.log.LogService;
-import org.scijava.options.OptionsService;
-
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Logger.SlaveLogger;
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.TrackModel;
-import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
-import fiji.plugin.trackmate.tracking.sparselap.costmatrix.JaqamanSegmentCostMatrixCreator;
 import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
-import fiji.plugin.trackmate.util.TMUtils;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
-import ij.plugin.frame.RoiManager;
-import net.imglib2.util.Util;
 import net.imagej.ImgPlus;
-import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
 import net.imglib2.Cursor;
-import net.imglib2.Interval;
 import net.imglib2.Localizable;
 import net.imglib2.Point;
 import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessible;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.RealPoint;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
-import net.imglib2.algorithm.region.localneighborhood.AbstractNeighborhood;
-import net.imglib2.algorithm.region.localneighborhood.EllipsoidNeighborhood;
-import net.imglib2.algorithm.region.localneighborhood.RectangleNeighborhoodGPL;
 import net.imglib2.img.display.imagej.ImgPlusViews;
-import net.imglib2.loops.LoopBuilder;
-import net.imglib2.outofbounds.OutOfBoundsMirrorExpWindowingFactory;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.util.Intervals;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
-
-import static fiji.plugin.trackmate.Spot.POSITION_X;
-import static fiji.plugin.trackmate.Spot.POSITION_Y;
-import static fiji.plugin.trackmate.Spot.POSITION_Z;
-import static fiji.plugin.trackmate.Spot.FRAME;
-import static fiji.plugin.trackmate.Spot.RADIUS;
 
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_BREAK_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_CREATE_LINKS;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_USE_MARI_PRINCIPLE;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
-import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_TRACKLET_LENGTH;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_MARI_ANGLE;
-import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
-import static fiji.plugin.trackmate.Spot.QUALITY;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_FEATURE_PENALTIES;
@@ -100,39 +61,16 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTA
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_GAP_CLOSING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_MERGING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_CUTOFF_PERCENTILE;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALTERNATIVE_LINKING_COST_FACTOR;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_SPLITTING_FEATURE_PENALTIES;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_LINKING_FEATURE_PENALTIES;
 
 public class TrackCorrectorRunner {
 
-	private final static Context context = TMUtils.getContext();
 
-	private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, Spot vertex,
-			Spot split) {
-
-		Set<Spot> connectedSet = new HashSet<>();
-
-		connectedSet = new HashSet<>();
-
-		BreadthFirstIterator<Spot, DefaultWeightedEdge> i = new BreadthFirstIterator<>(graph, vertex);
-
-		do {
-			Spot spot = i.next();
-			if (spot.ID() == split.ID()) {
-				break;
-
-			}
-			connectedSet.add(spot);
-		} while (i.hasNext());
-
-		return connectedSet;
-	}
 
 	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
 			final TrackMate trackmate,
@@ -557,7 +495,6 @@ public class TrackCorrectorRunner {
 	private static Pair<double[], double[]> getEigen(final Ellipsoid ellipsoid, int ndim) {
 
 		double[][] covariance = ellipsoid.getCovariance();
-		double[] mean = ellipsoid.getCenter();
 		final EigenvalueDecomposition eig = new Matrix(covariance).eig();
 		final double[] Eigenvalues = eig.getRealEigenvalues();
 		final Matrix Eigenvector = eig.getV();
@@ -707,38 +644,7 @@ public class TrackCorrectorRunner {
 			return null;
 	}
 
-	private static Ellipsoid ellipsoidFromEquation3D(final RealVector V) {
-		final double a = V.getEntry(0);
-		final double b = V.getEntry(1);
-		final double c = V.getEntry(2);
-		final double d = V.getEntry(3);
-		final double e = V.getEntry(4);
-		final double f = V.getEntry(5);
-		final double g = V.getEntry(6);
-		final double h = V.getEntry(7);
-		final double i = V.getEntry(8);
-
-		double[] Coefficents = V.toArray();
-
-		final double[][] aa = new double[][] { { a, d, e }, { d, b, f }, { e, f, c } };
-		final double[] bb = new double[] { g, h, i };
-		double det = new Matrix(aa).det();
-
-		if (det > 1.0E-15) {
-			final double[] cc = new Matrix(aa).solve(new Matrix(bb, 3)).getRowPackedCopy();
-			LinAlgHelpers.scale(cc, -1, cc);
-
-			final double[] At = new double[3];
-			LinAlgHelpers.mult(aa, cc, At);
-			final double r33 = LinAlgHelpers.dot(cc, At) + 2 * LinAlgHelpers.dot(bb, cc) - 1;
-			LinAlgHelpers.scale(aa, -1 / r33, aa);
-			int n = cc.length;
-			double[][] covariance = new Matrix(aa).inverse().getArray();
-			return (new Ellipsoid(cc, covariance, aa, null, computeAxisAndRadiiFromCovariance(covariance, n),
-					Coefficents));
-		} else
-			return null;
-	}
+	
 
 	private static double[] computeAxisAndRadiiFromCovariance(double[][] covariance, int n) {
 		final EigenvalueDecomposition eig = new Matrix(covariance).eig();
@@ -1183,7 +1089,7 @@ public class TrackCorrectorRunner {
 
 			final Spot sourcespot = Dividingspot.getB();
 
-			final double dist = sourcespot.diffTo(targetspot, FRAME);
+			final double dist = sourcespot.diffTo(targetspot, Spot.FRAME);
 
 			if (dist <= mintimeDistance) {
 
@@ -1460,117 +1366,6 @@ public class TrackCorrectorRunner {
 				DivisionPair, ApoptosisPair);
 	}
 
-	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> removeTracklets(final Model model,
-			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, final Map<String, Object> settings) {
-		double timecutoff = 2;
-		TrackModel trackModel = model.getTrackModel();
-		if (settings.get(KEY_TRACKLET_LENGTH) != null)
-			timecutoff = (Integer) settings.get(KEY_TRACKLET_LENGTH);
-
-		for (final Integer trackID : trackModel.trackIDs(true)) {
-
-			ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
-			ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
-			ArrayList<Integer> SourcesID = new ArrayList<Integer>();
-			ArrayList<Integer> TargetsID = new ArrayList<Integer>();
-			ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
-			ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
-			HashSet<Pair<Integer, Spot>> Splits = new HashSet<Pair<Integer, Spot>>();
-
-			final Set<DefaultWeightedEdge> track = trackModel.trackEdges(trackID);
-
-			for (final DefaultWeightedEdge e : track) {
-
-				Spot Spotbase = model.getTrackModel().getEdgeSource(e);
-				Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
-
-				Integer targetID = Spottarget.ID();
-				Integer sourceID = Spotbase.ID();
-				Sources.add(new ValuePair<Integer, Spot>(sourceID, Spotbase));
-				Targets.add(new ValuePair<Integer, Spot>(targetID, Spottarget));
-				SourcesID.add(sourceID);
-				TargetsID.add(targetID);
-
-			}
-			// find track ends
-			for (Pair<Integer, Spot> tid : Targets) {
-
-				if (!SourcesID.contains(tid.getA())) {
-
-					Ends.add(tid);
-
-				}
-
-			}
-
-			// find track starts
-			for (Pair<Integer, Spot> sid : Sources) {
-
-				if (!TargetsID.contains(sid.getA())) {
-					Starts.add(sid);
-
-				}
-
-			}
-
-			// find track splits
-			int scount = 0;
-			for (Pair<Integer, Spot> sid : Sources) {
-
-				for (Pair<Integer, Spot> dupsid : Sources) {
-
-					if (dupsid.getA().intValue() == sid.getA().intValue()) {
-						scount++;
-					}
-				}
-				if (scount > 1) {
-					Splits.add(sid);
-				}
-				scount = 0;
-			}
-
-			if (Splits.size() > 0) {
-
-				for (Pair<Integer, Spot> sid : Ends) {
-
-					Spot Spotend = sid.getB();
-
-					int trackletlength = 0;
-
-					double minsize = Double.MAX_VALUE;
-					Spot Actualsplit = null;
-					for (Pair<Integer, Spot> splitid : Splits) {
-						Spot Spotstart = splitid.getB();
-						Set<Spot> spotset = connectedSetOf(graph, Spotend, Spotstart);
-
-						if (spotset.size() < minsize) {
-
-							minsize = spotset.size();
-							Actualsplit = Spotstart;
-
-						}
-
-					}
-
-					if (Actualsplit != null) {
-						Set<Spot> connectedspotset = connectedSetOf(graph, Spotend, Actualsplit);
-						trackletlength = (int) Math.abs(Actualsplit.diffTo(Spotend, Spot.FRAME));
-
-						if (trackletlength <= timecutoff) {
-
-							Iterator<Spot> it = connectedspotset.iterator();
-							while (it.hasNext())
-								graph.removeVertex(it.next());
-
-						}
-					}
-
-				}
-			}
-		}
-
-		return graph;
-
-	}
+	
 
 }
