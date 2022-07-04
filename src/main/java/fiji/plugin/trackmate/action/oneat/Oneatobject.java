@@ -1,6 +1,5 @@
 package fiji.plugin.trackmate.action.oneat;
 
-import net.imglib2.RealLocalizable;
 
 public class Oneatobject {
 

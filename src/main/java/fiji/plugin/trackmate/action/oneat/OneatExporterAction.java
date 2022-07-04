@@ -4,7 +4,6 @@ import java.awt.Frame;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import fiji.plugin.trackmate.visualization.hyperstack.HyperStackDisplayer;
@@ -19,18 +18,14 @@ import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_ICON;
 import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_THRESHOLD;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_BIG_ICON;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
-
 import org.scijava.plugin.Plugin;
-
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.action.AbstractTMAction;
-import fiji.plugin.trackmate.action.CaptureOverlayAction;
 import fiji.plugin.trackmate.action.TrackMateAction;
 import fiji.plugin.trackmate.action.TrackMateActionFactory;
 import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
@@ -38,19 +33,13 @@ import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.visualization.hyperstack.SpotOverlay;
 import fiji.plugin.trackmate.visualization.hyperstack.TrackOverlay;
 import ij.ImagePlus;
-import ij.plugin.frame.RoiManager;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
 import net.imglib2.img.display.imagej.ImgPlusViews;
-import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.util.Util;
-import net.imglib2.view.Views;
 
 public class  OneatExporterAction < T extends RealType< T > & NumericType< T > > extends AbstractTMAction {
 
@@ -108,6 +97,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 		
 		Map<String, Object> detectorsettings = settings.detectorSettings;
 		Model model = trackmate.getModel();
+		@SuppressWarnings("unchecked")
 		final ImgPlus<T> img = TMUtils.rawWraps( settings.imp );
 		
 		final double[] calibration = new double[ 3 ];
@@ -152,6 +142,7 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 				detectionimg = ImgPlusViews.hyperSlice( img, 2, (int) detchannel );
 			}
 			
+			@SuppressWarnings("unchecked")
 			final ImgPlus< UnsignedShortType > intimg = (ImgPlus<UnsignedShortType>) detectionimg;
 		
 			

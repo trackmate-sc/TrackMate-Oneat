@@ -1,28 +1,18 @@
 package fiji.plugin.trackmate.action.oneat;
 
-import java.io.File;
 import java.util.Map;
-
 import javax.swing.JPanel;
-
 import org.jdom2.Element;
-
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.TrackMateModule;
-import fiji.plugin.trackmate.gui.components.ConfigurationPanel;
 import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import fiji.plugin.trackmate.tracking.SpotTracker;
-import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 import fiji.plugin.trackmate.tracking.TrackerKeys;
 import net.imagej.ImgPlus;
-import net.imglib2.Interval;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 /**

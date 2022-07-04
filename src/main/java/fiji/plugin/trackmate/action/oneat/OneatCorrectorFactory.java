@@ -21,10 +21,7 @@ import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import net.imagej.ImgPlus;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 @Plugin( type = TrackCorrectorFactory.class, visible = true )
@@ -32,28 +29,15 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 
 	
 	public static final String DIVISION_FILE = "MITOSIS_FILE";
-	
-    
     public static final String APOPTOSIS_FILE = "APOPTOSIS_FILE";
-    
     public static final String KEY_TRACKLET_LENGTH = "TRACKLET_LENGTH";
-    
     public static final String KEY_PROB_THRESHOLD = "DETECTION_THRESHOLD";
-    
     public static final String KEY_CREATE_LINKS = "CREATE_LINKS";
-    
     public static final String KEY_BREAK_LINKS = "BREAK_LINKS";
-    
     public static final String KEY_USE_MARI_PRINCIPLE = "USE_MARI_PRINCIPLE";
-    
     public static final String KEY_MARI_ANGLE = "MARI_ANGLE";
-
-
-	
 	public static final String THIS_TRACK_CORRECTOR = "Oneat_Corrector";
-
 	public static final String THIS_NAME = "Oneat Corrector";
-
 	public static final String THIS_INFO_TEXT = "<html>"
 			+ "This is the corrector based on oneat, a CNN + LSTM based action classification network <br>"
 			+ " </html>";

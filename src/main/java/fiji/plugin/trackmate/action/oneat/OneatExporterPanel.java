@@ -7,7 +7,6 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRA
 import static fiji.plugin.trackmate.action.oneat.gui.Icons.KAPOORLABS_ICON;
 import java.awt.Cursor;
 import java.awt.Desktop;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -18,19 +17,12 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
@@ -39,10 +31,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.text.NumberFormatter;
-
-import org.scijava.convert.NumberConverters;
-
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 
@@ -65,11 +53,8 @@ public class OneatExporterPanel extends JPanel {
 	
 	private JButton Loaddivisioncsvbutton;
 	private JButton Loadcelldeathcsvbutton;
-	private JFormattedTextField MinTracklet;
-	private JFormattedTextField DetectionChannel;
 	private JFormattedTextField TimeGap;
 	private JFormattedTextField Angle;
-	private JFormattedTextField MotherDaughterLinkDist;
 	private JFormattedTextField DetectionThreshold;
 	
 	public static final String WIKI = "https://imagej.net/plugins/trackmate/trackmate-oneat";

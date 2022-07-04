@@ -1,6 +1,5 @@
 package fiji.plugin.trackmate.action.oneat;
 
-import org.apache.batik.ext.awt.image.SpotLight;
 
 import fiji.plugin.trackmate.Spot;
 

@@ -6,10 +6,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.Collection;
 import java.util.HashSet;
-
 import org.jgrapht.graph.DefaultWeightedEdge;
-
-import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import fiji.plugin.trackmate.util.TMUtils;
