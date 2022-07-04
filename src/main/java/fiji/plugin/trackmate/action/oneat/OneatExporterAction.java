@@ -109,10 +109,12 @@ public class  OneatExporterAction < T extends RealType< T > & NumericType< T > >
 		Map<String, Object> detectorsettings = settings.detectorSettings;
 		Model model = trackmate.getModel();
 		final ImgPlus<T> img = TMUtils.rawWraps( settings.imp );
+		
 		final double[] calibration = new double[ 3 ];
 		calibration[ 0 ] = settings.dx;
 		calibration[ 1 ] = settings.dy;
 		calibration[ 2 ] = settings.dz;
+		
 		if (gui!=null)
 		{
 			

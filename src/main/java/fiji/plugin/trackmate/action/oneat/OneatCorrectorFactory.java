@@ -44,12 +44,10 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
     
     public static final String KEY_BREAK_LINKS = "BREAK_LINKS";
     
-    public static final String KEY_USE_MARI_PRINCIPLE = "USE MARI PRINCIPLE";
+    public static final String KEY_USE_MARI_PRINCIPLE = "USE_MARI_PRINCIPLE";
     
-    public static final String KEY_MARI_ANGLE = "MARI ANGLE";
-    
-    protected ImgPlus< IntType > img;
-	
+    public static final String KEY_MARI_ANGLE = "MARI_ANGLE";
+
 
 	
 	public static final String THIS_TRACK_CORRECTOR = "Oneat_Corrector";
@@ -90,16 +88,17 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 	
 
 	@Override
-	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> intimg,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
+	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
 			Map<String, Object> settings, final Logger logger, double[] calibration) {
 		
-		 
+		
+		  
 		  File oneatdivisionfile = (File) settings.get(DIVISION_FILE);
 		  
 		  File oneatapoptosisfile = (File) settings.get(APOPTOSIS_FILE);
 		  
 	
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, intimg,  model, trackmate, modelsettings, displaysettings, calibration, settings, logger);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img,  model, trackmate, modelsettings, displaysettings, calibration, settings, logger);
 	}
 
 	@Override
@@ -122,6 +121,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & writeAttribute( settings, element, KEY_TARGET_CHANNEL, Integer.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_USE_MARI_PRINCIPLE, Boolean.class, str );
 		ok = ok & writeAttribute( settings, element, KEY_MARI_ANGLE, Double.class, str );
+		ok = ok & writeAttribute( settings, element, KEY_PROB_THRESHOLD, Double.class, str );
 		return ok;
 	}
 
@@ -139,6 +139,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		ok = ok & readBooleanAttribute( element, settings, KEY_TARGET_CHANNEL, errorHolder );
 		ok = ok & readDoubleAttribute( element, settings, KEY_MARI_ANGLE, errorHolder );
 		ok = ok & readBooleanAttribute( element, settings, KEY_USE_MARI_PRINCIPLE, errorHolder );
+		ok = ok & readDoubleAttribute( element, settings, KEY_PROB_THRESHOLD, errorHolder );
 		return ok;
 	}
 
@@ -165,6 +166,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		
 		final String mariangle = (String) settings.get(KEY_MARI_ANGLE);
 		
+		final String probthreshold = (String) settings.get(KEY_PROB_THRESHOLD);
 		
 		final StringBuilder str = new StringBuilder();
 
@@ -173,10 +175,11 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		str.append( String.format( "  - Min Tracklet Length: %.1f\n", mintrackletlength));
 		str.append( String.format( "  - Max linking distance to consider for making links: %.1f\n", linkingdistance));
 		str.append( String.format( "  -Create new links: %.1f\n", createlinks));
-		str.append( String.format( "  - Breal links: %.1f\n", breaklinks));
+		str.append( String.format( "  - Break links: %.1f\n", breaklinks));
 		str.append( String.format( "  - Detection Channel: %.1f\n", detectionchannel));
 		str.append( String.format( "  - Use Mari Principle: %.1f\n", mariprinciple));
 		str.append( String.format( "  - Use Mari Angle: %.1f\n", mariangle));
+		str.append( String.format( "  - Probthreshold: %.1f\n", probthreshold));
 		
 		return str.toString();
 	}
@@ -211,7 +214,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		
 		ok = ok & checkParameter( settings, KEY_MARI_ANGLE, Double.class, str );
 		
-		
+		ok = ok & checkParameter( settings, KEY_PROB_THRESHOLD, Double.class, str );
 
 		if ( !ok )
 		{

@@ -55,7 +55,6 @@ public class OneatExporterPanel extends JPanel {
 
 	private  int detchannel = 1;
 	private double probthreshold = 0.9;
-	private  double sizeratio = 0.75;
 	private double linkdist = 250;
 	private  int deltat = 4;
 	private  int tracklet = 1;
@@ -393,11 +392,7 @@ public class OneatExporterPanel extends JPanel {
 		return detchannel;
 	}
 	
-	public double getSizeRatio() {
-		
-		
-		return sizeratio;
-	}
+	
 	
 	public int getMinTracklet() {
 		
