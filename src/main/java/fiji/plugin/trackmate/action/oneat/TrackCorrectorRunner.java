@@ -231,7 +231,7 @@ public class TrackCorrectorRunner {
 				int trackcount = 0;
 				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
 
-					logger.setProgress((float) (count) / Mitosisspots.size());
+				
 					// Get the current trackID
 					int trackID = trackidspots.getKey();
 					Set<DefaultWeightedEdge> dividingtracks = trackmodel.trackEdges(trackID);
@@ -245,7 +245,7 @@ public class TrackCorrectorRunner {
 
 					// Create the pixel list for mother cells
 
-					count++;
+				
 
 					// Remove edges corresponding to mitotic trajectories
 					for (final DefaultWeightedEdge edge : dividingtracks) {
@@ -345,7 +345,7 @@ public class TrackCorrectorRunner {
 						/*
 						 * Create links in graph.
 						 */
-
+                        System.gc();
 						logger.setProgress(trackcount / (Mitosisspots.size() + 1));
 
 						trackcount++;
