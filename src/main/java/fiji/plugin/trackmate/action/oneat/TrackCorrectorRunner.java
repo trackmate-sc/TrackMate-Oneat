@@ -315,7 +315,7 @@ public class TrackCorrectorRunner {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
 
-												if (source.getFeature(Spot.FRAME) == frame ) {
+												if (source.getFeature(Spot.FRAME) == frame && motherspot.getFeature(Spot.RADIUS) > source.getFeature(Spot.RADIUS) ) {
 													final Spot target = trackmodel.getEdgeTarget(localedge);
 													final double linkcost = trackmodel.getEdgeWeight(localedge);
 
@@ -703,6 +703,7 @@ public class TrackCorrectorRunner {
 					ranac.setPosition(frame, ndim);
 					int label = ranac.get().get();
 
+				
 					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
 							new ValuePair<Spot, Integer>(spot, trackID));
 					uniqueSpot.put(spot, label);
@@ -831,6 +832,25 @@ public class TrackCorrectorRunner {
 
 					int labelID = ranac.get().get();
 
+					int maxlabel = labelID;
+					// Oneat spot locations are not precise in Z so we give it 
+					if(labelID == 0 && ndim > 2) {
+						
+						for(int k = 0; k < img.dimension(ndim - 1); ++k) {
+							
+							ranac.setPosition(k, ndim - 1);
+							if(ranac.get().get() > maxlabel){
+								
+								maxlabel = ranac.get().get();
+							}
+							
+						}
+						
+					}
+					labelID = maxlabel;
+					
+			
+					
 					if (uniquelabelID.getA().containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID.getA()
 								.get(new ValuePair<Integer, Integer>(labelID, frame));
