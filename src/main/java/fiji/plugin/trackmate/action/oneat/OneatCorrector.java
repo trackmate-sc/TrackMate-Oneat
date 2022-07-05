@@ -141,11 +141,11 @@ public class OneatCorrector implements TrackCorrector {
 			// This object contains the track ID and a list of single object with the
 			// apoptotic spot where the track has to terminate and the root of the lineage
 			// tree
-			Apoptosisspots = TrackCorrectorRunner.getapoptosisTrackID(Tmobject.getA(), model, img, apoptosisframespots,
+			Apoptosisspots = TrackCorrectorRunner.getapoptosisTrackID(Tmobject.getA(), Tmobject.getB(), model, img, apoptosisframespots,
 					settings, logger,numThreads, calibration);
 
-		// To be safe let us sort the dead points in ascending order of frame
-
+	
+	
 		graph = TrackCorrectorRunner.getCorrectedTracks(model, trackmate, Tmobject.getA(), Tmobject.getB(),
 				Mitossisspots, Apoptosisspots, settings, ndims, logger, img, divisionframespots, numThreads,
 				calibration);
