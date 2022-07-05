@@ -229,7 +229,7 @@ public class OneatCostMatrix implements CostMatrixCreator< Spot, Spot >, MultiTh
 		executorGCM.shutdown();
 		try
 		{
-			executorGCM.awaitTermination( 1000, TimeUnit.MILLISECONDS );
+			executorGCM.awaitTermination( 1, TimeUnit.DAYS );
 		}
 		catch ( final InterruptedException e )
 		{
@@ -278,7 +278,7 @@ public class OneatCostMatrix implements CostMatrixCreator< Spot, Spot >, MultiTh
 			executorS.shutdown();
 			try
 			{
-				executorS.awaitTermination( 1000, TimeUnit.MILLISECONDS );
+				executorS.awaitTermination( 1, TimeUnit.DAYS );
 			}
 			catch ( final InterruptedException e )
 			{

@@ -111,11 +111,13 @@ public class OneatCorrector implements TrackCorrector {
 		apoptosisspots = new SpotCollection();
 		apoptosisframespots = new HashMap<Integer, ArrayList<Spot>>();
 		int ndims = img.numDimensions() - 1;
+		
+		// Get SpotCollection and HashMap of <frame, SpotList> for mitosis/cell death 
 		Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> result = TrackCorrectorRunner
-				.run(oneatdivision, oneatapoptosis, settings, ndims, calibration);
+				.run(oneatdivision, oneatapoptosis, settings, logger, ndims, calibration);
 
 		// Get first TrackMate object as in blue print
-		Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer, Pair<Integer, Spot>>, HashMap<Integer, ArrayList<Pair<Integer, Spot>>>>> Tmobject = TrackCorrectorRunner
+		Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>>> Tmobject = TrackCorrectorRunner
 				.getFirstTrackMateobject(model, img, logger, calibration);
 
 		// Oneat found spots for mitosis
@@ -131,7 +133,7 @@ public class OneatCorrector implements TrackCorrector {
 
 			// This object contains the track ID and a list of split points and the root of
 			// the lineage tree
-			Mitossisspots = TrackCorrectorRunner.getmitosisTrackID(Tmobject.getA(), model, img, divisionframespots,
+			Mitossisspots = TrackCorrectorRunner.getmitosisTrackID(Tmobject.getA(), Tmobject.getB(), model, img, divisionframespots,
 					settings, logger, numThreads, calibration);
 
 		if (apoptosisspots.keySet().size() > 0)
