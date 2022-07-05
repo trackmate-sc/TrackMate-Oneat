@@ -223,7 +223,7 @@ public class TrackCorrectorRunner {
 
 			// Lets take care of mitosis
 			if (Mitosisspots != null) {
-				logger.log("Total oneat Mitosis events " + " " + Mitosisspots.entrySet().size() + "\n");
+				logger.log("Matched Oneat Locations with Spots in Tracks " + " " + Mitosisspots.entrySet().size() + "\n");
 				if (mariprinciple)
 					logger.log("Using Mari's priniciple for track linking.\n");
 				logger.setStatus("Local Jaqman Linker");
@@ -732,20 +732,15 @@ public class TrackCorrectorRunner {
 		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 
-
-		
-		final ExecutorService executorS = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
-		
 		logger.log("Matching with oneat apoptosis spots.\n");
 		logger.setProgress(1.);
 
+		int count = 0;
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
+		
 			
-			executorS.submit( new Runnable()
-			{
-				@Override
-				public void run()
-				{
+			logger.setProgress(count/(framespots.entrySet().size() + 1));
+			count++;
 			int frame = framemap.getKey();
 			if (frame < img.dimension(ndim) - 1) {
 			
@@ -763,15 +758,7 @@ public class TrackCorrectorRunner {
 					}
 					ranac.setPosition(frame, ndim);
 
-					HyperSphere<UnsignedShortType> hyperSphere = new HyperSphere<UnsignedShortType>(img, ranac, 1);
-					int maxval = 0;
-					for (UnsignedShortType val : hyperSphere) {
-
-						if (maxval < val.get())
-							maxval = val.get();
-					}
-
-					int labelID = maxval;
+					int labelID = ranac.get().get();
 
 					if (uniquelabelID.getA().containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID.getA()
@@ -793,18 +780,7 @@ public class TrackCorrectorRunner {
 			}
 
 		}
-			}
-					);
-		}
-		executorS.shutdown();
-		try
-		{
-			executorS.awaitTermination( 1000, TimeUnit.SECONDS );
-		}
-		catch ( final InterruptedException e )
-		{
-			
-		}
+		
 		logger.log("Verifying lineage trees.\n");
 		logger.setProgress(0.);
 
@@ -829,16 +805,12 @@ public class TrackCorrectorRunner {
 
 		logger.log("Matching with oneat mitosis spots.\n");
 		logger.setProgress(1.);
-		final ExecutorService executorS = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
 		
-			
+	    int count = 0;		
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 			
-			executorS.submit( new Runnable()
-			{
-				@Override
-				public void run()
-				{
+		    logger.setProgress(count/(framespots.entrySet().size() + 1 ));
+		    count++;
 			int frame = framemap.getKey();
 			if (frame < img.dimension(ndim) - 1) {
 				
@@ -855,15 +827,9 @@ public class TrackCorrectorRunner {
 						ranac.setPosition(location[d], d);
 					}
 					ranac.setPosition(frame, ndim);
-					HyperSphere<UnsignedShortType> hyperSphere = new HyperSphere<UnsignedShortType>(img, ranac, 1);
-					int maxval = 0;
-					for (UnsignedShortType val : hyperSphere) {
+					
 
-						if (maxval < val.get())
-							maxval = val.get();
-					}
-
-					int labelID = maxval;
+					int labelID = ranac.get().get();
 
 					if (uniquelabelID.getA().containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID.getA()
@@ -876,6 +842,8 @@ public class TrackCorrectorRunner {
 						Pair<Boolean, Pair<Spot, Spot>> isDividingTMspot = isDividingTrack(DividingStartspots, spot, trackID, tmoneatdeltat);
 						Boolean isDividing = isDividingTMspot.getA();
 
+						
+						
 						// If isDividing is true oneat does not need to correct the track else it has to
 						// correct the trackid
 						if (!isDividing) {
@@ -911,18 +879,7 @@ public class TrackCorrectorRunner {
 
 			}
 		}
-			}
-					);
-		}
-		executorS.shutdown();
-		try
-		{
-			executorS.awaitTermination( 1000, TimeUnit.SECONDS );
-		}
-		catch ( final InterruptedException e )
-		{
 			
-		}
 		logger.log("Verifying lineage trees.\n");
 		logger.setProgress(0.);
 
@@ -1004,6 +961,7 @@ public class TrackCorrectorRunner {
 
 		}
 
+		
 		AllTrackIds.removeAll(DividingTrackids);
 		for (int trackID : AllTrackIds) {
 
@@ -1232,7 +1190,7 @@ public class TrackCorrectorRunner {
 				ie.printStackTrace();
 			}
 
-			logger.log("Oneat found mitosis events:" + " " + count);
+			logger.log("Oneat found mitosis events:" + " " + count + "\n");
 			// Parse each component.
 
 			final Iterator<Entry<Integer, ArrayList<Oneatobject>>> iterator = DivisionMap.entrySet().iterator();
@@ -1316,7 +1274,7 @@ public class TrackCorrectorRunner {
 			}
 
 			// Parse each component.
-			logger.log("Oneat found cell death events:" + " " + count);
+			logger.log("Oneat found cell death events:" + " " + count + "\n");
 			final Iterator<Entry<Integer, ArrayList<Oneatobject>>> iterator = ApoptosisMap.entrySet().iterator();
 
 			while (iterator.hasNext()) {
