@@ -10,6 +10,7 @@
 
 #@ File(label='Oneat Mitosis File', style='file') oneat_mitosis_file
 #@ File(label='Save XML directory', style='directory') savedir
+from pickle import FALSE
 import sys
 
 import java.io.File as File
@@ -47,7 +48,7 @@ sys.setdefaultencoding('utf-8')
 imagepath = '/gpfsstore/rech/jsy/uzj81mi/Mari_Data_Tracking/Tracking_hyperstack.tif'
 
 imp = IJ.openImage(imagepath)
-imp.show()
+
 #Or use the currently open image 
 #imp = WindowManager.getCurrentImage()
 
@@ -117,9 +118,7 @@ selectionModel = SelectionModel( model )
 # Read the default display settings.
 ds = DisplaySettingsIO.readUserDefault()
 
-displayer =  HyperStackDisplayer( model, selectionModel, imp, ds )
-displayer.render()
-displayer.refresh()
+
 # Echo results with the logger we set at start:
 model.getLogger().log( str( model ) )
 savename = imp.getShortTitle()
@@ -155,7 +154,7 @@ oneatmap = { 'MITOSIS_FILE': oneat_mitosis_file,
           'SPLITTING_MAX_DISTANCE':linking_maxdist}          
 calibration = [settings.dx,settings.dy,settings.dz]
 
-oneatcorrector = corrector.create(intimg,model, trackmate, settings, ds,oneatmap,model.getLogger(), calibration)
+oneatcorrector = corrector.create(intimg,model, trackmate, settings, ds,oneatmap,model.getLogger(), calibration, FALSE)
 oneatcorrector.checkInput()
 oneatcorrector.process()
 savefile = File(str(savedir) + '/' +   savename + ".xml") 
