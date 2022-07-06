@@ -11,10 +11,12 @@
 #@ File(label='Oneat Mitosis File', style='file') oneat_mitosis_file
 #@ File(label='Save XML directory', style='directory') savedir
 import sys
-import java.io.File as File
+
+import java.io.File as File
 from ij import IJ
 from ij import WindowManager
-import net.imagej.ImageJ as ImageJ
+
+import net.imagej.ImageJ as ImageJ
 from fiji.plugin.trackmate.io import TmXmlWriter
 from  fiji.plugin.trackmate.gui.wizard import TrackMateWizardSequence
 from net.imagej.axis import Axes
@@ -33,7 +35,8 @@ from fiji.plugin.trackmate.gui.displaysettings import DisplaySettingsIO
 from fiji.plugin.trackmate.action.oneat import OneatCorrectorFactory, OneatExporterPanel
 import fiji.plugin.trackmate.visualization.hyperstack.HyperStackDisplayer as HyperStackDisplayer
 import fiji.plugin.trackmate.features.FeatureFilter as FeatureFilter
-from  net.imglib2.img.display.imagej import ImgPlusViews
+
+from  net.imglib2.img.display.imagej import ImgPlusViews
 # We have to do the following to avoid errors with UTF8 chars generated in 
 # TrackMate that will mess with our Fiji Jython.
 reload(sys)
@@ -41,12 +44,12 @@ sys.setdefaultencoding('utf-8')
 
 # Get the image path and open the image
 
-#imagepath = '/D:/Mari_project/tracks_gt/Composite-2.tif'
+imagepath = '/gpfsstore/rech/jsy/uzj81mi/Mari_Data_Tracking/Tracking_hyperstack.tif'
 
-#imp = IJ.openImage(imagepath)
-
+imp = IJ.openImage(imagepath)
+imp.show()
 #Or use the currently open image 
-imp = WindowManager.getCurrentImage()
+#imp = WindowManager.getCurrentImage()
 
 
 #----------------------------
@@ -83,7 +86,8 @@ settings.trackerFactory = SimpleSparseLAPTrackerFactory()
 settings.trackerSettings = LAPUtils.getDefaultLAPSettingsMap() # almost good enough
 settings.trackerSettings['LINKING_MAX_DISTANCE'] = linking_maxdist
 settings.trackerSettings['GAP_CLOSING_MAX_DISTANCE'] = gap_maxdist
-settings.trackerSettings['MAX_FRAME_GAP'] = gap_maxframe
+
+settings.trackerSettings['MAX_FRAME_GAP'] = gap_maxframe
 
 # Add ALL the feature analyzers known to TrackMate. They will 
 # yield numerical features for the results, such as speed, mean intensity etc.
@@ -107,17 +111,15 @@ ok = trackmate.process()
 if not ok:
     sys.exit(str(trackmate.getErrorMessage()))
 
-
-#----------------
-# Display results
-#----------------
-
 # A selection.
 selectionModel = SelectionModel( model )
 
 # Read the default display settings.
 ds = DisplaySettingsIO.readUserDefault()
 
+displayer =  HyperStackDisplayer( model, selectionModel, imp, ds )
+displayer.render()
+displayer.refresh()
 # Echo results with the logger we set at start:
 model.getLogger().log( str( model ) )
 savename = imp.getShortTitle()
