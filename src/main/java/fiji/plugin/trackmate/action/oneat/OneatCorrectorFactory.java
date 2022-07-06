@@ -73,7 +73,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 
 	@Override
 	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
-			Map<String, Object> settings, final Logger logger, double[] calibration) {
+			Map<String, Object> settings, final Logger logger, double[] calibration, boolean addDisplay) {
 		
 		
 		  
@@ -82,7 +82,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 		  File oneatapoptosisfile = (File) settings.get(APOPTOSIS_FILE);
 		  
 	
-		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img,  model, trackmate, modelsettings, displaysettings, calibration, settings, logger);
+		  return new OneatCorrector(oneatdivisionfile, oneatapoptosisfile, img,  model, trackmate, modelsettings, displaysettings, calibration, settings, logger, addDisplay);
 	}
 
 	@Override

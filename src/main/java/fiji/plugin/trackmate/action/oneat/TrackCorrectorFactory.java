@@ -42,7 +42,7 @@ public interface  TrackCorrectorFactory  extends TrackMateModule
 		 * @return a new {@link SpotTracker} instance.
 		 */
 		public TrackCorrector create(  ImgPlus< UnsignedShortType > img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
-				final Map< String, Object > settings, final Logger logger, final double[] calibration );
+				final Map< String, Object > settings, final Logger logger, final double[] calibration, final boolean addDisplay );
 
 		/**
 		 * Returns a new GUI panel able to configure the settings suitable for the

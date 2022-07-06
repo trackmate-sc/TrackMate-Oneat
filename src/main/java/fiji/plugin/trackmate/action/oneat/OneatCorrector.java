@@ -51,6 +51,8 @@ public class OneatCorrector implements TrackCorrector {
 	private final Map<String, Object> settings;
 
 	private final Settings modelsettings;
+	
+	private final Boolean addDisplay;
 
 	private Logger logger;
 
@@ -67,7 +69,7 @@ public class OneatCorrector implements TrackCorrector {
 	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<UnsignedShortType> intimg,
 			final Model model, final TrackMate trackmate, final Settings modelsettings,
 			final DisplaySettings displaySettings, double[] calibration, Map<String, Object> settings,
-			final Logger logger) {
+			final Logger logger, final Boolean addDisplay) {
 
 		this.oneatdivision = oneatdivision;
 
@@ -83,6 +85,7 @@ public class OneatCorrector implements TrackCorrector {
 
 		this.modelsettings = modelsettings;
 
+		this.addDisplay = addDisplay;
 
 		this.logger = logger;
 
@@ -148,7 +151,7 @@ public class OneatCorrector implements TrackCorrector {
 	
 		graph = TrackCorrectorRunner.getCorrectedTracks(model, trackmate, Tmobject.getA(), Tmobject.getB(),
 				Mitossisspots, Apoptosisspots, settings, ndims, logger, img, divisionframespots, numThreads,
-				calibration);
+				calibration, addDisplay);
 
 		// Check that the objects list itself isn't null
 		if (null == graph) {

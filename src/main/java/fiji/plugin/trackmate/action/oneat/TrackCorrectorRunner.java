@@ -79,7 +79,7 @@ public class TrackCorrectorRunner {
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
 			HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim,
 			final Logger logger,  final ImgPlus<UnsignedShortType> img,
-			HashMap<Integer, ArrayList<Spot>> framespots, int numThreads, double[] calibration) {
+			HashMap<Integer, ArrayList<Spot>> framespots, int numThreads, double[] calibration, boolean addDisplay) {
 
 		// Get the trackmodel and spots in the default tracking result and start to
 		// create a new graph
@@ -388,13 +388,16 @@ public class TrackCorrectorRunner {
 										if(mariprinciple)
 										if (Math.signum(daughtermotheraxisB) * Math.signum(daughtermotheraxis) < 0) {
 											validlink = true;
+											if(addDisplay) {
 											addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, motherspot);
 											addOverlay(oneatOverlay, trackmate.getSettings().imp, motherspot);
+											}
 										}
 										if(!mariprinciple) {
+											if(addDisplay) {
 											addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, motherspot);
 											addOverlay(oneatOverlay, trackmate.getSettings().imp, motherspot);
-											
+											}
 										}
 											
 										
@@ -411,7 +414,6 @@ public class TrackCorrectorRunner {
 									graph.addVertex(source);
 									graph.addVertex(target);
 									final DefaultWeightedEdge edge = graph.addEdge(source, target);
-									
 									graph.setEdgeWeight(edge, cost);
 								}
 
