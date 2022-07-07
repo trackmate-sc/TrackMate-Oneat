@@ -797,7 +797,7 @@ public class TrackCorrectorRunner {
 			final Model model, final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, final int numThreads, double[] calibration) {
 
-		HashMap<Integer, ArrayList<Spot>> Mitosisspots = new HashMap<Integer, ArrayList<Spot>>();
+		
 		
 		// Starting point of the tree + list of mitosis spots in the trackID
 		HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Trackmitosis = new HashMap<Integer, Pair<Spot, ArrayList<Spot>>>();
@@ -833,8 +833,10 @@ public class TrackCorrectorRunner {
 					ranac.setPosition(frame, ndim);
 					
 
+					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
 					int labelID = ranac.get().get();
-
+                    if(labelID!=0)
+                    	Alllabels.add(labelID);
 					int maxlabel = labelID;
 					// Oneat spot locations are not precise in Z so we give it 
 					if(labelID == 0 && ndim > 2) {
@@ -844,7 +846,7 @@ public class TrackCorrectorRunner {
 							ranac.setPosition(k, ndim - 1);
 							if(ranac.get().get() > maxlabel){
 								
-								maxlabel = ranac.get().get();
+								Alllabels.add(ranac.get().get());
 							}
 							
 						}
@@ -853,10 +855,13 @@ public class TrackCorrectorRunner {
 					labelID = maxlabel;
 					
 			
-					
-					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
+					Iterator<Integer> labeliter = Alllabels.iterator();
+					while(labeliter.hasNext()) {
+						
+						int label = labeliter.next();
+					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(label, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID
-								.get(new ValuePair<Integer, Integer>(labelID, frame));
+								.get(new ValuePair<Integer, Integer>(label, frame));
 						// Now get the spot ID
 
 						Spot spot = spotandtrackID.getA();
@@ -873,14 +878,14 @@ public class TrackCorrectorRunner {
 
 							Spot startspot = isDividingTMspot.getB().getA();
 
-							if (Mitosisspots.containsKey(trackID)) {
+							if (Trackmitosis.containsKey(trackID)) {
 
-								ArrayList<Spot> trackspotlist = Mitosisspots.get(trackID);
-								if (!trackspotlist.contains(spot))
-									trackspotlist.add(spot);
-								Mitosisspots.put(trackID, trackspotlist);
+								Pair<Spot, ArrayList<Spot>>  trackstartspotlist = Trackmitosis.get(trackID);
+								if (!trackstartspotlist.getB().contains(spot))
+									trackstartspotlist.getB().add(spot);
+								
 								Pair<Spot, ArrayList<Spot>> pairlist = new ValuePair<Spot, ArrayList<Spot>>(startspot,
-										trackspotlist);
+										trackstartspotlist.getB());
 								Trackmitosis.put(trackID, pairlist);
 
 							} else {
@@ -902,7 +907,7 @@ public class TrackCorrectorRunner {
 
 			}
 		}
-			
+		}
 		logger.log("Verifying lineage trees.\n");
 		logger.setProgress(0.);
 
