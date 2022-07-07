@@ -199,7 +199,7 @@ public class OneatCorrector implements TrackCorrector {
 	@Override
 	public void setNumThreads() {
 
-		this.numThreads = Runtime.getRuntime().availableProcessors();
+		this.numThreads = Runtime.getRuntime().availableProcessors()/2;
 
 	}
 

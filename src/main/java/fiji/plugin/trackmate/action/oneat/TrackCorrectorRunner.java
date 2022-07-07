@@ -315,7 +315,7 @@ public class TrackCorrectorRunner {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
 
-												if (source.getFeature(Spot.FRAME) == frame && motherspot.getFeature(Spot.RADIUS) > source.getFeature(Spot.RADIUS) ) {
+												if (source.getFeature(Spot.FRAME) == frame ) {
 													final Spot target = trackmodel.getEdgeTarget(localedge);
 													final double linkcost = trackmodel.getEdgeWeight(localedge);
 
@@ -334,7 +334,7 @@ public class TrackCorrectorRunner {
 						}
 
 						final OneatCostMatrix costMatrixCreator = new OneatCostMatrix(localgraph, cmsettings);
-						costMatrixCreator.setNumThreads(Runtime.getRuntime().availableProcessors());
+						costMatrixCreator.setNumThreads(numThreads);
 						
 						final LocalJaqamanLinker<Spot, Spot> linker = new LocalJaqamanLinker<>(costMatrixCreator, logger, trackcount/Mitosisspots.entrySet().size());
 						if (!linker.checkInput() || !linker.process()) {
@@ -449,9 +449,7 @@ public class TrackCorrectorRunner {
 
 	private static void addOverlay(final Roi overlay, final ImagePlus imp, final Spot spot) {
 		
-		int channels = imp.getNChannels();
-		for(int c = 0; c< channels; ++c)
-		overlay.setPosition(c, spot.getFeature(Spot.POSITION_Z).intValue(), spot.getFeature(Spot.FRAME).intValue());
+	
 		imp.getOverlay().add(overlay);
 
 	}
@@ -733,7 +731,6 @@ public class TrackCorrectorRunner {
 		// Spots from trackmate
 
 		int ndim = img.numDimensions() - 1;
-		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 
 		logger.log("Matching with oneat apoptosis spots.\n");
@@ -761,12 +758,35 @@ public class TrackCorrectorRunner {
 						ranac.setPosition(location[d], d);
 					}
 					ranac.setPosition(frame, ndim);
-
+					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
 					int labelID = ranac.get().get();
-
-					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
+					if(labelID!=0)
+                    	Alllabels.add(labelID);
+					int maxlabel = labelID;
+					// Oneat spot locations are not precise in Z so we give it 
+					if(labelID == 0 && ndim > 2) {
+						
+						for(int k = 0; k < img.dimension(ndim - 1); ++k) {
+							
+							ranac.setPosition(k, ndim - 1);
+							if(ranac.get().get() > maxlabel){
+								
+								Alllabels.add(ranac.get().get());
+							}
+							
+						}
+						
+					}
+				
+					
+			
+					Iterator<Integer> labeliter = Alllabels.iterator();
+					while(labeliter.hasNext()) {
+						
+						int label = labeliter.next();
+					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(label, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID
-								.get(new ValuePair<Integer, Integer>(labelID, frame));
+								.get(new ValuePair<Integer, Integer>(label, frame));
 						// Now get the spot ID
 
 						Spot spot = spotandtrackID.getA();
@@ -783,6 +803,7 @@ public class TrackCorrectorRunner {
 				}
 			}
 
+		}
 		}
 		
 		logger.log("Verifying lineage trees.\n");
@@ -852,7 +873,7 @@ public class TrackCorrectorRunner {
 						}
 						
 					}
-					labelID = maxlabel;
+				
 					
 			
 					Iterator<Integer> labeliter = Alllabels.iterator();
