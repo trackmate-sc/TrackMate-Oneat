@@ -120,7 +120,7 @@ public class OneatCorrector implements TrackCorrector {
 				.run(oneatdivision, oneatapoptosis, settings, logger, ndims, calibration);
 
 		// Get first TrackMate object as in blue print
-		Pair<Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, HashMap<Spot, Integer>>, Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>>> Tmobject = TrackCorrectorRunner
+		Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>>> Tmobject = TrackCorrectorRunner
 				.getFirstTrackMateobject(model, img, logger, calibration);
 
 		// Oneat found spots for mitosis

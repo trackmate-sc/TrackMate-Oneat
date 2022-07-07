@@ -154,7 +154,7 @@ oneatmap = { 'MITOSIS_FILE': oneat_mitosis_file,
           'SPLITTING_MAX_DISTANCE':linking_maxdist}          
 calibration = [settings.dx,settings.dy,settings.dz]
 
-oneatcorrector = corrector.create(intimg,model, trackmate, settings, ds,oneatmap,model.getLogger(), calibration, FALSE)
+oneatcorrector = corrector.create(intimg,model, trackmate, settings, ds,oneatmap,model.getLogger(), calibration, False)
 oneatcorrector.checkInput()
 oneatcorrector.process()
 savefile = File(str(savedir) + '/' +   savename + ".xml") 
