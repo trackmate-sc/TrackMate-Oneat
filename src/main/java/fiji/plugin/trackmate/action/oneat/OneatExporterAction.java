@@ -21,6 +21,9 @@ import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_BIG_ICON;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import org.scijava.plugin.Plugin;
+
+import com.itextpdf.text.pdf.PdfDiv.FloatType;
+
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
@@ -41,7 +44,7 @@ import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 
-public class  OneatExporterAction < T extends RealType< T > & NumericType< T > > extends AbstractTMAction {
+public class  OneatExporterAction < T extends NativeType< T > & NumericType< T > > extends AbstractTMAction {
 
 	
 	public static final String INFO_TEXT = "<html>"

@@ -315,7 +315,7 @@ public class TrackCorrectorRunner {
 
 												final Spot source = trackmodel.getEdgeSource(localedge);
 
-												if (source.getFeature(Spot.FRAME) == frame ) {
+												if (source.getFeature(Spot.FRAME) == frame  ) {
 													final Spot target = trackmodel.getEdgeTarget(localedge);
 													final double linkcost = trackmodel.getEdgeWeight(localedge);
 
