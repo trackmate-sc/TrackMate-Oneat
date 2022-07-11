@@ -72,21 +72,21 @@ public class TrackCorrectorRunner {
 
 /**
  * 
- * @param model
- * @param trackmate
- * @param uniquelabelID
- * @param DividingStartspots
- * @param Mitosisspots
- * @param Apoptosisspots
- * @param settings
- * @param ndim
- * @param logger
- * @param img
- * @param framespots
- * @param numThreads
- * @param calibration
- * @param addDisplay
- * @return
+ * @param model The TrackMate model
+ * @param trackmate The TrackMate object	
+ * @param uniquelabelID HashMap of (label, frame) with value being TrackMate Spot from collection and its TrackID
+ * @param DividingStartspots A pair of HashMap of Track ID with starting Spot and a list of dividing spots for this ID 
+ * @param Mitosisspots A HashMap of TrackID, starting spot and list of dividing spots
+ * @param Apoptosisspots A HashMap of TrackID, starting spot and the apoptotic spot
+ * @param settings A HashMap of String and Object
+ * @param ndim Image dimensions
+ * @param logger TrackMate logger
+ * @param img The ImgPlus of the integer label image
+ * @param framespots HashMap of frame and Oneat found Spot 
+ * @param numThreads The number of threads used for the linking algorithm
+ * @param calibration The image calibration
+ * @param addDisplay A boolean to add Oneat display, set no if saving memory is of concern
+ * @return Returns corrected graph that is then set on the model
  */
 
 	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
