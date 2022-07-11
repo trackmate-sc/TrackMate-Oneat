@@ -5,21 +5,26 @@ TrackMate extension for oneat for verifying lineage trees
 Oneat is a keras based action classification library written by us and TrackMate-oneat is its Fiji extension that uses the results of detection of such cell events to correct lineage trees in TrackMate.
 
 # Tracking Metrics
+Linking max distance: 14 micron, Gap closing max distance: 16 micron, Gap closing max fra me gap: 3, splitting max distance: 15
+Initial tracks: 570
+
+## Simple LAP tracker
+
+{DET : 0.9968,    CT : 0.7221,   TRA : 0.9945,    TF : 0.9808,  BCi : 0}
+
 
 ## Simple LAP tracker + Oneat
 
-{DET : 0.9964,    CT : 0.73531,   TRA : 0.9933,    TF : 0.97518,  BCi : 0.10526}
+{DET : 0.9968,    CT : 0.7247,   TRA : 0.9945,    TF : 0.9771,  BCi : 0.3404}
 
-## LAP Tracker with track splitting and Quality as additional cost
+## LAP Tracker with track splitting 
 
-{DET : 0.9900,    CT : 0.677033,   TRA :	0.986785;  TF : 0.95041,  BCi :	0.04347}
+{DET : 0.9968,    CT : 0.454,   TRA :	0.9908;  TF : 0.8830,  BCi :	0.063}
 
-## LAP Tracker with track splitting and Quality as additional cost + Oneat
+## LAP Tracker with track splitting  + Oneat
 
-{DET : 0.98911,    CT :	0.672629,    TRA : 0.985774,   TF :	0.948692,   BCi : 0.05555}
+{DET : 0.9968,    CT :	0.456,    TRA : 0.9636,   TF :	0.8713,   BCi : 0.2857}
 
-## LAP Tracker without track splitting and Quality as additional cost + Oneat
-{DET : 0.990083,   CT :	0.6766,      TRA : 0.986742, TF : 0.9521, BCi	0.054}
 
 
 # Videos
