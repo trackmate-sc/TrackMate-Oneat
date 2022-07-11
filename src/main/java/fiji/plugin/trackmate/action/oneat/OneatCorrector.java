@@ -174,6 +174,11 @@ public class OneatCorrector implements TrackCorrector {
 			imp.updateAndDraw();
 	}
 
+	public Model returnModel() {
+		
+		return model;
+	}
+	
 	protected SpotOverlay createSpotOverlay(final DisplaySettings displaySettings, ImagePlus imp) {
 		return new SpotOverlay(model, imp, displaySettings);
 	}

@@ -98,6 +98,8 @@ public class TrackCorrectorRunner {
 			final Logger logger,  final ImgPlus<UnsignedShortType> img,
 			HashMap<Integer, ArrayList<Spot>> framespots, int numThreads, double[] calibration, boolean addDisplay) {
 
+		
+		
 		// Get the trackmodel and spots in the default tracking result and start to
 		// create a new graph
 		TrackModel trackmodel = model.getTrackModel();
@@ -113,7 +115,7 @@ public class TrackCorrectorRunner {
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
 		boolean mariprinciple = (boolean) settings.get(KEY_USE_MARI_PRINCIPLE);
 		double mariangle = (double) settings.get(KEY_MARI_ANGLE);
-
+		
 		// Generate the default graph
 		for (final Integer trackID : trackmodel.trackIDs(true)) {
 			// Nothing special here just maintaining the normal links found
@@ -225,6 +227,7 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
 
+			
 			/*
 			 * HashMap<String, Double> qu = new HashMap<String, Double>(); qu.put(QUALITY,
 			 * 1.0); qu.put(POSITION_Z, 1.0); qu.put(RADIUS, 1.0);
@@ -373,6 +376,7 @@ public class TrackCorrectorRunner {
 						// Recreate new links
 						if (assignment != null) {
 							
+							
 							for (final Spot source : assignment.keySet()) {
 
 								
@@ -480,6 +484,7 @@ public class TrackCorrectorRunner {
 	private static void addOverlay(final Roi overlay, final ImagePlus imp, final Spot spot) {
 		
 	
+		
 		imp.getOverlay().add(overlay);
 
 	}
@@ -569,6 +574,7 @@ public class TrackCorrectorRunner {
 
 	private static Ellipsoid getEllipsoid(Spot currentspot, ImgPlus<UnsignedShortType> img, double[] calibration) {
 
+		
 		int ndim = img.numDimensions();
 		Ellipsoid currentellipsoid = null;
 		long[] center = new long[currentspot.numDimensions()];

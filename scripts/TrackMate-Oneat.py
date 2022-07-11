@@ -1,4 +1,4 @@
-
+#@ File(label='Tracking image hyperstack', style='file') imagepath
 #@ Integer(label="Integer Detection Channel", required=true, value=2, stepSize=1) integer_channel
 #@ Boolean(label='Use Mari Principle', value=True) mari_principle
 #@ Float(label="Mari Angle", required=true, value=30, stepSize=1) mari_angle
@@ -45,9 +45,9 @@ sys.setdefaultencoding('utf-8')
 
 # Get the image path and open the image
 
-imagepath = '/gpfsstore/rech/jsy/uzj81mi/Mari_Data_Tracking/Tracking_hyperstack.tif'
 
-imp = IJ.openImage(imagepath)
+imp = IJ.openImage(str(imagepath))
+imp.show()
 
 #Or use the currently open image 
 #imp = WindowManager.getCurrentImage()
@@ -118,7 +118,6 @@ selectionModel = SelectionModel( model )
 # Read the default display settings.
 ds = DisplaySettingsIO.readUserDefault()
 
-
 # Echo results with the logger we set at start:
 model.getLogger().log( str( model ) )
 savename = imp.getShortTitle()
@@ -151,12 +150,15 @@ oneatmap = { 'MITOSIS_FILE': oneat_mitosis_file,
           'MAX_FRAME_GAP':gap_maxframe,
           'CREATE_LINKS': True,
           'BREAK_LINKS': True,
-          'SPLITTING_MAX_DISTANCE':linking_maxdist}          
+          'ALLOW_GAP_CLOSING': True,
+          'SPLITTING_MAX_DISTANCE' : linking_maxdist,
+          'GAP_CLOSING_MAX_DISTANCE':gap_maxdist}          
 calibration = [settings.dx,settings.dy,settings.dz]
 
 oneatcorrector = corrector.create(intimg,model, trackmate, settings, ds,oneatmap,model.getLogger(), calibration, False)
 oneatcorrector.checkInput()
 oneatcorrector.process()
+model = oneatcorrector.returnModel()
 savefile = File(str(savedir) + '/' +   savename + ".xml") 
 
 #Write the autocorrected tracks to xml file
