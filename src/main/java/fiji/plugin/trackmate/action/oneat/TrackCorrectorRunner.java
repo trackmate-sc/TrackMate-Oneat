@@ -70,7 +70,24 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_SPLITTING_FEATU
 
 public class TrackCorrectorRunner {
 
-
+/**
+ * 
+ * @param model
+ * @param trackmate
+ * @param uniquelabelID
+ * @param DividingStartspots
+ * @param Mitosisspots
+ * @param Apoptosisspots
+ * @param settings
+ * @param ndim
+ * @param logger
+ * @param img
+ * @param framespots
+ * @param numThreads
+ * @param calibration
+ * @param addDisplay
+ * @return
+ */
 
 	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
 			final TrackMate trackmate,
@@ -411,9 +428,16 @@ public class TrackCorrectorRunner {
 										graph.removeEdge(targetsource, target);
 									}
 
+									for (DefaultWeightedEdge targetedge : drawlinkslinks) {
+
+										Spot targetsource = trackmodel.getEdgeSource(targetedge);
+										graph.removeEdge(targetsource, target);
+									}
 									graph.addVertex(source);
 									graph.addVertex(target);
+									
 									final DefaultWeightedEdge edge = graph.addEdge(source, target);
+									
 									graph.setEdgeWeight(edge, cost);
 								}
 
@@ -447,6 +471,9 @@ public class TrackCorrectorRunner {
 
 	}
 
+	
+
+	
 	private static void addOverlay(final Roi overlay, final ImagePlus imp, final Spot spot) {
 		
 	
