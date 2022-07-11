@@ -47,7 +47,7 @@ sys.setdefaultencoding('utf-8')
 
 
 imp = IJ.openImage(str(imagepath))
-imp.show()
+
 
 #Or use the currently open image 
 #imp = WindowManager.getCurrentImage()
