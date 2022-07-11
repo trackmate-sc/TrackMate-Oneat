@@ -291,7 +291,6 @@ public class TrackCorrectorRunner {
 							slope = getEigen(ellipsoid, ndim);
 							motherslope = slope.getA();
 							largemotherslope = slope.getB();
-
 						}
 					
 
@@ -309,6 +308,8 @@ public class TrackCorrectorRunner {
 								localgraph.addVertex(target);
 								localgraph.addEdge(source, target);
 								localgraph.setEdgeWeight(localedge, linkcost);
+								
+								
 
 							}
 						}
@@ -336,12 +337,14 @@ public class TrackCorrectorRunner {
 													final Spot target = trackmodel.getEdgeTarget(localedge);
 													final double linkcost = trackmodel.getEdgeWeight(localedge);
 
+													
 													localgraph.addVertex(source);
 													localgraph.addVertex(target);
 													localgraph.addEdge(source, target);
 													localgraph.setEdgeWeight(localedge, linkcost);
-												}
+												
 
+												}
 											}
 
 										}
@@ -796,9 +799,11 @@ public class TrackCorrectorRunner {
 						for(int k = 0; k < img.dimension(ndim - 1); ++k) {
 							
 							ranac.setPosition(k, ndim - 1);
-							if(ranac.get().get() > maxlabel){
+							int labelval = ranac.get().get();
+							if(labelval > maxlabel){
 								
-								Alllabels.add(ranac.get().get());
+								if(!Alllabels.contains(labelval))
+								   Alllabels.add(ranac.get().get());
 							}
 							
 						}
