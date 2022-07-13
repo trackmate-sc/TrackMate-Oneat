@@ -409,8 +409,6 @@ public class TrackCorrectorRunner {
 			
 		}
 		
-		
-	
 
 	
 
@@ -546,7 +544,6 @@ public class TrackCorrectorRunner {
 			
 			List<Future<Graphobject>> graphlistresult = LinkCreator(model,trackmate,graph,uniquelabelID,DividingStartspots,Mitosisspots,settings,
 					ndim,logger,img,framespots, numThreads, calibration, addDisplay);
-			System.out.println(graphlistresult.size());
 			for(Future<Graphobject> graphresult:graphlistresult ) {
 				
 				Graphobject object = graphresult.get();
@@ -557,29 +554,30 @@ public class TrackCorrectorRunner {
 				for(int i = 0; i < costlist.size(); ++i) {
 					
 					Pair<Spot, Spot> removesourcetarget = removeedges.get(i);
-					Pair<Spot, Spot> addsourcetarget = addedges.get(i);
-					double cost = costlist.get(i);
-					
-					
-					
 					graph.removeEdge(removesourcetarget.getA(), removesourcetarget.getB());
-					graph.addVertex(addsourcetarget.getA());
-					graph.addVertex(addsourcetarget.getB());
 					
-					if(graph.degreeOf(addsourcetarget.getB()) < 2) {
-					final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(), addsourcetarget.getB());
-					System.out.println("cost" + " " + cost + " " + addsourcetarget.getA().ID()  + " " + addsourcetarget.getB().ID());
-				
-					graph.setEdgeWeight(edge, cost);
 					}
+             for(int i = 0; i < costlist.size(); ++i) {
+					
+				Pair<Spot, Spot> addsourcetarget = addedges.get(i);
+				double cost = costlist.get(i);
+				graph.addVertex(addsourcetarget.getA());
+				graph.addVertex(addsourcetarget.getB());
+				
+				if(graph.degreeOf(addsourcetarget.getB()) < 2) {
+				final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(), addsourcetarget.getB());
+			
+				graph.setEdgeWeight(edge, cost);
 					
 				}
 				
 			}
 			
 	
-
+			}
+			
 		}
+		
 
 		logger.setProgress(1d);
 		logger.flush();
