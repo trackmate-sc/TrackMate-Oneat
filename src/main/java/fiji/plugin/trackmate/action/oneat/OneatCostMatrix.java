@@ -175,14 +175,10 @@ public class OneatCostMatrix implements CostMatrixCreator< Spot, Spot >, MultiTh
 		 * (gap-closing) then the segment middles (merging).
 		 */
 
-		final ExecutorService executorGCM = Executors.newFixedThreadPool( numThreads );
+		
 		for ( final Spot source : allMiddles )
 		{
-			executorGCM.submit( new Runnable()
-			{
-				@Override
-				public void run()
-				{
+			
 					final int sourceFrame = source.getFeature( Spot.FRAME ).intValue();
 
 					/*
@@ -224,28 +220,13 @@ public class OneatCostMatrix implements CostMatrixCreator< Spot, Spot >, MultiTh
 
 					
 				}
-			} );
-		}
-		executorGCM.shutdown();
-		try
-		{
-			executorGCM.awaitTermination( 1, TimeUnit.DAYS );
-		}
-		catch ( final InterruptedException e )
-		{
-			errorMessage = BASE_ERROR_MESSAGE + e.getMessage();
-			return false;
-		}
+			
 
 	
-			final ExecutorService executorS = Executors.newFixedThreadPool( numThreads );
+			
 			for ( final Spot source : segmentEnds )
 			{
-				executorS.submit( new Runnable()
-				{
-					@Override
-					public void run()
-					{
+				
 						final int sourceFrame = source.getFeature( Spot.FRAME ).intValue();
 						for ( final Spot target : segmentStarts )
 						{
@@ -272,18 +253,7 @@ public class OneatCostMatrix implements CostMatrixCreator< Spot, Spot >, MultiTh
 							}
 						}
 					}
-				}
-						);
-			}
-			executorS.shutdown();
-			try
-			{
-				executorS.awaitTermination( 1, TimeUnit.DAYS );
-			}
-			catch ( final InterruptedException e )
-			{
-				errorMessage = BASE_ERROR_MESSAGE + e.getMessage();
-			}
+				
 		
 		linkCosts.trimToSize();
 
