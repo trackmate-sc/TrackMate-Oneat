@@ -73,389 +73,347 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANC
 import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_SPLITTING_FEATURE_PENALTIES;
 
 public class TrackCorrectorRunner {
-	
-	
-	
-	
-	@SuppressWarnings("unchecked")
-	public static List<Future<Graphobject>> LinkCreator(final Model model,
-			final TrackMate trackmate, final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph,
+
+	public static List<Future<Graphobject>> LinkCreator(final Model model, final TrackMate trackmate,
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
-			Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>> DividingStartspots,
-			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
-			 Map<String, Object> settings, final int ndim,
-			final Logger logger,  final ImgPlus<UnsignedShortType> img,
-			HashMap<Integer, ArrayList<Spot>> framespots, int numThreads, double[] calibration, boolean addDisplay) {
-		
-		
-		         // Get the trackmodel and spots in the default tracking result and start to
-				// create a new graph
-				TrackModel trackmodel = model.getTrackModel();
-				SpotCollection allspots = model.getSpots();
+			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots,
+			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots, Map<String, Object> settings, final int ndim,
+			final Logger logger, final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			int numThreads, double[] calibration, boolean addDisplay) {
 
-			
-				final ExecutorService executorS = Executors.newFixedThreadPool( numThreads );
-				
-				final ArrayList<Integer> trackcountlist = new ArrayList<Integer>();
-				double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE) != null
-						? (double) settings.get(KEY_LINKING_MAX_DISTANCE)
-						: 10);
-				int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-				
-				boolean mariprinciple = (boolean) settings.get(KEY_USE_MARI_PRINCIPLE);
-				double mariangle = (double) settings.get(KEY_MARI_ANGLE);
-				
-		
-		
-			Map<String, Object> cmsettings = new HashMap<>();
-			// Gap closing.
+		// Get the trackmodel and spots in the default tracking result and start to
+		// create a new graph
+		TrackModel trackmodel = model.getTrackModel();
+		SpotCollection allspots = model.getSpots();
 
-			int maxFrameInterval = tmoneatdeltat;
-			if (settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP) != null)
-				maxFrameInterval = (Integer) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-			double gcMaxDistance = searchdistance;
+		final ExecutorService executorS = Executors.newFixedThreadPool(numThreads);
 
-			if (settings.get(KEY_GAP_CLOSING_MAX_DISTANCE) != null)
+		final ArrayList<Integer> trackcountlist = new ArrayList<Integer>();
+		double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE) != null
+				? (double) settings.get(KEY_LINKING_MAX_DISTANCE)
+				: 10);
+		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 
-				gcMaxDistance = (double) settings.get(KEY_GAP_CLOSING_MAX_DISTANCE);
-			boolean allowGapClosing = false;
-			if (settings.get(KEY_ALLOW_GAP_CLOSING) != null) {
-				allowGapClosing = (Boolean) settings.get(KEY_ALLOW_GAP_CLOSING);
-			}
-			boolean allowTrackMerging = false;
-			if (settings.get(KEY_ALLOW_TRACK_MERGING) != null)
-				allowTrackMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
-			boolean allowTrackSplitting = true;
-			if (settings.get(KEY_ALLOW_TRACK_SPLITTING) != null)
-				allowTrackSplitting = (Boolean) settings.get(KEY_ALLOW_TRACK_SPLITTING);
-			// Merging
-			double mMaxDistance = Double.MAX_VALUE;
-			double sMaxDistance = Double.MAX_VALUE;
-			boolean allowMerging = false;
-			if (settings.get(KEY_ALLOW_TRACK_MERGING) != null)
-				allowMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
-			if (allowTrackMerging)
-				mMaxDistance = (Double) settings.get(KEY_MERGING_MAX_DISTANCE);
-			else
-				mMaxDistance = searchdistance;
+		boolean mariprinciple = (boolean) settings.get(KEY_USE_MARI_PRINCIPLE);
+		double mariangle = (double) settings.get(KEY_MARI_ANGLE);
 
-			if (allowTrackSplitting)
-				// Splitting
-				sMaxDistance = (Double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
-			else
-				sMaxDistance = searchdistance;
-			// Alternative cost
-			double alternativeCostFactor = 1.05d;
-			if (settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR) != null)
-				alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
-			double percentile = 0.9d;
-			if (settings.get(KEY_CUTOFF_PERCENTILE) != null)
-				percentile = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
+		Map<String, Object> cmsettings = new HashMap<>();
+		// Gap closing.
 
-			cmsettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
-			cmsettings.put(KEY_SPLITTING_MAX_DISTANCE, sMaxDistance);
-			cmsettings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, maxFrameInterval);
-			cmsettings.put(KEY_ALLOW_GAP_CLOSING, allowGapClosing);
-			cmsettings.put(KEY_ALLOW_TRACK_MERGING, allowMerging);
-			cmsettings.put(KEY_CUTOFF_PERCENTILE, percentile);
-			cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
-			cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
-			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
+		int maxFrameInterval = tmoneatdeltat;
+		if (settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP) != null)
+			maxFrameInterval = (Integer) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
+		double gcMaxDistance = searchdistance;
 
-			
-		
+		if (settings.get(KEY_GAP_CLOSING_MAX_DISTANCE) != null)
 
-			if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
-				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
-			else
-				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
-			List<Future<Graphobject>> grapherlist = new ArrayList<>();
-			// Lets take care of mitosis
-			if (Mitosisspots != null) {
-				logger.log("Matched Oneat Locations with Spots in Tracks " + " " + Mitosisspots.entrySet().size() + "\n");
-				if (mariprinciple)
-					logger.log("Using Mari's priniciple for track linking.\n");
-				logger.setStatus("Local Jaqaman Linker");
-				logger.setProgress(0.);
-				
-				
-				
-				
-			
+			gcMaxDistance = (double) settings.get(KEY_GAP_CLOSING_MAX_DISTANCE);
+		boolean allowGapClosing = false;
+		if (settings.get(KEY_ALLOW_GAP_CLOSING) != null) {
+			allowGapClosing = (Boolean) settings.get(KEY_ALLOW_GAP_CLOSING);
+		}
+		boolean allowTrackMerging = false;
+		if (settings.get(KEY_ALLOW_TRACK_MERGING) != null)
+			allowTrackMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
+		boolean allowTrackSplitting = true;
+		if (settings.get(KEY_ALLOW_TRACK_SPLITTING) != null)
+			allowTrackSplitting = (Boolean) settings.get(KEY_ALLOW_TRACK_SPLITTING);
+		// Merging
+		double mMaxDistance = Double.MAX_VALUE;
+		double sMaxDistance = Double.MAX_VALUE;
+		boolean allowMerging = false;
+		if (settings.get(KEY_ALLOW_TRACK_MERGING) != null)
+			allowMerging = (Boolean) settings.get(KEY_ALLOW_TRACK_MERGING);
+		if (allowTrackMerging)
+			mMaxDistance = (Double) settings.get(KEY_MERGING_MAX_DISTANCE);
+		else
+			mMaxDistance = searchdistance;
 
-				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
+		if (allowTrackSplitting)
+			// Splitting
+			sMaxDistance = (Double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
+		else
+			sMaxDistance = searchdistance;
+		// Alternative cost
+		double alternativeCostFactor = 1.05d;
+		if (settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR) != null)
+			alternativeCostFactor = (Double) settings.get(KEY_ALTERNATIVE_LINKING_COST_FACTOR);
+		double percentile = 0.9d;
+		if (settings.get(KEY_CUTOFF_PERCENTILE) != null)
+			percentile = (Double) settings.get(KEY_CUTOFF_PERCENTILE);
 
-					ArrayList<Pair<Spot, Spot>> removeedges = new ArrayList<>();
-					ArrayList<Pair<Spot, Spot>> addedges = new ArrayList<>();
-					ArrayList<Double> costlist = new ArrayList<>();
-					
-					Future<Graphobject> result = executorS.submit( new Callable<Graphobject>()
-					{
-						@Override
-						public Graphobject call() throws Exception
-						{
-							int trackcount = 0;
-							trackcountlist.add(trackcount);
-					// List of all the mother cells and the root of the lineage tree
-					Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
+		cmsettings.put(KEY_ALLOW_TRACK_SPLITTING, true);
+		cmsettings.put(KEY_SPLITTING_MAX_DISTANCE, sMaxDistance);
+		cmsettings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, maxFrameInterval);
+		cmsettings.put(KEY_ALLOW_GAP_CLOSING, allowGapClosing);
+		cmsettings.put(KEY_ALLOW_TRACK_MERGING, allowMerging);
+		cmsettings.put(KEY_CUTOFF_PERCENTILE, percentile);
+		cmsettings.put(KEY_ALTERNATIVE_LINKING_COST_FACTOR, alternativeCostFactor);
+		cmsettings.put(KEY_GAP_CLOSING_MAX_DISTANCE, gcMaxDistance);
+		cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
 
-					ArrayList<Spot> mitosismotherspots = trackspots.getB();
+		if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
+		else
+			cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_LINKING_FEATURE_PENALTIES));
+		List<Future<Graphobject>> grapherlist = new ArrayList<>();
+		// Lets take care of mitosis
+		if (Mitosisspots != null) {
+			logger.log("Matched Oneat Locations with Spots in Tracks " + " " + Mitosisspots.entrySet().size() + "\n");
+			if (mariprinciple)
+				logger.log("Using Mari's priniciple for track linking.\n");
+			logger.setStatus("Local Jaqaman Linker");
+			logger.setProgress(0.);
 
-					// Create a new map of spot and label
+			for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
 
-					// Create the pixel list for mother cells
+				ArrayList<Pair<Spot, Spot>> removeedges = new ArrayList<>();
+				ArrayList<Pair<Spot, Spot>> addedges = new ArrayList<>();
+				ArrayList<Double> costlist = new ArrayList<>();
 
-					
-					Ellipsoid ellipsoid = null;
-					double[] motherslope = new double[2];
-					double[] largemotherslope = new double[2];
-					Pair<double[], double[]> slope = new ValuePair<double[], double[]>(motherslope, largemotherslope);
-					
-					
-					
-					
-					for (Spot motherspot : mitosismotherspots) {
+				Future<Graphobject> result = executorS.submit(new Callable<Graphobject>() {
+					@Override
+					public Graphobject call() throws Exception {
+						int trackcount = 0;
+						trackcountlist.add(trackcount);
+						// List of all the mother cells and the root of the lineage tree
+						Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
 
-						Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
+						ArrayList<Spot> mitosismotherspots = trackspots.getB();
 
-						ellipsoid = getEllipsoid(motherspot, img, calibration);
+						// Create a new map of spot and label
 
-						if (ellipsoid != null) {
-							slope = getEigen(ellipsoid, ndim);
-							motherslope = slope.getA();
-							largemotherslope = slope.getB();
-						}
-					
+						// Create the pixel list for mother cells
 
-						final SimpleWeightedGraph<Spot, DefaultWeightedEdge> localgraph = new SimpleWeightedGraph<>(
-								DefaultWeightedEdge.class);
+						Ellipsoid ellipsoid = null;
+						double[] motherslope = new double[2];
+						double[] largemotherslope = new double[2];
+						Pair<double[], double[]> slope = new ValuePair<double[], double[]>(motherslope,
+								largemotherslope);
 
-						for (DefaultWeightedEdge localedge : mothertrack) {
+						for (Spot motherspot : mitosismotherspots) {
 
-							
-							
+							Set<DefaultWeightedEdge> mothertrack = trackmodel.edgesOf(motherspot);
+
+							ellipsoid = getEllipsoid(motherspot, img, calibration);
+
+							if (ellipsoid != null) {
+								slope = getEigen(ellipsoid, ndim);
+								motherslope = slope.getA();
+								largemotherslope = slope.getB();
+							}
+
+							final SimpleWeightedGraph<Spot, DefaultWeightedEdge> localgraph = new SimpleWeightedGraph<>(
+									DefaultWeightedEdge.class);
+
+							for (DefaultWeightedEdge localedge : mothertrack) {
+
 								final Spot source = trackmodel.getEdgeSource(localedge);
 
 								final Spot target = trackmodel.getEdgeTarget(localedge);
-								
-								if(target.ID() == motherspot.ID() || source.ID() == motherspot.ID()) {
-								final double linkcost = trackmodel.getEdgeWeight(localedge);
-								localgraph.addVertex(source);
-								localgraph.addVertex(target);
-								localgraph.addEdge(source, target);
-								localgraph.setEdgeWeight(localedge, linkcost);
-								
+
+								if (target.ID() == motherspot.ID() || source.ID() == motherspot.ID()) {
+									final double linkcost = trackmodel.getEdgeWeight(localedge);
+									localgraph.addVertex(source);
+									localgraph.addVertex(target);
+									localgraph.addEdge(source, target);
+									localgraph.setEdgeWeight(localedge, linkcost);
+
 								}
 
-							
-						}
+							}
 
-						for (int i = 1; i < tmoneatdeltat; ++i) {
+							for (int i = 1; i < tmoneatdeltat; ++i) {
 
-							double frame = motherspot.getFeature(Spot.FRAME) + i;
-							if (frame > 0) {
+								double frame = motherspot.getFeature(Spot.FRAME) + i;
+								if (frame > 0) {
 
-								SpotCollection regionspots = regionspot(img, allspots, motherspot, logger, calibration,
-										(int) frame, searchdistance, motherslope, mariangle, mariprinciple);
+									SpotCollection regionspots = regionspot(img, allspots, motherspot, logger,
+											calibration, (int) frame, searchdistance, motherslope, mariangle,
+											mariprinciple);
 
-								if (regionspots.getNSpots((int) frame, false) > 0)
-									for (Spot spot : regionspots.iterable((int) frame, false)) {
+									if (regionspots.getNSpots((int) frame, false) > 0)
+										for (Spot spot : regionspots.iterable((int) frame, false)) {
 
-										if (trackmodel.trackIDOf(spot) != null) {
-											int regiontrackID = trackmodel.trackIDOf(spot);
-											Set<DefaultWeightedEdge> localtracks = trackmodel.trackEdges(regiontrackID);
+											if (trackmodel.trackIDOf(spot) != null) {
+												int regiontrackID = trackmodel.trackIDOf(spot);
+												Set<DefaultWeightedEdge> localtracks = trackmodel
+														.trackEdges(regiontrackID);
 
-											for (DefaultWeightedEdge localedge : localtracks) {
+												for (DefaultWeightedEdge localedge : localtracks) {
 
-												final Spot source = trackmodel.getEdgeSource(localedge);
+													final Spot source = trackmodel.getEdgeSource(localedge);
 
-												if (source.getFeature(Spot.FRAME) == frame  ) {
-													final Spot target = trackmodel.getEdgeTarget(localedge);
-													final double linkcost = trackmodel.getEdgeWeight(localedge);
+													if (source.getFeature(Spot.FRAME) == frame) {
+														final Spot target = trackmodel.getEdgeTarget(localedge);
+														final double linkcost = trackmodel.getEdgeWeight(localedge);
 
-													
-													localgraph.addVertex(source);
-													localgraph.addVertex(target);
-													localgraph.addEdge(source, target);
-													localgraph.setEdgeWeight(localedge, linkcost);
-												
+														localgraph.addVertex(source);
+														localgraph.addVertex(target);
+														localgraph.addEdge(source, target);
+														localgraph.setEdgeWeight(localedge, linkcost);
 
+													}
+												}
+
+											}
+										}
+
+								}
+							}
+
+							final OneatCostMatrix costMatrixCreator = new OneatCostMatrix(localgraph, cmsettings);
+							costMatrixCreator.setNumThreads(numThreads);
+							logger.setProgress((double) trackcountlist.size() / Mitosisspots.entrySet().size());
+							final LocalJaqamanLinker<Spot, Spot> linker = new LocalJaqamanLinker<>(costMatrixCreator,
+									logger);
+							if (!linker.checkInput() || !linker.process()) {
+								System.out.println(linker.getErrorMessage());
+							}
+
+						
+
+							final Map<Spot, Spot> assignment = linker.getResult();
+							final Map<Spot, Double> costs = linker.getAssignmentCosts();
+							// Recreate new links
+							if (assignment != null) {
+
+								for (final Spot source : assignment.keySet()) {
+
+									final Spot target = assignment.get(source);
+
+									Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
+
+									boolean validlink = true;
+									if (mariprinciple)
+										validlink = false;
+									final double cost = costs.get(source);
+									Set<DefaultWeightedEdge> drawlinkslinks = trackmodel.edgesOf(source);
+									OneatOverlay oneatOverlayFirst = new OneatOverlay(motherspot, source, target,
+											motherslope, largemotherslope, trackmate.getSettings().imp);
+									double motheraxis = largemotherslope[1] / largemotherslope[0];
+
+									double intercept = motherspot.getDoublePosition(1)
+											- motheraxis * motherspot.getDoublePosition(0);
+
+									double daughtermotheraxis = (target.getDoublePosition(1)
+											- motheraxis * target.getDoublePosition(0) - intercept);
+
+									for (DefaultWeightedEdge targetedge : drawlinkslinks) {
+										Spot targetsource = trackmodel.getEdgeTarget(targetedge);
+										OneatOverlay oneatOverlay = new OneatOverlay(motherspot, source, targetsource,
+												motherslope, largemotherslope, trackmate.getSettings().imp);
+
+										if (source.getDoublePosition(0) != targetsource.getDoublePosition(0)) {
+											double daughtermotheraxisB = (targetsource.getDoublePosition(1)
+													- motheraxis * targetsource.getDoublePosition(0) - intercept);
+
+											if (mariprinciple)
+												if (Math.signum(daughtermotheraxisB)
+														* Math.signum(daughtermotheraxis) < 0) {
+													validlink = true;
+													if (addDisplay) {
+														addOverlay(oneatOverlayFirst, trackmate.getSettings().imp,
+																motherspot);
+														addOverlay(oneatOverlay, trackmate.getSettings().imp,
+																motherspot);
+													}
+												}
+											if (!mariprinciple) {
+												if (addDisplay) {
+													addOverlay(oneatOverlayFirst, trackmate.getSettings().imp,
+															motherspot);
+													addOverlay(oneatOverlay, trackmate.getSettings().imp, motherspot);
 												}
 											}
 
 										}
 									}
+									if (validlink) {
+										// Remove the targetsource and target edge prior to assingment
+										for (DefaultWeightedEdge targetedge : targetlinks) {
 
-							}
-						}
-
-						final OneatCostMatrix costMatrixCreator = new OneatCostMatrix(localgraph, cmsettings);
-						costMatrixCreator.setNumThreads(numThreads);
-						logger.setProgress( (double)trackcountlist.size()/Mitosisspots.entrySet().size( ));
-						final LocalJaqamanLinker<Spot, Spot> linker = new LocalJaqamanLinker<>(costMatrixCreator, logger);
-						if (!linker.checkInput() || !linker.process()) {
-							System.out.println(linker.getErrorMessage());
-						}
-
-						/*
-						 * Create links in graph.
-						 */
-                        System.gc();
-						
-
-						
-						final Map<Spot, Spot> assignment = linker.getResult();
-						final Map<Spot, Double> costs = linker.getAssignmentCosts();
-						// Recreate new links
-						if (assignment != null) {
-							
-							
-							for (final Spot source : assignment.keySet()) {
-
-								
-								final Spot target = assignment.get(source);
-
-								Set<DefaultWeightedEdge> targetlinks = trackmodel.edgesOf(target);
-
-								boolean validlink = true;
-								if (mariprinciple)
-								  validlink = false;
-								final double cost = costs.get(source);
-								Set<DefaultWeightedEdge> drawlinkslinks = trackmodel.edgesOf(source);
-								OneatOverlay oneatOverlayFirst = new OneatOverlay(motherspot, source, target,
-										motherslope, largemotherslope, trackmate.getSettings().imp);
-								double motheraxis = largemotherslope[1] / largemotherslope[0];
-
-								double intercept = motherspot.getDoublePosition(1)
-										- motheraxis * motherspot.getDoublePosition(0);
-
-								double daughtermotheraxis = (target.getDoublePosition(1)
-										- motheraxis * target.getDoublePosition(0) - intercept);
-
-							
-								for (DefaultWeightedEdge targetedge : drawlinkslinks) {
-									Spot targetsource = trackmodel.getEdgeTarget(targetedge);
-									OneatOverlay oneatOverlay = new OneatOverlay(motherspot, source, targetsource,
-											motherslope, largemotherslope, trackmate.getSettings().imp);
-
-									if (source.getDoublePosition(0) != targetsource.getDoublePosition(0)) {
-										double daughtermotheraxisB = (targetsource.getDoublePosition(1)
-												- motheraxis * targetsource.getDoublePosition(0) - intercept);
-
-										if(mariprinciple)
-										if (Math.signum(daughtermotheraxisB) * Math.signum(daughtermotheraxis) < 0) {
-											validlink = true;
-											if(addDisplay) {
-											addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, motherspot);
-											addOverlay(oneatOverlay, trackmate.getSettings().imp, motherspot);
-											}
+											Spot targetsource = trackmodel.getEdgeSource(targetedge);
+											removeedges.add(new ValuePair<Spot, Spot>(targetsource, target));
 										}
-										if(!mariprinciple) {
-											if(addDisplay) {
-											addOverlay(oneatOverlayFirst, trackmate.getSettings().imp, motherspot);
-											addOverlay(oneatOverlay, trackmate.getSettings().imp, motherspot);
-											}
+
+										for (DefaultWeightedEdge targetedge : drawlinkslinks) {
+
+											Spot targetsource = trackmodel.getEdgeSource(targetedge);
+											removeedges.add(new ValuePair<Spot, Spot>(targetsource, target));
 										}
-											
-										
-									}
-								}
-								if (validlink) {
-									// Remove the targetsource and target edge prior to assingment
-									for (DefaultWeightedEdge targetedge : targetlinks) {
 
-										Spot targetsource = trackmodel.getEdgeSource(targetedge);
-										removeedges.add(new ValuePair<Spot, Spot>(targetsource, target));
+										addedges.add(new ValuePair<Spot, Spot>(source, target));
+										costlist.add(cost);
 									}
 
-									for (DefaultWeightedEdge targetedge : drawlinkslinks) {
-
-										Spot targetsource = trackmodel.getEdgeSource(targetedge);
-										removeedges.add(new ValuePair<Spot, Spot>(targetsource, target));
-									}
-									
-									
-									addedges.add(new ValuePair<Spot, Spot>(source, target));
-									costlist.add(cost);
 								}
 
 							}
-							
+
 						}
 
+						Graphobject grapher = new Graphobject(removeedges, addedges, costlist);
+
+						return grapher;
 					}
-					
-					Graphobject grapher = new Graphobject(removeedges, addedges, costlist);
-					
-					
-					 return grapher;
-						}
-						
-						
-						});
-					
-					
-					
-				grapherlist.add(result);	
-				}
-				
-				
-				
+
+				});
+
+				grapherlist.add(result);
 			}
-		
-	
-	return grapherlist;
 
-			
 		}
-		
 
-	
+		return grapherlist;
 
-/**
- * 
- * @param model The TrackMate model
- * @param trackmate The TrackMate object	
- * @param uniquelabelID HashMap of (label, frame) with value being TrackMate Spot from collection and its TrackID
- * @param DividingStartspots A pair of HashMap of Track ID with starting Spot and a list of dividing spots for this ID 
- * @param Mitosisspots A HashMap of TrackID, starting spot and list of dividing spots
- * @param Apoptosisspots A HashMap of TrackID, starting spot and the apoptotic spot
- * @param settings A HashMap of String and Object
- * @param ndim Image dimensions
- * @param logger TrackMate logger
- * @param img The ImgPlus of the integer label image
- * @param framespots HashMap of frame and Oneat found Spot 
- * @param numThreads The number of threads used for the linking algorithm
- * @param calibration The image calibration
- * @param addDisplay A boolean to add Oneat display, set no if saving memory is of concern
- * @return Returns corrected graph that is then set on the model
- * @throws ExecutionException 
- * @throws InterruptedException 
- */
+	}
+
+	/**
+	 * 
+	 * @param model              The TrackMate model
+	 * @param trackmate          The TrackMate object
+	 * @param uniquelabelID      HashMap of (label, frame) with value being
+	 *                           TrackMate Spot from collection and its TrackID
+	 * @param DividingStartspots A pair of HashMap of Track ID with starting Spot
+	 *                           and a list of dividing spots for this ID
+	 * @param Mitosisspots       A HashMap of TrackID, starting spot and list of
+	 *                           dividing spots
+	 * @param Apoptosisspots     A HashMap of TrackID, starting spot and the
+	 *                           apoptotic spot
+	 * @param settings           A HashMap of String and Object
+	 * @param ndim               Image dimensions
+	 * @param logger             TrackMate logger
+	 * @param img                The ImgPlus of the integer label image
+	 * @param framespots         HashMap of frame and Oneat found Spot
+	 * @param numThreads         The number of threads used for the linking
+	 *                           algorithm
+	 * @param calibration        The image calibration
+	 * @param addDisplay         A boolean to add Oneat display, set no if saving
+	 *                           memory is of concern
+	 * @return Returns corrected graph that is then set on the model
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
 
 	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
-			final TrackMate trackmate,
-			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
-			Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>> DividingStartspots,
+			final TrackMate trackmate, HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
+			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
 			HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim,
-			final Logger logger,  final ImgPlus<UnsignedShortType> img,
-			HashMap<Integer, ArrayList<Spot>> framespots, int numThreads, double[] calibration, boolean addDisplay) throws InterruptedException, ExecutionException {
+			final Logger logger, final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			int numThreads, double[] calibration, boolean addDisplay) throws InterruptedException, ExecutionException {
 
-		
-		
 		// Get the trackmodel and spots in the default tracking result and start to
 		// create a new graph
 		TrackModel trackmodel = model.getTrackModel();
-		
+
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
-		
 		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
-		
-		
+
 		// Generate the default graph
 		for (final Integer trackID : trackmodel.trackIDs(true)) {
 			// Nothing special here just maintaining the normal links found
@@ -513,71 +471,44 @@ public class TrackCorrectorRunner {
 
 		if (createlinks) {
 			if (Mitosisspots != null) {
-			
-				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
 
-				     
-					// Get the current trackID
-					int trackID = trackidspots.getKey();
-					Set<DefaultWeightedEdge> dividingtracks = trackmodel.trackEdges(trackID);
+				List<Future<Graphobject>> graphlistresult = LinkCreator(model, trackmate, uniquelabelID,
+						DividingStartspots, Mitosisspots, settings, ndim, logger, img, framespots, numThreads,
+						calibration, addDisplay);
+				for (Future<Graphobject> graphresult : graphlistresult) {
 
-					// List of all the mother cells and the root of the lineage tree
-					Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
+					Graphobject object = graphresult.get();
+					ArrayList<Pair<Spot, Spot>> removeedges = object.removeedges;
+					ArrayList<Pair<Spot, Spot>> addedges = object.addedges;
+					ArrayList<Double> costlist = object.costlist;
 
-					ArrayList<Spot> mitosismotherspots = trackspots.getB();
+					for (int i = 0; i < costlist.size(); ++i) {
 
-				
-					// Remove edges corresponding to mitotic trajectories
-					for (final DefaultWeightedEdge edge : dividingtracks) {
+						Pair<Spot, Spot> removesourcetarget = removeedges.get(i);
+						graph.removeEdge(removesourcetarget.getA(), removesourcetarget.getB());
 
-						final Spot source = trackmodel.getEdgeSource(edge);
+					}
+					for (int i = 0; i < costlist.size(); ++i) {
 
-						if (mitosismotherspots.contains(source)) {
+						Pair<Spot, Spot> addsourcetarget = addedges.get(i);
+						double cost = costlist.get(i);
+						graph.addVertex(addsourcetarget.getA());
+						graph.addVertex(addsourcetarget.getB());
 
-							graph.removeEdge(edge);
+						if (graph.degreeOf(addsourcetarget.getB()) < 2) {
+							final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(),
+									addsourcetarget.getB());
+
+							graph.setEdgeWeight(edge, cost);
+
 						}
 
 					}
 
 				}
+
 			}
-			
-			List<Future<Graphobject>> graphlistresult = LinkCreator(model,trackmate,graph,uniquelabelID,DividingStartspots,Mitosisspots,settings,
-					ndim,logger,img,framespots, numThreads, calibration, addDisplay);
-			for(Future<Graphobject> graphresult:graphlistresult ) {
-				
-				Graphobject object = graphresult.get();
-				ArrayList<Pair<Spot, Spot>> removeedges = object.removeedges;
-				ArrayList<Pair<Spot, Spot>> addedges = object.addedges;
-				ArrayList<Double> costlist = object.costlist;
-				
-				for(int i = 0; i < costlist.size(); ++i) {
-					
-					Pair<Spot, Spot> removesourcetarget = removeedges.get(i);
-					graph.removeEdge(removesourcetarget.getA(), removesourcetarget.getB());
-					
-					}
-             for(int i = 0; i < costlist.size(); ++i) {
-					
-				Pair<Spot, Spot> addsourcetarget = addedges.get(i);
-				double cost = costlist.get(i);
-				graph.addVertex(addsourcetarget.getA());
-				graph.addVertex(addsourcetarget.getB());
-				
-				if(graph.degreeOf(addsourcetarget.getB()) < 2) {
-				final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(), addsourcetarget.getB());
-			
-				graph.setEdgeWeight(edge, cost);
-					
-				}
-				
-			}
-			
-	
-			}
-			
 		}
-		
 
 		logger.setProgress(1d);
 		logger.flush();
@@ -596,13 +527,8 @@ public class TrackCorrectorRunner {
 
 	}
 
-	
-
-	
 	private static void addOverlay(final Roi overlay, final ImagePlus imp, final Spot spot) {
-		
-	
-		
+
 		imp.getOverlay().add(overlay);
 
 	}
@@ -692,7 +618,6 @@ public class TrackCorrectorRunner {
 
 	private static Ellipsoid getEllipsoid(Spot currentspot, ImgPlus<UnsignedShortType> img, double[] calibration) {
 
-		
 		int ndim = img.numDimensions();
 		Ellipsoid currentellipsoid = null;
 		long[] center = new long[currentspot.numDimensions()];
@@ -805,8 +730,6 @@ public class TrackCorrectorRunner {
 			return null;
 	}
 
-	
-
 	private static double[] computeAxisAndRadiiFromCovariance(double[][] covariance, int n) {
 		final EigenvalueDecomposition eig = new Matrix(covariance).eig();
 		final Matrix ev = eig.getD();
@@ -819,23 +742,24 @@ public class TrackCorrectorRunner {
 
 	/**
 	 * 
-	 * @param model The TrackMate model object
-	 * @param img The integer labelled image
-	 * @param logger TrackMate logger
+	 * @param model       The TrackMate model object
+	 * @param img         The integer labelled image
+	 * @param logger      TrackMate logger
 	 * @param calibration Image calibration
-	 * @return A HashMap of <Segment Label, Frame>: <Spot, TrackID> and Spot, A second HashMap of trackID + starting spot and trackID + list of dividing spots for that track
+	 * @return A HashMap of <Segment Label, Frame>: <Spot, TrackID> and Spot, A
+	 *         second HashMap of trackID + starting spot and trackID + list of
+	 *         dividing spots for that track
 	 */
-	
-	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>>> getFirstTrackMateobject(
+
+	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>>> getFirstTrackMateobject(
 			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
 
-		Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList< Spot>>> DividingStartspots = getTMStartSplit(
-				model);
+		Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots = getTMStartSplit(model);
 		int ndim = img.numDimensions() - 1;
 		RandomAccess<UnsignedShortType> ranac = img.randomAccess();
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(true);
 		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
-		
+
 		logger.flush();
 		logger.log("Collecting tracks, in total " + AllTrackIds.size() + ".\n");
 		int count = 0;
@@ -859,26 +783,23 @@ public class TrackCorrectorRunner {
 					ranac.setPosition(frame, ndim);
 					int label = ranac.get().get();
 
-				
 					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
 							new ValuePair<Spot, Integer>(spot, trackID));
-					
 
 				}
 			}
 		}
-		
-		return new ValuePair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>>>(
+
+		return new ValuePair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>>>(
 				uniquelabelID, DividingStartspots);
 
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
-			Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>> DividingStartspots,
-			final Model model, final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
-			final Map<String, Object> mapsettings, final Logger logger,final int numThreads, double[] calibration) {
-
+			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots, final Model model,
+			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			final Map<String, Object> mapsettings, final Logger logger, final int numThreads, double[] calibration) {
 
 		// Starting point of the tree + apoptotic spot in the trackID
 		HashMap<Integer, Pair<Spot, Spot>> Trackapoptosis = new HashMap<Integer, Pair<Spot, Spot>>();
@@ -892,19 +813,15 @@ public class TrackCorrectorRunner {
 
 		int count = 0;
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
-		
-			
-			logger.setProgress(count/(framespots.entrySet().size() + 1));
+
+			logger.setProgress(count / (framespots.entrySet().size() + 1));
 			count++;
 			int frame = framemap.getKey();
 			if (frame < img.dimension(ndim) - 1) {
-			
 
 				ArrayList<Spot> spotlist = framemap.getValue();
 
 				for (Spot currentspots : spotlist) {
-
-					
 
 					long[] location = new long[ndim];
 					for (int d = 0; d < ndim; ++d) {
@@ -914,54 +831,52 @@ public class TrackCorrectorRunner {
 					ranac.setPosition(frame, ndim);
 					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
 					int labelID = ranac.get().get();
-					if(labelID!=0)
-                    	Alllabels.add(labelID);
+					if (labelID != 0)
+						Alllabels.add(labelID);
 					int maxlabel = labelID;
-					// Oneat spot locations are not precise in Z so we give it 
-					if(labelID == 0 && ndim > 2) {
-						
-						for(int k = 0; k < img.dimension(ndim - 1); ++k) {
-							
+					// Oneat spot locations are not precise in Z so we give it
+					if (labelID == 0 && ndim > 2) {
+
+						for (int k = 0; k < img.dimension(ndim - 1); ++k) {
+
 							ranac.setPosition(k, ndim - 1);
 							int labelval = ranac.get().get();
-							if(labelval > maxlabel){
-								
-								if(!Alllabels.contains(labelval))
-								   Alllabels.add(ranac.get().get());
+							if (labelval > maxlabel) {
+
+								if (!Alllabels.contains(labelval))
+									Alllabels.add(ranac.get().get());
 							}
-							
+
 						}
-						
+
 					}
-				
-					
-			
+
 					Iterator<Integer> labeliter = Alllabels.iterator();
-					while(labeliter.hasNext()) {
-						
+					while (labeliter.hasNext()) {
+
 						int label = labeliter.next();
-					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(label, frame))) {
-						Pair<Spot, Integer> spotandtrackID = uniquelabelID
-								.get(new ValuePair<Integer, Integer>(label, frame));
-						// Now get the spot ID
+						if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(label, frame))) {
+							Pair<Spot, Integer> spotandtrackID = uniquelabelID
+									.get(new ValuePair<Integer, Integer>(label, frame));
+							// Now get the spot ID
 
-						Spot spot = spotandtrackID.getA();
+							Spot spot = spotandtrackID.getA();
 
-						int trackID = spotandtrackID.getB();
-						Spot startspot = DividingStartspots.getA().get(trackID);
-						
-						ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
-						trackspotlist.add(spot);
-						Pair<Spot, Spot> pair = new ValuePair<Spot, Spot>(spot, startspot);
-						Trackapoptosis.put(trackID, pair);
+							int trackID = spotandtrackID.getB();
+							Spot startspot = DividingStartspots.getA().get(trackID);
 
+							ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
+							trackspotlist.add(spot);
+							Pair<Spot, Spot> pair = new ValuePair<Spot, Spot>(spot, startspot);
+							Trackapoptosis.put(trackID, pair);
+
+						}
 					}
 				}
-			}
 
+			}
 		}
-		}
-		
+
 		logger.log("Verifying lineage trees.\n");
 		logger.setProgress(0.);
 
@@ -970,12 +885,10 @@ public class TrackCorrectorRunner {
 
 	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
-			Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>> DividingStartspots,
-			final Model model, final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots, final Model model,
+			final ImgPlus<UnsignedShortType> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, final int numThreads, double[] calibration) {
 
-		
-		
 		// Starting point of the tree + list of mitosis spots in the trackID
 		HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Trackmitosis = new HashMap<Integer, Pair<Spot, ArrayList<Spot>>>();
 		// Spots from trackmate
@@ -986,21 +899,18 @@ public class TrackCorrectorRunner {
 
 		logger.log("Matching with oneat mitosis spots.\n");
 		logger.setProgress(1.);
-		
-	    int count = 0;		
+
+		int count = 0;
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
-			
-		    logger.setProgress(count/(framespots.entrySet().size() + 1 ));
-		    count++;
+
+			logger.setProgress(count / (framespots.entrySet().size() + 1));
+			count++;
 			int frame = framemap.getKey();
 			if (frame < img.dimension(ndim) - 1) {
-				
 
 				ArrayList<Spot> spotlist = framemap.getValue();
 
 				for (Spot currentspots : spotlist) {
-
-					
 
 					long[] location = new long[ndim];
 					for (int d = 0; d < ndim; ++d) {
@@ -1008,71 +918,69 @@ public class TrackCorrectorRunner {
 						ranac.setPosition(location[d], d);
 					}
 					ranac.setPosition(frame, ndim);
-					
 
 					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
 					int labelID = ranac.get().get();
-                    if(labelID!=0)
-                    	Alllabels.add(labelID);
+					if (labelID != 0)
+						Alllabels.add(labelID);
 					int maxlabel = labelID;
-					// Oneat spot locations are not precise in Z so we give it 
-					if(labelID == 0 && ndim > 2) {
-						
-						for(int k = 0; k < img.dimension(ndim - 1); ++k) {
-							
+					// Oneat spot locations are not precise in Z so we give it
+					if (labelID == 0 && ndim > 2) {
+
+						for (int k = 0; k < img.dimension(ndim - 1); ++k) {
+
 							ranac.setPosition(k, ndim - 1);
-							if(ranac.get().get() > maxlabel){
-								
+							if (ranac.get().get() > maxlabel) {
+
 								Alllabels.add(ranac.get().get());
 							}
-							
+
 						}
-						
+
 					}
-				
-					
-			
+
 					Iterator<Integer> labeliter = Alllabels.iterator();
-					while(labeliter.hasNext()) {
-						
+					while (labeliter.hasNext()) {
+
 						int label = labeliter.next();
-					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(label, frame))) {
-						Pair<Spot, Integer> spotandtrackID = uniquelabelID
-								.get(new ValuePair<Integer, Integer>(label, frame));
-						// Now get the spot ID
+						if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(label, frame))) {
+							Pair<Spot, Integer> spotandtrackID = uniquelabelID
+									.get(new ValuePair<Integer, Integer>(label, frame));
+							// Now get the spot ID
 
-						Spot spot = spotandtrackID.getA();
+							Spot spot = spotandtrackID.getA();
 
-						int trackID = spotandtrackID.getB();
-						Pair<Boolean, Pair<Spot, Spot>> isDividingTMspot = isDividingTrack(DividingStartspots, spot, trackID, tmoneatdeltat);
-						Boolean isDividing = isDividingTMspot.getA();
+							int trackID = spotandtrackID.getB();
+							Pair<Boolean, Pair<Spot, Spot>> isDividingTMspot = isDividingTrack(DividingStartspots, spot,
+									trackID, tmoneatdeltat);
+							Boolean isDividing = isDividingTMspot.getA();
 
-						
-						
-						// If isDividing is true oneat does not need to correct the track else it has to
-						// correct the trackid
-						if (!isDividing) {
+							// If isDividing is true oneat does not need to correct the track else it has to
+							// correct the trackid
+							if (!isDividing) {
 
-							Spot startspot = isDividingTMspot.getB().getA();
+								Spot startspot = isDividingTMspot.getB().getA();
 
-							if (Trackmitosis.containsKey(trackID)) {
+								if (Trackmitosis.containsKey(trackID)) {
 
-								Pair<Spot, ArrayList<Spot>>  trackstartspotlist = Trackmitosis.get(trackID);
-								if (!trackstartspotlist.getB().contains(spot))
-									trackstartspotlist.getB().add(spot);
-								
-								Pair<Spot, ArrayList<Spot>> pairlist = new ValuePair<Spot, ArrayList<Spot>>(startspot,
-										trackstartspotlist.getB());
-								Trackmitosis.put(trackID, pairlist);
+									Pair<Spot, ArrayList<Spot>> trackstartspotlist = Trackmitosis.get(trackID);
+									if (!trackstartspotlist.getB().contains(spot))
+										trackstartspotlist.getB().add(spot);
 
-							} else {
+									Pair<Spot, ArrayList<Spot>> pairlist = new ValuePair<Spot, ArrayList<Spot>>(
+											startspot, trackstartspotlist.getB());
+									Trackmitosis.put(trackID, pairlist);
 
-								ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
-								trackspotlist.add(spot);
+								} else {
 
-								Pair<Spot, ArrayList<Spot>> pairlist = new ValuePair<Spot, ArrayList<Spot>>(startspot,
-										trackspotlist);
-								Trackmitosis.put(trackID, pairlist);
+									ArrayList<Spot> trackspotlist = new ArrayList<Spot>();
+									trackspotlist.add(spot);
+
+									Pair<Spot, ArrayList<Spot>> pairlist = new ValuePair<Spot, ArrayList<Spot>>(
+											startspot, trackspotlist);
+									Trackmitosis.put(trackID, pairlist);
+
+								}
 
 							}
 
@@ -1081,9 +989,7 @@ public class TrackCorrectorRunner {
 					}
 
 				}
-
 			}
-		}
 		}
 		logger.log("Verifying lineage trees.\n");
 		logger.setProgress(0.);
@@ -1166,7 +1072,6 @@ public class TrackCorrectorRunner {
 
 		}
 
-		
 		AllTrackIds.removeAll(DividingTrackids);
 		for (int trackID : AllTrackIds) {
 
@@ -1193,52 +1098,45 @@ public class TrackCorrectorRunner {
 		return graph;
 
 	}
-	
-	
-	
+
 	/**
 	 * 
-	 * @param spot 
+	 * @param spot
 	 * @param trackID
 	 * @param N
 	 * @param model
 	 * @return
 	 */
-	
-	private static Pair<Boolean, Pair<Spot, Spot>> isDividingTrack(final Pair<HashMap<Integer,  Spot>, HashMap<Integer, ArrayList< Spot>>> DividingStartspots,
-			final Spot spot, final int trackID, final int N) {
+
+	private static Pair<Boolean, Pair<Spot, Spot>> isDividingTrack(
+			final Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots, final Spot spot,
+			final int trackID, final int N) {
 
 		Boolean isDividing = false;
-		
+
 		Spot closestSpot = null;
-		
+
 		ArrayList<Spot> Dividingspotlocations = DividingStartspots.getB().get(trackID);
 		Spot startingspot = DividingStartspots.getA().get(trackID);
-		 
-		 
+
 		Pair<Double, Spot> closestspotpair = closestSpot(spot, Dividingspotlocations);
 		double closestdistance = closestspotpair.getA();
 		closestSpot = closestspotpair.getB();
 		// There could be a N frame gap at most between the TM detected dividing spot
 		// location and oneat found spot location
-		if (closestdistance < N) 
+		if (closestdistance < N)
 			isDividing = true;
-			
-		
-		
 
 		return new ValuePair<Boolean, Pair<Spot, Spot>>(isDividing,
 				new ValuePair<Spot, Spot>(startingspot, closestSpot));
 	}
 
-	private static Pair<Double, Spot> closestSpot(final Spot targetspot,
-			final ArrayList<Spot> Dividingspotlocations) {
+	private static Pair<Double, Spot> closestSpot(final Spot targetspot, final ArrayList<Spot> Dividingspotlocations) {
 
 		double mintimeDistance = Double.MAX_VALUE;
 		Spot closestsourcespot = null;
 
 		for (Spot sourcespot : Dividingspotlocations) {
-
 
 			final double dist = sourcespot.diffTo(targetspot, Spot.FRAME);
 
@@ -1259,15 +1157,15 @@ public class TrackCorrectorRunner {
 	/**
 	 * 
 	 * @param model TrackMate Model
-	 * @return Pair of HashMap <TrackID, TrackStartSpot> and <TrackID, List of dividing Spots in that track> 
+	 * @return Pair of HashMap <TrackID, TrackStartSpot> and <TrackID, List of
+	 *         dividing Spots in that track>
 	 */
-	private static Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> getTMStartSplit(
-			final Model model) {
+	private static Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> getTMStartSplit(final Model model) {
 
-		HashMap<Integer, ArrayList<Spot>> Dividingspots = new HashMap<Integer, ArrayList< Spot>>();
+		HashMap<Integer, ArrayList<Spot>> Dividingspots = new HashMap<Integer, ArrayList<Spot>>();
 		HashMap<Integer, Spot> Startingspots = new HashMap<Integer, Spot>();
 		TrackModel trackmodel = model.getTrackModel();
-		
+
 		for (final Integer trackID : trackmodel.trackIDs(true)) {
 
 			final Set<DefaultWeightedEdge> track = trackmodel.trackEdges(trackID);
@@ -1277,8 +1175,8 @@ public class TrackCorrectorRunner {
 			ArrayList<Integer> TargetsID = new ArrayList<Integer>();
 
 			Spot Starts = null;
-			
-			ArrayList< Spot> Splits = new ArrayList<Spot>();
+
+			ArrayList<Spot> Splits = new ArrayList<Spot>();
 
 			for (final DefaultWeightedEdge e : track) {
 
@@ -1293,7 +1191,6 @@ public class TrackCorrectorRunner {
 				TargetsID.add(targetID);
 
 			}
-			
 
 			// find track start
 			for (Pair<Integer, Spot> sid : Sources) {
@@ -1327,25 +1224,28 @@ public class TrackCorrectorRunner {
 
 		}
 
-		return new ValuePair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList< Spot>>>(
-				Startingspots, Dividingspots);
+		return new ValuePair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>>(Startingspots, Dividingspots);
 
 	}
-	
+
 	/**
 	 * 
-	 * @param oneatdivisionfile The file containing oneat locations of mitosis events
-	 * @param oneatapoptosisfile The file containing oneat locations of cell death events
-	 * @param settings HashMap of oneat specific parameters to veto events found in file 
-	 * @param logger TrackMate logger to log the number of found events
-	 * @param ndims The image dimensions
-	 * @param calibration The image calibration
-	 * @return SpotCollection and HashMap of <frame, SpotList> for mitosis/cell death 
+	 * @param oneatdivisionfile  The file containing oneat locations of mitosis
+	 *                           events
+	 * @param oneatapoptosisfile The file containing oneat locations of cell death
+	 *                           events
+	 * @param settings           HashMap of oneat specific parameters to veto events
+	 *                           found in file
+	 * @param logger             TrackMate logger to log the number of found events
+	 * @param ndims              The image dimensions
+	 * @param calibration        The image calibration
+	 * @return SpotCollection and HashMap of <frame, SpotList> for mitosis/cell
+	 *         death
 	 */
 
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
-			final File oneatdivisionfile, final File oneatapoptosisfile, Map<String, Object> settings, final Logger logger, final int ndims,
-			final double[] calibration) {
+			final File oneatdivisionfile, final File oneatapoptosisfile, Map<String, Object> settings,
+			final Logger logger, final int ndims, final double[] calibration) {
 
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
@@ -1524,7 +1424,5 @@ public class TrackCorrectorRunner {
 		return new ValuePair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>>(
 				DivisionPair, ApoptosisPair);
 	}
-
-	
 
 }
