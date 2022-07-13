@@ -86,7 +86,7 @@ public class TrackCorrectorRunner {
 		TrackModel trackmodel = model.getTrackModel();
 		SpotCollection allspots = model.getSpots();
 
-		final ExecutorService executorS = Executors.newFixedThreadPool(numThreads);
+		final ExecutorService executorS = Executors.newWorkStealingPool();
 
 		final ArrayList<Integer> trackcountlist = new ArrayList<Integer>();
 		double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE) != null
