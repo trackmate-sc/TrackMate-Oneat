@@ -232,19 +232,22 @@ public class TrackCorrectorRunner {
 
 						for (DefaultWeightedEdge localedge : mothertrack) {
 
-							if (!graph.containsEdge(localedge)) {
+							
+							
 								final Spot source = trackmodel.getEdgeSource(localedge);
 
 								final Spot target = trackmodel.getEdgeTarget(localedge);
+								
+								if(target.ID() == motherspot.ID() || source.ID() == motherspot.ID()) {
 								final double linkcost = trackmodel.getEdgeWeight(localedge);
 								localgraph.addVertex(source);
 								localgraph.addVertex(target);
 								localgraph.addEdge(source, target);
 								localgraph.setEdgeWeight(localedge, linkcost);
 								
-								
+								}
 
-							}
+							
 						}
 
 						for (int i = 1; i < tmoneatdeltat; ++i) {
@@ -563,11 +566,12 @@ public class TrackCorrectorRunner {
 					graph.addVertex(addsourcetarget.getA());
 					graph.addVertex(addsourcetarget.getB());
 					
+					if(graph.degreeOf(addsourcetarget.getB()) < 2) {
 					final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(), addsourcetarget.getB());
 					System.out.println("cost" + " " + cost + " " + addsourcetarget.getA().ID()  + " " + addsourcetarget.getB().ID());
 				
 					graph.setEdgeWeight(edge, cost);
-					
+					}
 					
 				}
 				
