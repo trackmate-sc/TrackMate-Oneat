@@ -36,7 +36,7 @@ public class LocalJaqamanLinker< K extends Comparable< K >, J extends Comparable
 
 	private final Logger logger;
 	
-	private final double trackcount;
+
 
 	/**
 	 * Creates a new linker for the specified cost matrix creator. See Jaqaman
@@ -47,11 +47,11 @@ public class LocalJaqamanLinker< K extends Comparable< K >, J extends Comparable
 	 * @param logger
 	 *            a logger that will receive progress messages.
 	 */
-	public LocalJaqamanLinker( final CostMatrixCreator< K, J > costMatrixCreator, final Logger logger, final double trackcount )
+	public LocalJaqamanLinker( final CostMatrixCreator< K, J > costMatrixCreator, final Logger logger )
 	{
 		this.costMatrixCreator = costMatrixCreator;
 		this.logger = logger;
-		this.trackcount = trackcount;
+		
 	}
 
 
@@ -106,7 +106,7 @@ public class LocalJaqamanLinker< K extends Comparable< K >, J extends Comparable
 			errorMessage = costMatrixCreator.getErrorMessage();
 			return false;
 		}
-		logger.setProgress( trackcount );
+		
 
 		final SparseCostMatrix tl = costMatrixCreator.getResult();
 		final List< K > matrixRows = costMatrixCreator.getSourceList();

@@ -88,7 +88,7 @@ public class TrackCorrectorRunner {
 			HashMap<Integer, ArrayList<Spot>> framespots, int numThreads, double[] calibration, boolean addDisplay) {
 		
 		
-		// Get the trackmodel and spots in the default tracking result and start to
+		         // Get the trackmodel and spots in the default tracking result and start to
 				// create a new graph
 				TrackModel trackmodel = model.getTrackModel();
 				SpotCollection allspots = model.getSpots();
@@ -96,7 +96,7 @@ public class TrackCorrectorRunner {
 			
 				final ExecutorService executorS = Executors.newFixedThreadPool( numThreads );
 				
-				
+				final ArrayList<Integer> trackcountlist = new ArrayList<Integer>();
 				double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE) != null
 						? (double) settings.get(KEY_LINKING_MAX_DISTANCE)
 						: 10);
@@ -163,13 +163,7 @@ public class TrackCorrectorRunner {
 			cmsettings.put(KEY_MERGING_MAX_DISTANCE, mMaxDistance);
 
 			
-			/*
-			 * HashMap<String, Double> qu = new HashMap<String, Double>(); qu.put(QUALITY,
-			 * 1.0); qu.put(POSITION_Z, 1.0); qu.put(RADIUS, 1.0);
-			 * 
-			 * cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, qu);
-			 * 
-			 */
+		
 
 			if (settings.get(KEY_SPLITTING_FEATURE_PENALTIES) != DEFAULT_SPLITTING_FEATURE_PENALTIES)
 				cmsettings.put(KEY_SPLITTING_FEATURE_PENALTIES, settings.get(KEY_SPLITTING_FEATURE_PENALTIES));
@@ -185,25 +179,23 @@ public class TrackCorrectorRunner {
 				logger.setProgress(0.);
 				
 				
-				ArrayList<Pair<Spot, Spot>> removeedges = new ArrayList<>();
-				ArrayList<Pair<Spot, Spot>> addedges = new ArrayList<>();
-				ArrayList<Double> costlist = new ArrayList<>();
 				
 				
-				
-				
-						
-				
-				
+			
+
 				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
 
-				    
+					ArrayList<Pair<Spot, Spot>> removeedges = new ArrayList<>();
+					ArrayList<Pair<Spot, Spot>> addedges = new ArrayList<>();
+					ArrayList<Double> costlist = new ArrayList<>();
+					
 					Future<Graphobject> result = executorS.submit( new Callable<Graphobject>()
 					{
 						@Override
 						public Graphobject call() throws Exception
 						{
-							double trackcount = 0;
+							int trackcount = 0;
+							trackcountlist.add(trackcount);
 					// List of all the mother cells and the root of the lineage tree
 					Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
 
@@ -296,8 +288,8 @@ public class TrackCorrectorRunner {
 
 						final OneatCostMatrix costMatrixCreator = new OneatCostMatrix(localgraph, cmsettings);
 						costMatrixCreator.setNumThreads(numThreads);
-						
-						final LocalJaqamanLinker<Spot, Spot> linker = new LocalJaqamanLinker<>(costMatrixCreator, logger, trackcount/Mitosisspots.entrySet().size());
+						logger.setProgress( (double)trackcountlist.size()/Mitosisspots.entrySet().size( ));
+						final LocalJaqamanLinker<Spot, Spot> linker = new LocalJaqamanLinker<>(costMatrixCreator, logger);
 						if (!linker.checkInput() || !linker.process()) {
 							System.out.println(linker.getErrorMessage());
 						}
@@ -392,7 +384,7 @@ public class TrackCorrectorRunner {
 					
 					Graphobject grapher = new Graphobject(removeedges, addedges, costlist);
 					
-					trackcount++;
+					
 					 return grapher;
 						}
 						
@@ -404,18 +396,7 @@ public class TrackCorrectorRunner {
 				grapherlist.add(result);	
 				}
 				
-				executorS.shutdown();
-				try
-				{
-					executorS.awaitTermination( 1, TimeUnit.DAYS );
-				}
-				catch ( final InterruptedException e )
-				{
-					
-				}
 				
-				
-		       
 				
 			}
 		
@@ -465,18 +446,14 @@ public class TrackCorrectorRunner {
 		// Get the trackmodel and spots in the default tracking result and start to
 		// create a new graph
 		TrackModel trackmodel = model.getTrackModel();
-		SpotCollection allspots = model.getSpots();
-
+		
 		SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
-		double searchdistance = (double) (settings.get(KEY_LINKING_MAX_DISTANCE) != null
-				? (double) settings.get(KEY_LINKING_MAX_DISTANCE)
-				: 10);
+		
 		int tmoneatdeltat = (int) settings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
 		boolean createlinks = (boolean) settings.get(KEY_CREATE_LINKS);
 		boolean breaklinks = (boolean) settings.get(KEY_BREAK_LINKS);
-		boolean mariprinciple = (boolean) settings.get(KEY_USE_MARI_PRINCIPLE);
-		double mariangle = (double) settings.get(KEY_MARI_ANGLE);
+		
 		
 		// Generate the default graph
 		for (final Integer trackID : trackmodel.trackIDs(true)) {
@@ -534,11 +511,39 @@ public class TrackCorrectorRunner {
 		count = 0;
 
 		if (createlinks) {
+			if (Mitosisspots != null) {
 			
+				for (Map.Entry<Integer, Pair<Spot, ArrayList<Spot>>> trackidspots : Mitosisspots.entrySet()) {
+
+				     
+					// Get the current trackID
+					int trackID = trackidspots.getKey();
+					Set<DefaultWeightedEdge> dividingtracks = trackmodel.trackEdges(trackID);
+
+					// List of all the mother cells and the root of the lineage tree
+					Pair<Spot, ArrayList<Spot>> trackspots = trackidspots.getValue();
+
+					ArrayList<Spot> mitosismotherspots = trackspots.getB();
+
+				
+					// Remove edges corresponding to mitotic trajectories
+					for (final DefaultWeightedEdge edge : dividingtracks) {
+
+						final Spot source = trackmodel.getEdgeSource(edge);
+
+						if (mitosismotherspots.contains(source)) {
+
+							graph.removeEdge(edge);
+						}
+
+					}
+
+				}
+			}
 			
 			List<Future<Graphobject>> graphlistresult = LinkCreator(model,trackmate,graph,uniquelabelID,DividingStartspots,Mitosisspots,settings,
 					ndim,logger,img,framespots, numThreads, calibration, addDisplay);
-			
+			System.out.println(graphlistresult.size());
 			for(Future<Graphobject> graphresult:graphlistresult ) {
 				
 				Graphobject object = graphresult.get();
@@ -551,12 +556,19 @@ public class TrackCorrectorRunner {
 					Pair<Spot, Spot> removesourcetarget = removeedges.get(i);
 					Pair<Spot, Spot> addsourcetarget = addedges.get(i);
 					double cost = costlist.get(i);
+					
+					
+					
 					graph.removeEdge(removesourcetarget.getA(), removesourcetarget.getB());
 					graph.addVertex(addsourcetarget.getA());
 					graph.addVertex(addsourcetarget.getB());
 					
 					final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(), addsourcetarget.getB());
+					System.out.println("cost" + " " + cost + " " + addsourcetarget.getA().ID()  + " " + addsourcetarget.getB().ID());
+				
 					graph.setEdgeWeight(edge, cost);
+					
+					
 				}
 				
 			}
