@@ -6,6 +6,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import fiji.plugin.trackmate.Logger;
@@ -149,9 +151,17 @@ public class OneatCorrector implements TrackCorrector {
 
 	
 	
-		graph = TrackCorrectorRunner.getCorrectedTracks(model, trackmate, Tmobject.getA(), Tmobject.getB(),
-				Mitossisspots, Apoptosisspots, settings, ndims, logger, img, divisionframespots, numThreads,
-				calibration, addDisplay);
+		try {
+			graph = TrackCorrectorRunner.getCorrectedTracks(model, trackmate, Tmobject.getA(), Tmobject.getB(),
+					Mitossisspots, Apoptosisspots, settings, ndims, logger, img, divisionframespots, numThreads,
+					calibration, addDisplay);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		// Check that the objects list itself isn't null
 		if (null == graph) {
