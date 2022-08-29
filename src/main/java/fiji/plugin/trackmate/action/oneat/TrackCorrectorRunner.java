@@ -833,23 +833,7 @@ public class TrackCorrectorRunner {
 					int labelID = ranac.get().get();
 					if (labelID != 0)
 						Alllabels.add(labelID);
-					int maxlabel = labelID;
-					// Oneat spot locations are not precise in Z so we give it
-					if (labelID == 0 && ndim > 2) {
-
-						for (int k = 0; k < img.dimension(ndim - 1); ++k) {
-
-							ranac.setPosition(k, ndim - 1);
-							int labelval = ranac.get().get();
-							if (labelval > maxlabel) {
-
-								if (!Alllabels.contains(labelval))
-									Alllabels.add(ranac.get().get());
-							}
-
-						}
-
-					}
+				
 
 					Iterator<Integer> labeliter = Alllabels.iterator();
 					while (labeliter.hasNext()) {
@@ -923,22 +907,7 @@ public class TrackCorrectorRunner {
 					int labelID = ranac.get().get();
 					if (labelID != 0)
 						Alllabels.add(labelID);
-					int maxlabel = labelID;
-					// Oneat spot locations are not precise in Z so we give it
-					if (labelID == 0 && ndim > 2) {
-
-						for (int k = 0; k < img.dimension(ndim - 1); ++k) {
-
-							ranac.setPosition(k, ndim - 1);
-							if (ranac.get().get() > maxlabel) {
-
-								Alllabels.add(ranac.get().get());
-							}
-
-						}
-
-					}
-
+		
 					Iterator<Integer> labeliter = Alllabels.iterator();
 					while (labeliter.hasNext()) {
 
