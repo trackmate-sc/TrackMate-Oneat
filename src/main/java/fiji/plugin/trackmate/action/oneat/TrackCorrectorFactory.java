@@ -20,27 +20,10 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
  * once. They return new tracks.
  * 
  * @author Varun Kapoor
- *
- * @param <T>
  */
 public interface  TrackCorrectorFactory  extends TrackMateModule
  {
 
-	
-	
-	   
-	
-	
-		/**
-		 * Instantiates and returns a new {@link SpotTracker} configured to operate
-		 * on the specified {@link SpotCollection}, using the specified settins map.
-		 *
-		 * @param spots
-		 *            the {@link SpotCollection} containing the spots to track.
-		 * @param settings
-		 *            the settings map configuring the tracker.
-		 * @return a new {@link SpotTracker} instance.
-		 */
 		public TrackCorrector create(  ImgPlus< UnsignedShortType > img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
 				final Map< String, Object > settings, final Logger logger, final double[] calibration, final boolean addDisplay );
 

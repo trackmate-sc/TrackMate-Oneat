@@ -746,11 +746,10 @@ public class TrackCorrectorRunner {
 	 * @param img         The integer labelled image
 	 * @param logger      TrackMate logger
 	 * @param calibration Image calibration
-	 * @return A HashMap of <Segment Label, Frame>: <Spot, TrackID> and Spot, A
-	 *         second HashMap of trackID + starting spot and trackID + list of
-	 *         dividing spots for that track
+	 * @return A HashMap of {@code <Segment Label, Frame>: <Spot, TrackID>} and
+	 *         Spot, A second HashMap of trackID + starting spot and trackID +
+	 *         list of dividing spots for that track
 	 */
-
 	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>>> getFirstTrackMateobject(
 			final Model model, final ImgPlus<UnsignedShortType> img, final Logger logger, double[] calibration) {
 
@@ -1208,10 +1207,9 @@ public class TrackCorrectorRunner {
 	 * @param logger             TrackMate logger to log the number of found events
 	 * @param ndims              The image dimensions
 	 * @param calibration        The image calibration
-	 * @return SpotCollection and HashMap of <frame, SpotList> for mitosis/cell
-	 *         death
+	 * @return SpotCollection and HashMap of {@code <frame, SpotList>} for
+	 *         mitosis/cell death
 	 */
-
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
 			final File oneatdivisionfile, final File oneatapoptosisfile, Map<String, Object> settings,
 			final Logger logger, final int ndims, final double[] calibration) {
