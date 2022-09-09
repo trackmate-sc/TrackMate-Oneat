@@ -22,7 +22,7 @@
 		<url>https://github.com/trackmate-sc</url>
 	</organization>
 	<licenses>
-		<license>
+			<license>
 			<name>GNU General Public License v3+</name>
 			<url>https://www.gnu.org/licenses/gpl.html</url>
 			<distribution>repo</distribution>
