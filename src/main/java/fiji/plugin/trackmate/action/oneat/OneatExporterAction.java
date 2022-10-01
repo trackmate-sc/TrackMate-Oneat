@@ -145,8 +145,8 @@ public class  OneatExporterAction < T extends NativeType< T > & NumericType< T >
 				detectionimg = ImgPlusViews.hyperSlice( img, 2, (int) detchannel );
 			}
 			
-			@SuppressWarnings("unchecked")
-			final ImgPlus< UnsignedShortType > intimg = (ImgPlus<UnsignedShortType>) detectionimg;
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			final ImgPlus< UnsignedShortType > intimg = (ImgPlus) detectionimg;
 		
 			
 			OneatCorrector oneatcorrector = corrector.create(intimg, model, trackmate, settings, displaySettings, mapsettings, logger, calibration, true );
