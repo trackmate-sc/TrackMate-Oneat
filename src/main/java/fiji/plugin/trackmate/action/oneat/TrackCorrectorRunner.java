@@ -1256,6 +1256,7 @@ public class TrackCorrectorRunner {
 
 					if (count > 0) {
 
+						if(divisionspotsfile.length > 4) { 
 						int time = (int) Double.parseDouble(divisionspotsfile[0]);
 						double Z = Double.parseDouble(divisionspotsfile[1]) * calibration[2];
 						double Y = Double.parseDouble(divisionspotsfile[2]) * calibration[1];
@@ -1263,10 +1264,9 @@ public class TrackCorrectorRunner {
 						double score = Double.parseDouble(divisionspotsfile[4]);
 						double size = Double.parseDouble(divisionspotsfile[5]);
 						double confidence = Double.parseDouble(divisionspotsfile[6]);
-						double angle = Double.parseDouble(divisionspotsfile[7]);
-
+						
 						if (score >= probthreshold) {
-							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
+							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
 
 							if (DivisionMap.get(time) == null) {
 								DivisionSpots = new ArrayList<Oneatobject>();
@@ -1275,8 +1275,39 @@ public class TrackCorrectorRunner {
 								DivisionMap.put(time, DivisionSpots);
 							DivisionSpots.add(Spot);
 						}
+						
 
 					}
+						
+						else {
+							
+							int time = (int) Double.parseDouble(divisionspotsfile[0]);
+							double Z = Double.parseDouble(divisionspotsfile[1]) * calibration[2];
+							double Y = Double.parseDouble(divisionspotsfile[2]) * calibration[1];
+							double X = Double.parseDouble(divisionspotsfile[3]) * calibration[0];
+							double score = 1.0;
+							double size = 10;
+							double confidence = 1.0;
+							
+							if (score >= probthreshold) {
+								Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
+
+								if (DivisionMap.get(time) == null) {
+									DivisionSpots = new ArrayList<Oneatobject>();
+									DivisionMap.put(time, DivisionSpots);
+								} else
+									DivisionMap.put(time, DivisionSpots);
+								DivisionSpots.add(Spot);
+							}
+							
+						}
+						
+						
+						
+					}
+					
+					
+					
 					count = count + 1;
 				}
 			} catch (IOException ie) {
@@ -1340,6 +1371,8 @@ public class TrackCorrectorRunner {
 
 					if (count > 0) {
 
+						if(apoptosisspotsfile.length > 4) {
+						
 						int time = Integer.parseInt(apoptosisspotsfile[0]);
 						double Z = Double.parseDouble(apoptosisspotsfile[1]) * calibration[2];
 						double Y = Double.parseDouble(apoptosisspotsfile[2]) * calibration[1];
@@ -1347,9 +1380,9 @@ public class TrackCorrectorRunner {
 						double score = Double.parseDouble(apoptosisspotsfile[4]);
 						double size = Double.parseDouble(apoptosisspotsfile[5]);
 						double confidence = Double.parseDouble(apoptosisspotsfile[6]);
-						double angle = Double.parseDouble(apoptosisspotsfile[7]);
+						
 						if (score >= probthreshold) {
-							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence, angle);
+							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
 
 							if (ApoptosisMap.get(time) == null) {
 								ApoptosisSpots = new ArrayList<Oneatobject>();
@@ -1360,7 +1393,30 @@ public class TrackCorrectorRunner {
 						}
 
 					}
+						
+						else {
+							
+							int time = Integer.parseInt(apoptosisspotsfile[0]);
+							double Z = Double.parseDouble(apoptosisspotsfile[1]) * calibration[2];
+							double Y = Double.parseDouble(apoptosisspotsfile[2]) * calibration[1];
+							double X = Double.parseDouble(apoptosisspotsfile[3]) * calibration[0];
+							double score = 1.0;
+							double size = 10;
+							double confidence = 1.0;
+							
+							if (score >= probthreshold) {
+								Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
+
+								if (ApoptosisMap.get(time) == null) {
+									ApoptosisSpots = new ArrayList<Oneatobject>();
+									ApoptosisMap.put(time, ApoptosisSpots);
+								} else
+									ApoptosisMap.put(time, ApoptosisSpots);
+								ApoptosisSpots.add(Spot);
+							}
+						}
 					count = count + 1;
+				}
 				}
 			} catch (IOException ie) {
 				ie.printStackTrace();

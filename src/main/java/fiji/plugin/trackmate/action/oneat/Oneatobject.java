@@ -38,9 +38,9 @@ public class Oneatobject {
 
 	public final double confidence;
 
-	public final double angle;
+	
 
-	public Oneatobject(int time, double Z, double Y, double X, double score, double size, double confidence, double angle) {
+	public Oneatobject(int time, double Z, double Y, double X, double score, double size, double confidence) {
 
 		
 		this.time = time;
@@ -57,7 +57,7 @@ public class Oneatobject {
 
 		this.confidence = confidence;
 		
-		this.angle = angle;
+		
 
 
 	}
