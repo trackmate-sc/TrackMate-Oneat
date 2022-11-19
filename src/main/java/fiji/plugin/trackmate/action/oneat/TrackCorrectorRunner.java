@@ -27,6 +27,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,8 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
+import org.jgrapht.traverse.BreadthFirstIterator;
+
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 import fiji.plugin.trackmate.Logger;
@@ -95,6 +98,140 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_SPLITTING_FEATU
 
 public class TrackCorrectorRunner {
 
+	
+	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> removeTracklets(final Model model,
+			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, final Map<String, Object> settings) {
+		int timecutoff = 2;
+		TrackModel trackModel = model.getTrackModel();
+
+		for (final Integer trackID : trackModel.trackIDs(true)) {
+
+			ArrayList<Pair<Integer, Spot>> Sources = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Pair<Integer, Spot>> Targets = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Integer> SourcesID = new ArrayList<Integer>();
+			ArrayList<Integer> TargetsID = new ArrayList<Integer>();
+			ArrayList<Pair<Integer, Spot>> Starts = new ArrayList<Pair<Integer, Spot>>();
+			ArrayList<Pair<Integer, Spot>> Ends = new ArrayList<Pair<Integer, Spot>>();
+			HashSet<Pair<Integer, Spot>> Splits = new HashSet<Pair<Integer, Spot>>();
+
+			final Set<DefaultWeightedEdge> track = trackModel.trackEdges(trackID);
+
+			for (final DefaultWeightedEdge e : track) {
+
+				Spot Spotbase = model.getTrackModel().getEdgeSource(e);
+				Spot Spottarget = model.getTrackModel().getEdgeTarget(e);
+
+				Integer targetID = Spottarget.ID();
+				Integer sourceID = Spotbase.ID();
+				Sources.add(new ValuePair<Integer, Spot>(sourceID, Spotbase));
+				Targets.add(new ValuePair<Integer, Spot>(targetID, Spottarget));
+				SourcesID.add(sourceID);
+				TargetsID.add(targetID);
+
+			}
+			// find track ends
+			for (Pair<Integer, Spot> tid : Targets) {
+
+				if (!SourcesID.contains(tid.getA())) {
+
+					Ends.add(tid);
+
+				}
+
+			}
+
+			// find track starts
+			for (Pair<Integer, Spot> sid : Sources) {
+
+				if (!TargetsID.contains(sid.getA())) {
+					Starts.add(sid);
+
+				}
+
+			}
+
+			// find track splits
+			int scount = 0;
+			for (Pair<Integer, Spot> sid : Sources) {
+
+				for (Pair<Integer, Spot> dupsid : Sources) {
+
+					if (dupsid.getA().intValue() == sid.getA().intValue()) {
+						scount++;
+					}
+				}
+				if (scount > 1) {
+					Splits.add(sid);
+				}
+				scount = 0;
+			}
+
+			if (Splits.size() > 0) {
+
+				for (Pair<Integer, Spot> sid : Ends) {
+
+					Spot Spotend = sid.getB();
+
+					int trackletlength = 0;
+
+					double minsize = Double.MAX_VALUE;
+					Spot Actualsplit = null;
+					for (Pair<Integer, Spot> splitid : Splits) {
+						Spot Spotstart = splitid.getB();
+						Set<Spot> spotset = connectedSetOf(graph, Spotend, Spotstart);
+
+						if (spotset.size() < minsize) {
+
+							minsize = spotset.size();
+							Actualsplit = Spotstart;
+
+						}
+
+					}
+
+					if (Actualsplit != null) {
+						Set<Spot> connectedspotset = connectedSetOf(graph, Spotend, Actualsplit);
+						trackletlength = (int) Math.abs(Actualsplit.diffTo(Spotend, Spot.FRAME));
+
+						if (trackletlength <= timecutoff) {
+
+							Iterator<Spot> it = connectedspotset.iterator();
+							while (it.hasNext())
+								graph.removeVertex(it.next());
+
+						}
+					}
+
+				}
+			}
+		}
+
+		return graph;
+
+	}
+	
+
+	private static Set<Spot> connectedSetOf(SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, Spot vertex,
+			Spot split) {
+
+		Set<Spot> connectedSet = new HashSet<>();
+
+		connectedSet = new HashSet<>();
+
+		BreadthFirstIterator<Spot, DefaultWeightedEdge> i = new BreadthFirstIterator<>(graph, vertex);
+
+		do {
+			Spot spot = i.next();
+			if (spot.ID() == split.ID()) {
+				break;
+
+			}
+			connectedSet.add(spot);
+		} while (i.hasNext());
+
+		return connectedSet;
+	}
+	
 	public static List<Future<Graphobject>> LinkCreator(final Model model, final TrackMate trackmate,
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots,
@@ -531,8 +668,9 @@ public class TrackCorrectorRunner {
 			}
 		}
 
+		
 		logger.setProgress(1d);
-		logger.flush();
+		graph = removeTracklets(model, graph, settings); 
 		logger.log("Done, please review the TrackScheme by going back.\n");
 
 		model.beginUpdate();
