@@ -101,7 +101,7 @@ public class TrackCorrectorRunner {
 	
 	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> removeTracklets(final Model model,
 			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, final Map<String, Object> settings) {
-		int timecutoff = 2;
+		int timecutoff = 1;
 		TrackModel trackModel = model.getTrackModel();
 
 		for (final Integer trackID : trackModel.trackIDs(true)) {
