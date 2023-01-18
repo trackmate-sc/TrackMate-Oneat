@@ -194,6 +194,8 @@ public class OneatCorrector implements TrackCorrector {
 		trackmate.computeTrackFeatures(true);
 		logger.setProgress(1d);
 		logger.setStatus("");
+		
+		
 		final long end = System.currentTimeMillis();
 		processingTime = end - start;
 

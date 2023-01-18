@@ -433,6 +433,8 @@ public class TrackCorrectorRunner {
 
 							final Map<Spot, Spot> assignment = linker.getResult();
 							final Map<Spot, Double> costs = linker.getAssignmentCosts();
+							
+							
 							// Recreate new links
 							if (assignment != null) {
 
@@ -446,6 +448,7 @@ public class TrackCorrectorRunner {
 									if (mariprinciple)
 										validlink = false;
 									final double cost = costs.get(source);
+									
 									Set<DefaultWeightedEdge> drawlinkslinks = trackmodel.edgesOf(source);
 									OneatOverlay oneatOverlayFirst = new OneatOverlay(motherspot, source, target,
 											motherslope, largemotherslope, trackmate.getSettings().imp);
@@ -487,7 +490,8 @@ public class TrackCorrectorRunner {
 
 										}
 									}
-									if (validlink) {
+									
+									if (validlink && cost < searchdistance * searchdistance /2) {
 										// Remove the targetsource and target edge prior to assingment
 										for (DefaultWeightedEdge targetedge : targetlinks) {
 
@@ -503,6 +507,7 @@ public class TrackCorrectorRunner {
 
 										addedges.add(new ValuePair<Spot, Spot>(source, target));
 										costlist.add(cost);
+										
 									}
 
 								}
@@ -670,15 +675,15 @@ public class TrackCorrectorRunner {
 
 		
 		logger.setProgress(1d);
-		graph = removeTracklets(model, graph, settings); 
+		
 		logger.log("Done, please review the TrackScheme by going back.\n");
 
 		model.beginUpdate();
 		model.clearTracks(true);
-
-		IJ.wait(1000);
+        IJ.wait(1000);
 
 		model.setTracks(graph, true);
+		
 		logger.log("New tracks: " + model.getTrackModel().nTracks(true));
 		model.endUpdate();
 
