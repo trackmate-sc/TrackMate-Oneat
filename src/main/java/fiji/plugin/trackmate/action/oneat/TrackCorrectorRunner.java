@@ -1355,6 +1355,132 @@ public class TrackCorrectorRunner {
 
 	}
 
+	
+	public static Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>> get_action_spotlist_frame(final HashMap<Integer, ArrayList<Oneatobject>> ActionMap, final double[] calibration, final int ndims) {
+		
+		// Parse each component.
+
+		final Iterator<Entry<Integer, ArrayList<Oneatobject>>> iterator = ActionMap.entrySet().iterator();
+		SpotCollection actionspots = new SpotCollection();
+		HashMap<Integer, ArrayList<Spot>> ActionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
+		while (iterator.hasNext()) {
+			final Map.Entry<Integer, ArrayList<Oneatobject>> region = iterator.next();
+
+			int frame = region.getKey();
+			ArrayList<Oneatobject> currentcell = region.getValue();
+			ArrayList<Spot> currentspots = new ArrayList<Spot>();
+			for (Oneatobject cell : currentcell) {
+				final double x = (cell.X);
+				final double y = (cell.Y);
+				final double z = (cell.Z);
+
+				double volume = cell.size * calibration[0] * calibration[1] * calibration[2];
+				double quality = cell.size;
+
+				final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
+						: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
+
+				Spot currentspot = new Spot(x, y, z, radius, quality);
+				// Put spot features so we can get it back by feature name
+				currentspot.putFeature(Spot.POSITION_X, Double.valueOf(x));
+				currentspot.putFeature(Spot.POSITION_Y, Double.valueOf(y));
+				currentspot.putFeature(Spot.POSITION_Z, Double.valueOf(z));
+				currentspot.putFeature(Spot.FRAME, Double.valueOf(frame));
+				currentspot.putFeature(Spot.RADIUS, Double.valueOf(radius));
+				currentspot.putFeature(Spot.QUALITY, Double.valueOf(quality));
+
+				currentspots.add(currentspot);
+				actionspots.add(currentspot, frame);
+				ActionSpotListFrame.put(frame, currentspots);
+			}
+
+		}
+		
+		return new ValuePair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>(actionspots, ActionSpotListFrame);
+
+	}
+	
+	
+	public static Pair<ArrayList<Oneatobject>, HashMap<Integer, ArrayList<Oneatobject>>> get_action_spots(final File oneatactionfile, final Logger logger, final double[] calibration, double probthreshold) {
+		
+		String line = "";
+		String cvsSplitBy = ",";
+		int count = 0;
+
+		ArrayList<Oneatobject> ActionSpots = new ArrayList<Oneatobject>();
+		HashMap<Integer, ArrayList<Oneatobject>> ActionMap = new HashMap<Integer, ArrayList<Oneatobject>>();
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(oneatactionfile))) {
+
+			while ((line = br.readLine()) != null) {
+
+				// use comma as separator
+				String[] divisionspotsfile = line.split(cvsSplitBy);
+
+				if (count > 0) {
+
+					if(divisionspotsfile.length > 4) { 
+					int time = (int) Double.parseDouble(divisionspotsfile[0]);
+					double Z = Double.parseDouble(divisionspotsfile[1]) * calibration[2];
+					double Y = Double.parseDouble(divisionspotsfile[2]) * calibration[1];
+					double X = Double.parseDouble(divisionspotsfile[3]) * calibration[0];
+					double score = Double.parseDouble(divisionspotsfile[4]);
+					double size = Double.parseDouble(divisionspotsfile[5]);
+					double confidence = Double.parseDouble(divisionspotsfile[6]);
+					
+					if (score >= probthreshold) {
+						Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
+
+						if (ActionMap.get(time) == null) {
+							ActionSpots = new ArrayList<Oneatobject>();
+							ActionMap.put(time, ActionSpots);
+						} else
+							ActionMap.put(time, ActionSpots);
+						ActionSpots.add(Spot);
+					}
+					
+
+				}
+					
+					else {
+						
+						int time = (int) Double.parseDouble(divisionspotsfile[0]);
+						double Z = Double.parseDouble(divisionspotsfile[1]) * calibration[2];
+						double Y = Double.parseDouble(divisionspotsfile[2]) * calibration[1];
+						double X = Double.parseDouble(divisionspotsfile[3]) * calibration[0];
+						double score = 1.0;
+						double size = 10;
+						double confidence = 1.0;
+						
+						if (score >= probthreshold) {
+							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
+
+							if (ActionMap.get(time) == null) {
+								ActionSpots = new ArrayList<Oneatobject>();
+								ActionMap.put(time, ActionSpots);
+							} else
+								ActionMap.put(time, ActionSpots);
+							ActionSpots.add(Spot);
+						}
+						
+					}
+					
+					
+					
+				}
+				
+				
+				
+				count = count + 1;
+			}
+		} catch (IOException ie) {
+			ie.printStackTrace();
+		}
+		logger.log("Oneat found action events:" + " " + count + "\n");
+		return new ValuePair<ArrayList<Oneatobject>, HashMap<Integer, ArrayList<Oneatobject>>>(ActionSpots, ActionMap);
+	}
+	
+	
 	/**
 	 * 
 	 * @param oneatdivisionfile  The file containing oneat locations of mitosis
@@ -1369,6 +1495,10 @@ public class TrackCorrectorRunner {
 	 * @return SpotCollection and HashMap of {@code <frame, SpotList>} for
 	 *         mitosis/cell death
 	 */
+	
+	
+	
+	
 	public static Pair<Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>, Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>> run(
 			final File oneatdivisionfile, final File oneatapoptosisfile, Map<String, Object> settings,
 			final Logger logger, final int ndims, final double[] calibration) {
@@ -1376,225 +1506,41 @@ public class TrackCorrectorRunner {
 		SpotCollection divisionspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> DivisionSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
 
+		ArrayList<Oneatobject> DivisionSpots = new ArrayList<Oneatobject>();
+		HashMap<Integer, ArrayList<Oneatobject>> DivisionMap = new HashMap<Integer, ArrayList<Oneatobject>>();
+		
 		double probthreshold = (double) settings.get(KEY_PROB_THRESHOLD);
 
 		if (oneatdivisionfile != null) {
-			String line = "";
-			String cvsSplitBy = ",";
-			int count = 0;
-
-			ArrayList<Oneatobject> DivisionSpots = new ArrayList<Oneatobject>();
-			HashMap<Integer, ArrayList<Oneatobject>> DivisionMap = new HashMap<Integer, ArrayList<Oneatobject>>();
-			try (BufferedReader br = new BufferedReader(new FileReader(oneatdivisionfile))) {
-
-				while ((line = br.readLine()) != null) {
-
-					// use comma as separator
-					String[] divisionspotsfile = line.split(cvsSplitBy);
-
-					if (count > 0) {
-
-						if(divisionspotsfile.length > 4) { 
-						int time = (int) Double.parseDouble(divisionspotsfile[0]);
-						double Z = Double.parseDouble(divisionspotsfile[1]) * calibration[2];
-						double Y = Double.parseDouble(divisionspotsfile[2]) * calibration[1];
-						double X = Double.parseDouble(divisionspotsfile[3]) * calibration[0];
-						double score = Double.parseDouble(divisionspotsfile[4]);
-						double size = Double.parseDouble(divisionspotsfile[5]);
-						double confidence = Double.parseDouble(divisionspotsfile[6]);
-						
-						if (score >= probthreshold) {
-							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
-
-							if (DivisionMap.get(time) == null) {
-								DivisionSpots = new ArrayList<Oneatobject>();
-								DivisionMap.put(time, DivisionSpots);
-							} else
-								DivisionMap.put(time, DivisionSpots);
-							DivisionSpots.add(Spot);
-						}
-						
-
-					}
-						
-						else {
-							
-							int time = (int) Double.parseDouble(divisionspotsfile[0]);
-							double Z = Double.parseDouble(divisionspotsfile[1]) * calibration[2];
-							double Y = Double.parseDouble(divisionspotsfile[2]) * calibration[1];
-							double X = Double.parseDouble(divisionspotsfile[3]) * calibration[0];
-							double score = 1.0;
-							double size = 10;
-							double confidence = 1.0;
-							
-							if (score >= probthreshold) {
-								Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
-
-								if (DivisionMap.get(time) == null) {
-									DivisionSpots = new ArrayList<Oneatobject>();
-									DivisionMap.put(time, DivisionSpots);
-								} else
-									DivisionMap.put(time, DivisionSpots);
-								DivisionSpots.add(Spot);
-							}
-							
-						}
-						
-						
-						
-					}
-					
-					
-					
-					count = count + 1;
-				}
-			} catch (IOException ie) {
-				ie.printStackTrace();
-			}
-
-			logger.log("Oneat found mitosis events:" + " " + count + "\n");
+			Pair<ArrayList<Oneatobject>, HashMap<Integer, ArrayList<Oneatobject>>> mitosisobject   =  get_action_spots(oneatdivisionfile, logger, calibration, probthreshold);
+            
+			DivisionSpots = mitosisobject.getA();
+			DivisionMap = mitosisobject.getB();	
+			
 			// Parse each component.
-
-			final Iterator<Entry<Integer, ArrayList<Oneatobject>>> iterator = DivisionMap.entrySet().iterator();
-
-			while (iterator.hasNext()) {
-				final Map.Entry<Integer, ArrayList<Oneatobject>> region = iterator.next();
-
-				int frame = region.getKey();
-				ArrayList<Oneatobject> currentcell = region.getValue();
-				ArrayList<Spot> currentspots = new ArrayList<Spot>();
-				for (Oneatobject cell : currentcell) {
-					final double x = (cell.X);
-					final double y = (cell.Y);
-					final double z = (cell.Z);
-
-					double volume = cell.size * calibration[0] * calibration[1] * calibration[2];
-					double quality = cell.size;
-
-					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
-							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
-
-					Spot currentspot = new Spot(x, y, z, radius, quality);
-					// Put spot features so we can get it back by feature name
-					currentspot.putFeature(Spot.POSITION_X, Double.valueOf(x));
-					currentspot.putFeature(Spot.POSITION_Y, Double.valueOf(y));
-					currentspot.putFeature(Spot.POSITION_Z, Double.valueOf(z));
-					currentspot.putFeature(Spot.FRAME, Double.valueOf(frame));
-					currentspot.putFeature(Spot.RADIUS, Double.valueOf(radius));
-					currentspot.putFeature(Spot.QUALITY, Double.valueOf(quality));
-
-					currentspots.add(currentspot);
-					divisionspots.add(currentspot, frame);
-					DivisionSpotListFrame.put(frame, currentspots);
-				}
-
-			}
-
+			Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>> divisionspotlistframe = get_action_spotlist_frame(DivisionMap, calibration, ndims);
+			
+			divisionspots = divisionspotlistframe.getA();
+			DivisionSpotListFrame = divisionspotlistframe.getB();	
+			
 		}
 
 		SpotCollection apoptosisspots = new SpotCollection();
 		HashMap<Integer, ArrayList<Spot>> ApoptosisSpotListFrame = new HashMap<Integer, ArrayList<Spot>>();
+		ArrayList<Oneatobject> ApoptosisSpots = new ArrayList<Oneatobject>();
+		HashMap<Integer, ArrayList<Oneatobject>> ApoptosisMap = new HashMap<Integer, ArrayList<Oneatobject>>();
 		if (oneatapoptosisfile != null) {
-			String line = "";
-			String cvsSplitBy = ",";
-			int count = 0;
-			ArrayList<Oneatobject> ApoptosisSpots = new ArrayList<Oneatobject>();
-			HashMap<Integer, ArrayList<Oneatobject>> ApoptosisMap = new HashMap<Integer, ArrayList<Oneatobject>>();
-			try (BufferedReader br = new BufferedReader(new FileReader(oneatapoptosisfile))) {
-
-				while ((line = br.readLine()) != null) {
-
-					// use comma as separator
-					String[] apoptosisspotsfile = line.split(cvsSplitBy);
-
-					if (count > 0) {
-
-						if(apoptosisspotsfile.length > 4) {
-						
-						int time = Integer.parseInt(apoptosisspotsfile[0]);
-						double Z = Double.parseDouble(apoptosisspotsfile[1]) * calibration[2];
-						double Y = Double.parseDouble(apoptosisspotsfile[2]) * calibration[1];
-						double X = Double.parseDouble(apoptosisspotsfile[3]) * calibration[0];
-						double score = Double.parseDouble(apoptosisspotsfile[4]);
-						double size = Double.parseDouble(apoptosisspotsfile[5]);
-						double confidence = Double.parseDouble(apoptosisspotsfile[6]);
-						
-						if (score >= probthreshold) {
-							Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
-
-							if (ApoptosisMap.get(time) == null) {
-								ApoptosisSpots = new ArrayList<Oneatobject>();
-								ApoptosisMap.put(time, ApoptosisSpots);
-							} else
-								ApoptosisMap.put(time, ApoptosisSpots);
-							ApoptosisSpots.add(Spot);
-						}
-
-					}
-						
-						else {
-							
-							int time = Integer.parseInt(apoptosisspotsfile[0]);
-							double Z = Double.parseDouble(apoptosisspotsfile[1]) * calibration[2];
-							double Y = Double.parseDouble(apoptosisspotsfile[2]) * calibration[1];
-							double X = Double.parseDouble(apoptosisspotsfile[3]) * calibration[0];
-							double score = 1.0;
-							double size = 10;
-							double confidence = 1.0;
-							
-							if (score >= probthreshold) {
-								Oneatobject Spot = new Oneatobject(time, Z, Y, X, score, size, confidence);
-
-								if (ApoptosisMap.get(time) == null) {
-									ApoptosisSpots = new ArrayList<Oneatobject>();
-									ApoptosisMap.put(time, ApoptosisSpots);
-								} else
-									ApoptosisMap.put(time, ApoptosisSpots);
-								ApoptosisSpots.add(Spot);
-							}
-						}
-					count = count + 1;
-				}
-				}
-			} catch (IOException ie) {
-				ie.printStackTrace();
-			}
-
+			
+            Pair<ArrayList<Oneatobject>, HashMap<Integer, ArrayList<Oneatobject>>> apoptosisobject =  get_action_spots(oneatapoptosisfile, logger, calibration, probthreshold);
+            
+			ApoptosisSpots = apoptosisobject.getA();
+			ApoptosisMap = apoptosisobject.getB();	
+			
 			// Parse each component.
-			logger.log("Oneat found cell death events:" + " " + count + "\n");
-			final Iterator<Entry<Integer, ArrayList<Oneatobject>>> iterator = ApoptosisMap.entrySet().iterator();
-
-			while (iterator.hasNext()) {
-				final Map.Entry<Integer, ArrayList<Oneatobject>> region = iterator.next();
-
-				int frame = region.getKey();
-				ArrayList<Oneatobject> currentcell = region.getValue();
-				ArrayList<Spot> currentspots = new ArrayList<Spot>();
-				for (Oneatobject cell : currentcell) {
-					final double x = (cell.X);
-					final double y = (cell.Y);
-					final double z = (cell.Z);
-
-					double volume = cell.size * calibration[0] * calibration[1] * calibration[2];
-					double quality = cell.size;
-
-					final double radius = (ndims == 2) ? Math.sqrt(volume / Math.PI)
-							: Math.pow(3. * volume / (4. * Math.PI), 1. / 3.);
-
-					Spot currentspot = new Spot(x, y, z, radius, quality);
-					currentspot.putFeature(Spot.POSITION_X, Double.valueOf(x));
-					currentspot.putFeature(Spot.POSITION_Y, Double.valueOf(y));
-					currentspot.putFeature(Spot.POSITION_Z, Double.valueOf(z));
-					currentspot.putFeature(Spot.FRAME, Double.valueOf(frame));
-					currentspot.putFeature(Spot.RADIUS, Double.valueOf(radius));
-					currentspot.putFeature(Spot.QUALITY, Double.valueOf(quality));
-					currentspots.add(currentspot);
-					apoptosisspots.add(currentspot, frame);
-					ApoptosisSpotListFrame.put(frame, currentspots);
-				}
-
-			}
-
+			Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>> apoptosisspotlistframe = get_action_spotlist_frame(ApoptosisMap, calibration, ndims);
+			
+			apoptosisspots = apoptosisspotlistframe.getA();
+			ApoptosisSpotListFrame = apoptosisspotlistframe.getB();	
 		}
 
 		Pair<SpotCollection, HashMap<Integer, ArrayList<Spot>>> DivisionPair = new ValuePair<SpotCollection, HashMap<Integer, ArrayList<Spot>>>(
