@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -56,6 +57,7 @@ import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.TrackModel;
+import fiji.plugin.trackmate.graph.SortedDepthFirstIterator;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
@@ -90,6 +92,8 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_MAX_DISTANC
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.DEFAULT_SPLITTING_FEATURE_PENALTIES;
+
+
 
 public class TrackCorrectorRunner {
 
@@ -607,20 +611,37 @@ public class TrackCorrectorRunner {
 				Spot killerspot = trackspots.getB();
 
 				logger.setProgress((float) (count) / Apoptosisspots.size());
-				Set<DefaultWeightedEdge> killertrack = trackmodel.trackEdges(trackID);
-				for (final DefaultWeightedEdge edge : killertrack) {
-					final Spot source = trackmodel.getEdgeSource(edge);
-					graph.addVertex(source);
-					if (source != killerspot) {
+				
+				
+				Comparator<Spot> comparator = new SpotComparator();
+				SortedDepthFirstIterator< Spot, DefaultWeightedEdge > depthiterator = model.getTrackModel().getSortedDepthFirstIterator(killerspot, comparator, true);
+				
+				List<Spot> verticesToRemove = new ArrayList<>();
+				boolean skipRemoval = false;
 
-						final Spot target = trackmodel.getEdgeTarget(edge);
-						graph.addVertex(target);
-						final DefaultWeightedEdge newedge = graph.addEdge(source, target);
-						graph.setEdgeWeight(newedge, graph.getEdgeWeight(newedge));
-					}
-
+				while (depthiterator.hasNext()) {
+				    Spot vertex = depthiterator.next();
+				    
+				        if (comparator.compare(vertex, killerspot) <= 0) {
+				            skipRemoval = true;
+				            continue;
+				        }
+				    if (!skipRemoval) {
+				        verticesToRemove.add(vertex);
+				    }
+				    
+				    // Reset the skipRemoval flag if needed
+				    if (skipRemoval && comparator.compare(vertex, killerspot) > 0) {
+				        skipRemoval = false;
+				    }
 				}
 
+				// Remove vertices outside the iterator loop to avoid concurrent modification
+				for (Spot vertex : verticesToRemove) {
+				    graph.removeVertex(vertex);
+				}
+				
+				
 			}
 
 		}
@@ -685,6 +706,8 @@ public class TrackCorrectorRunner {
 		return graph;
 
 	}
+	
+
 
 	private static void addOverlay(final Roi overlay, final ImagePlus imp, final Spot spot) {
 
@@ -1437,6 +1460,8 @@ public class TrackCorrectorRunner {
 						} else
 							ActionMap.put(time, ActionSpots);
 						ActionSpots.add(Spot);
+						
+						count = count + 1;
 					}
 					
 
@@ -1461,6 +1486,7 @@ public class TrackCorrectorRunner {
 							} else
 								ActionMap.put(time, ActionSpots);
 							ActionSpots.add(Spot);
+							count = count + 1;
 						}
 						
 					}
@@ -1469,9 +1495,10 @@ public class TrackCorrectorRunner {
 					
 				}
 				
+				if (count == 0)
+					count = 1;
 				
 				
-				count = count + 1;
 			}
 		} catch (IOException ie) {
 			ie.printStackTrace();
