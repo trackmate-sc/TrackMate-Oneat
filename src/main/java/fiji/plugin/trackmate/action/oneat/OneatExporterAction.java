@@ -40,7 +40,7 @@ import static fiji.plugin.trackmate.action.oneat.OneatCorrectorFactory.KEY_PROB_
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 import static fiji.plugin.trackmate.action.oneat.gui.Icons.ONEAT_BIG_ICON;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
 import org.scijava.plugin.Plugin;
 
 
@@ -218,7 +218,7 @@ public class  OneatExporterAction < T extends NativeType< T > & NumericType< T >
 		settings.put(KEY_CREATE_LINKS, createlinks);
 		settings.put(KEY_USE_MARI_PRINCIPLE, mariprinciple);
 		settings.put(KEY_TARGET_CHANNEL, detchannel);
-		settings.put(KEY_SPLITTING_MAX_DISTANCE, linkdist);
+		settings.put(KEY_LINKING_MAX_DISTANCE, linkdist);
 		settings.put(KEY_GAP_CLOSING_MAX_FRAME_GAP, deltat);
 		settings.put(KEY_PROB_THRESHOLD, probthreshold);
 		settings.put(KEY_MARI_ANGLE, angle);

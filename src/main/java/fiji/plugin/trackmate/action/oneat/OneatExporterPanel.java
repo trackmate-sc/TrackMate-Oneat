@@ -23,7 +23,7 @@
 package fiji.plugin.trackmate.action.oneat;
 
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
-import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_GAP_CLOSING_MAX_FRAME_GAP;
 import static fiji.plugin.trackmate.action.oneat.gui.Icons.KAPOORLABS_ICON;
 import java.awt.Cursor;
@@ -94,7 +94,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		detchannel = detectorsettings.get(KEY_TARGET_CHANNEL)!=null? (int) detectorsettings.get(KEY_TARGET_CHANNEL): 1;
-		linkdist =  trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE)!=null? (double) trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE): 30;
+		linkdist =  trackmapsettings.get(KEY_LINKING_MAX_DISTANCE)!=null? (double) trackmapsettings.get(KEY_LINKING_MAX_DISTANCE): 30;
 		deltat = trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null? (int) trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP):4;
 		
 		final GridBagLayout gridBagLayout = new GridBagLayout();
@@ -185,10 +185,10 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
+		
 		final JLabel lblDistanceGap = new JLabel("Allowed distancegap between mitosis events :" );
 		add( lblDistanceGap, gbc );
 		gbc.gridx++;
-		
 		
 		DistanceGap = new JFormattedTextField();
 		DistanceGap.setValue(linkdist);
@@ -197,6 +197,7 @@ public class OneatExporterPanel extends JPanel {
 		gbc.gridy++;
 		gbc.gridx--;
 		
+
 		
 		final JLabel MariAngle = new JLabel("Mari Principle angle veto (degrees)" );
 		add( MariAngle, gbc );
