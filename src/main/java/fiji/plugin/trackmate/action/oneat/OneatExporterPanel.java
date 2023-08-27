@@ -64,7 +64,7 @@ public class OneatExporterPanel extends JPanel {
 
 	private  int detchannel = 1;
 	private double probthreshold = 0.9;
-	private double linkdist = 250;
+	private double linkdist = 30;
 	private  int deltat = 4;
 	private  int tracklet = 1;
 	private double angle = 30;
@@ -75,6 +75,7 @@ public class OneatExporterPanel extends JPanel {
 	private JButton Loaddivisioncsvbutton;
 	private JButton Loadcelldeathcsvbutton;
 	private JFormattedTextField TimeGap;
+	private JFormattedTextField DistanceGap;
 	private JFormattedTextField Angle;
 	private JFormattedTextField DetectionThreshold;
 	
@@ -93,7 +94,7 @@ public class OneatExporterPanel extends JPanel {
 		
 		
 		detchannel = detectorsettings.get(KEY_TARGET_CHANNEL)!=null? (int) detectorsettings.get(KEY_TARGET_CHANNEL): 1;
-		linkdist =  trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE)!=null? (double) trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE): 250;
+		linkdist =  trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE)!=null? (double) trackmapsettings.get(KEY_SPLITTING_MAX_DISTANCE): 30;
 		deltat = trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP)!=null? (int) trackmapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP):4;
 		
 		final GridBagLayout gridBagLayout = new GridBagLayout();
@@ -181,6 +182,18 @@ public class OneatExporterPanel extends JPanel {
 		TimeGap.setValue(deltat);
 		TimeGap.setColumns( 4 );
 		add(TimeGap, gbc);
+		gbc.gridy++;
+		gbc.gridx--;
+		
+		final JLabel lblDistanceGap = new JLabel("Allowed distancegap between mitosis events :" );
+		add( lblDistanceGap, gbc );
+		gbc.gridx++;
+		
+		
+		DistanceGap = new JFormattedTextField();
+		DistanceGap.setValue(linkdist);
+		DistanceGap.setColumns( 4 );
+		add(DistanceGap, gbc);
 		gbc.gridy++;
 		gbc.gridx--;
 		
@@ -369,6 +382,15 @@ public class OneatExporterPanel extends JPanel {
 			}
 		});
 		
+		DistanceGap.addPropertyChangeListener(new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				linkdist = ((Number) DistanceGap.getValue()).intValue();
+				
+			}
+		});	
+		
        Angle.addPropertyChangeListener(new PropertyChangeListener() {
 			
 			@Override
@@ -424,6 +446,8 @@ public class OneatExporterPanel extends JPanel {
 		
 		return deltat;
 	}
+	
+
 	
 	public double getMariAngle() {
 			
