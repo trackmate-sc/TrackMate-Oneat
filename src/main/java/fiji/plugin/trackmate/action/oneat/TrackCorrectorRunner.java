@@ -608,12 +608,14 @@ public class TrackCorrectorRunner {
 				Pair<Spot, Spot> trackspots = trackidspots.getValue();
 
 				// Apoptosis cell can not be source of an edge
-				Spot killerspot = trackspots.getB();
+				Spot killerspot = trackspots.getA();
 
 				logger.setProgress((float) (count) / Apoptosisspots.size());
 				
 				
 				Comparator<Spot> comparator = new SpotComparator();
+				
+				 
 				SortedDepthFirstIterator< Spot, DefaultWeightedEdge > depthiterator = model.getTrackModel().getSortedDepthFirstIterator(killerspot, comparator, true);
 				
 				List<Spot> verticesToRemove = new ArrayList<>();
