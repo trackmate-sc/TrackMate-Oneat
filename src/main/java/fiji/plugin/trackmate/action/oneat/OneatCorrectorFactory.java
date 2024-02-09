@@ -43,6 +43,8 @@ import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
+
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.detection.DetectorKeys.KEY_TARGET_CHANNEL;
 @Plugin( type = TrackCorrectorFactory.class, visible = true )
@@ -93,7 +95,7 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 	
 
 	@Override
-	public   OneatCorrector  create(  ImgPlus<UnsignedShortType> img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
+	public   OneatCorrector  create(  ImgPlus<FloatType> img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
 			Map<String, Object> settings, final Logger logger, double[] calibration, boolean addDisplay) {
 		
 		
@@ -237,6 +239,8 @@ public  class  OneatCorrectorFactory implements TrackCorrectorFactory  {
 	public OneatCorrectorFactory copy() {
 		return new OneatCorrectorFactory();
 	}
+
+
 
 
 }

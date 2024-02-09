@@ -64,6 +64,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
 
 public class  OneatExporterAction < T extends NativeType< T > & NumericType< T > > extends AbstractTMAction {
 
@@ -167,7 +168,7 @@ public class  OneatExporterAction < T extends NativeType< T > & NumericType< T >
 			}
 			
 			@SuppressWarnings({ "rawtypes", "unchecked" })
-			final ImgPlus< UnsignedShortType > intimg = (ImgPlus) detectionimg;
+			final ImgPlus< FloatType > intimg = (ImgPlus) detectionimg;
 		
 			
 			OneatCorrector oneatcorrector = corrector.create(intimg, model, trackmate, settings, displaySettings, mapsettings, logger, calibration, false );

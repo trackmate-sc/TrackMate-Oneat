@@ -33,7 +33,8 @@ import fiji.plugin.trackmate.gui.displaysettings.DisplaySettings;
 import fiji.plugin.trackmate.tracking.SpotTracker;
 import fiji.plugin.trackmate.tracking.TrackerKeys;
 import net.imagej.ImgPlus;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
+
 
 /**
  * Interface for track corrector factories that need to process all the tracks at
@@ -44,7 +45,7 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 public interface  TrackCorrectorFactory  extends TrackMateModule
  {
 
-		public TrackCorrector create(  ImgPlus< UnsignedShortType > img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
+		public TrackCorrector create(  ImgPlus< FloatType > img,  Model model, TrackMate trackmate, Settings modelsettings, DisplaySettings displaysettings,
 				final Map< String, Object > settings, final Logger logger, final double[] calibration, final boolean addDisplay );
 
 		/**

@@ -43,6 +43,7 @@ import fiji.plugin.trackmate.visualization.hyperstack.TrackOverlay;
 import ij.ImagePlus;
 import net.imagej.ImgPlus;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 
 public class OneatCorrector implements TrackCorrector {
@@ -69,7 +70,7 @@ public class OneatCorrector implements TrackCorrector {
 
 	private HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots;
 
-	private final ImgPlus<UnsignedShortType> img;
+	private final ImgPlus<FloatType> img;
 
 	private final Map<String, Object> settings;
 
@@ -89,7 +90,7 @@ public class OneatCorrector implements TrackCorrector {
 
 	private static final String BASE_ERROR_MESSAGE = "[OneatTrackCorrector] ";
 
-	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<UnsignedShortType> intimg,
+	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<FloatType> intimg,
 			final Model model, final TrackMate trackmate, final Settings modelsettings,
 			final DisplaySettings displaySettings, double[] calibration, Map<String, Object> settings,
 			final Logger logger, final Boolean addDisplay) {
