@@ -69,6 +69,7 @@ import net.imglib2.RandomAccess;
 import net.imglib2.img.display.imagej.ImgPlusViews;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.LinAlgHelpers;
 import net.imglib2.util.Pair;
@@ -231,11 +232,11 @@ public class TrackCorrectorRunner {
 		return connectedSet;
 	}
 	
-	public static List<Future<Graphobject>> LinkCreator(final Model model, final TrackMate trackmate,
+	public static <T extends NativeType<T>> List<Future<Graphobject>> LinkCreator(final Model model, final TrackMate trackmate,
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots, Map<String, Object> settings, final int ndim,
-			final Logger logger, final ImgPlus<FloatType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			final Logger logger, final ImgPlus<T> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			int numThreads, double[] calibration, boolean addDisplay) {
 
 		// Get the trackmodel and spots in the default tracking result and start to
@@ -533,6 +534,7 @@ public class TrackCorrectorRunner {
 
 	/**
 	 * 
+	 * @param <T>
 	 * @param model              The TrackMate model
 	 * @param trackmate          The TrackMate object
 	 * @param uniquelabelID      HashMap of (label, frame) with value being
@@ -558,12 +560,12 @@ public class TrackCorrectorRunner {
 	 * @throws InterruptedException
 	 */
 
-	public static SimpleWeightedGraph<Spot, DefaultWeightedEdge> getCorrectedTracks(final Model model,
+	public  static  <T extends NativeType<T>> SimpleWeightedGraph<Spot, DefaultWeightedEdge>  getCorrectedTracks(final Model model,
 			final TrackMate trackmate, HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots,
 			HashMap<Integer, Pair<Spot, ArrayList<Spot>>> Mitosisspots,
 			HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots, Map<String, Object> settings, final int ndim,
-			final Logger logger, final ImgPlus<FloatType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			final Logger logger, final ImgPlus<T> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			int numThreads, double[] calibration, boolean addDisplay) throws InterruptedException, ExecutionException {
 
 		// Get the trackmodel and spots in the default tracking result and start to
@@ -717,7 +719,7 @@ public class TrackCorrectorRunner {
 
 	}
 
-	private static SpotCollection regionspot(final ImgPlus<FloatType> img, final SpotCollection allspots,
+	private static <T extends NativeType<T>> SpotCollection regionspot(final ImgPlus<T> img, final SpotCollection allspots,
 			final Spot motherspot, final Logger logger, final double[] calibration, final int frame,
 			final double region, final double[] motherslope, final double mariangle, final boolean mariprinciple) {
 
@@ -800,7 +802,7 @@ public class TrackCorrectorRunner {
 
 	}
 
-	private static Ellipsoid getEllipsoid(Spot currentspot, ImgPlus<FloatType> img, double[] calibration) {
+	private static <T extends NativeType<T>> Ellipsoid getEllipsoid(Spot currentspot, ImgPlus<T> img, double[] calibration) {
 
 		int ndim = img.numDimensions();
 		Ellipsoid currentellipsoid = null;
@@ -809,25 +811,25 @@ public class TrackCorrectorRunner {
 			center[d] = Math.round(currentspot.getFeature(Spot.POSITION_FEATURES[d]).doubleValue() / calibration[d]);
 		}
 
-		ImgPlus<FloatType> frameimg = ImgPlusViews.hyperSlice(img, ndim - 1,
+		ImgPlus<T> frameimg = ImgPlusViews.hyperSlice(img, ndim - 1,
 				(int) currentspot.getFeature(Spot.FRAME).intValue());
 
 		long[] location = new long[ndim - 1];
-		RandomAccess<FloatType> ranac = frameimg.randomAccess();
+		RandomAccess<T> ranac = frameimg.randomAccess();
 		for (int d = 0; d < ndim - 1; ++d) {
 			location[d] = (long) (currentspot.getDoublePosition(d) / calibration[d]);
 			ranac.setPosition(location[d], d);
 		}
 
-		int label = (int) ranac.get().get();
+		int label = (int) ( (UnsignedShortType) ranac.get()).get();
 
-		Cursor<FloatType> cur = frameimg.localizingCursor();
+		Cursor<T> cur = frameimg.localizingCursor();
 		ArrayList<Localizable> points = new ArrayList<Localizable>();
 		while (cur.hasNext()) {
 
 			cur.fwd();
 
-			if (cur.get().get() == label) {
+			if ((int) ( (UnsignedShortType) cur.get()).get() == label) {
 
 				long[] point = new long[center.length];
 				for (int d = 0; d < center.length; d++) {
@@ -934,12 +936,12 @@ public class TrackCorrectorRunner {
 	 *         Spot, A second HashMap of trackID + starting spot and trackID +
 	 *         list of dividing spots for that track
 	 */
-	public static Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>>> getFirstTrackMateobject(
-			final Model model, final ImgPlus<FloatType> img, final Logger logger, double[] calibration) {
+	public static <T extends NativeType<T>> Pair<HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>, Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>>> getFirstTrackMateobject(
+			final Model model, final ImgPlus<T> img, final Logger logger, double[] calibration) {
 
 		Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots = getTMStartSplit(model);
 		int ndim = img.numDimensions() - 1;
-		RandomAccess<FloatType> ranac = img.randomAccess();
+		RandomAccess<T> ranac = img.randomAccess();
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(true);
 		HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID = new HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>>();
 
@@ -964,7 +966,7 @@ public class TrackCorrectorRunner {
 					}
 
 					ranac.setPosition(frame, ndim);
-					int label = (int) ranac.get().get();
+					int label = (int) ( (UnsignedShortType) ranac.get()).get();
 
 					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
 							new ValuePair<Spot, Integer>(spot, trackID));
@@ -978,10 +980,10 @@ public class TrackCorrectorRunner {
 
 	}
 
-	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
+	public static <T extends  NativeType<T>> HashMap<Integer, Pair<Spot, Spot>> getapoptosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots, final Model model,
-			final ImgPlus<FloatType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			final ImgPlus<T> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, final int numThreads, double[] calibration) {
 
 		// Starting point of the tree + apoptotic spot in the trackID
@@ -989,7 +991,7 @@ public class TrackCorrectorRunner {
 		// Spots from trackmate
 
 		int ndim = img.numDimensions() - 1;
-		RandomAccess<FloatType> ranac = img.randomAccess();
+		RandomAccess<T> ranac = img.randomAccess();
 
 		logger.log("Matching with oneat apoptosis spots.\n");
 		logger.setProgress(1.);
@@ -1013,7 +1015,7 @@ public class TrackCorrectorRunner {
 					}
 					ranac.setPosition(frame, ndim);
 					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
-					int labelID = (int) ranac.get().get();
+					int labelID = (int) ( (UnsignedShortType) ranac.get()).get();
 					if (labelID != 0)
 						Alllabels.add(labelID);
 				
@@ -1050,10 +1052,10 @@ public class TrackCorrectorRunner {
 		return Trackapoptosis;
 	}
 
-	public static <T extends RealType<T> & NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
+	public static <T extends NativeType<T>> HashMap<Integer, Pair<Spot, ArrayList<Spot>>> getmitosisTrackID(
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots, final Model model,
-			final ImgPlus<FloatType> img, HashMap<Integer, ArrayList<Spot>> framespots,
+			final ImgPlus<T> img, HashMap<Integer, ArrayList<Spot>> framespots,
 			final Map<String, Object> mapsettings, final Logger logger, final int numThreads, double[] calibration) {
 
 		// Starting point of the tree + list of mitosis spots in the trackID
@@ -1062,7 +1064,7 @@ public class TrackCorrectorRunner {
 
 		int ndim = img.numDimensions() - 1;
 		int tmoneatdeltat = (int) mapsettings.get(KEY_GAP_CLOSING_MAX_FRAME_GAP);
-		RandomAccess<FloatType> ranac = img.randomAccess();
+		RandomAccess<T> ranac = img.randomAccess();
 
 		logger.log("Matching with oneat mitosis spots.\n");
 		logger.setProgress(1.);
@@ -1087,7 +1089,7 @@ public class TrackCorrectorRunner {
 					ranac.setPosition(frame, ndim);
 
 					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
-					int labelID = (int) ranac.get().get();
+					int labelID = (int) ( (UnsignedShortType) ranac.get()).get();
 					if (labelID != 0)
 						Alllabels.add(labelID);
 		
@@ -1149,10 +1151,10 @@ public class TrackCorrectorRunner {
 		return Trackmitosis;
 	}
 
-	private static SimpleWeightedGraph<Spot, DefaultWeightedEdge> BreakLinksTrack(final Model model,
+	private static <T extends NativeType<T>> SimpleWeightedGraph<Spot, DefaultWeightedEdge> BreakLinksTrack(final Model model,
 			HashMap<Pair<Integer, Integer>, Pair<Spot, Integer>> uniquelabelID,
 			Pair<HashMap<Integer, Spot>, HashMap<Integer, ArrayList<Spot>>> DividingStartspots,
-			HashMap<Integer, ArrayList<Spot>> framespots, final ImgPlus<FloatType> img, final Logger logger,
+			HashMap<Integer, ArrayList<Spot>> framespots, final ImgPlus<T> img, final Logger logger,
 			final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph, double[] calibration, int N) {
 
 		int count = 0;
@@ -1163,7 +1165,7 @@ public class TrackCorrectorRunner {
 
 		Set<Integer> AllTrackIds = model.getTrackModel().trackIDs(true);
 
-		RandomAccess<FloatType> ranac = img.randomAccess();
+		RandomAccess<T> ranac = img.randomAccess();
 		ArrayList<Integer> DividingTrackids = new ArrayList<Integer>();
 		for (Map.Entry<Integer, ArrayList<Spot>> framemap : framespots.entrySet()) {
 
@@ -1184,7 +1186,7 @@ public class TrackCorrectorRunner {
 					}
 					ranac.setPosition(frame, ndim);
 					// Get the label ID of the current interesting spot
-					int labelID = (int) ranac.get().get();
+					int labelID = (int) ( (UnsignedShortType) ranac.get()).get();
 
 					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID

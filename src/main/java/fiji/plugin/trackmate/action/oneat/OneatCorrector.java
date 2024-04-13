@@ -42,11 +42,12 @@ import fiji.plugin.trackmate.visualization.hyperstack.SpotOverlay;
 import fiji.plugin.trackmate.visualization.hyperstack.TrackOverlay;
 import ij.ImagePlus;
 import net.imagej.ImgPlus;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 
-public class OneatCorrector implements TrackCorrector {
+public class OneatCorrector <T extends NativeType<T>> implements TrackCorrector {
 
 	private final File oneatdivision;
 
@@ -70,7 +71,7 @@ public class OneatCorrector implements TrackCorrector {
 
 	private HashMap<Integer, Pair<Spot, Spot>> Apoptosisspots;
 
-	private final ImgPlus<FloatType> img;
+	private final ImgPlus<T> img;
 
 	private final Map<String, Object> settings;
 
@@ -90,7 +91,7 @@ public class OneatCorrector implements TrackCorrector {
 
 	private static final String BASE_ERROR_MESSAGE = "[OneatTrackCorrector] ";
 
-	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<FloatType> intimg,
+	public OneatCorrector(final File oneatdivision, final File oneatapoptosis, final ImgPlus<T> intimg,
 			final Model model, final TrackMate trackmate, final Settings modelsettings,
 			final DisplaySettings displaySettings, double[] calibration, Map<String, Object> settings,
 			final Logger logger, final Boolean addDisplay) {
@@ -118,6 +119,8 @@ public class OneatCorrector implements TrackCorrector {
 		setNumThreads();
 
 	}
+	
+	
 
 	@Override
 	public SimpleWeightedGraph<Spot, DefaultWeightedEdge> getResult() {
