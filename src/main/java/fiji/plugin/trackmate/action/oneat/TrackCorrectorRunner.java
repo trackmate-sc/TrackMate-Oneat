@@ -816,20 +816,39 @@ public class TrackCorrectorRunner {
 
 		long[] location = new long[ndim - 1];
 		RandomAccess<T> ranac = frameimg.randomAccess();
+		int label= 0, checklabel= 0;
 		for (int d = 0; d < ndim - 1; ++d) {
 			location[d] = (long) (currentspot.getDoublePosition(d) / calibration[d]);
 			ranac.setPosition(location[d], d);
 		}
-
-		int label = (int) ( (UnsignedShortType) ranac.get()).get();
+		
+		String pixelType = ranac.get().getClass().getSimpleName();
+		if ("UnsignedShortType".equals(pixelType)) {
+			label = (int) ((UnsignedShortType) ranac.get()).get();
+		} else if ("FloatType".equals(pixelType)) {
+			label = (int) ((FloatType) ranac.get()).get();
+		} else {
+		    throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
+		}
+		
 
 		Cursor<T> cur = frameimg.localizingCursor();
 		ArrayList<Localizable> points = new ArrayList<Localizable>();
 		while (cur.hasNext()) {
 
 			cur.fwd();
+            
+			
 
-			if ((int) ( (UnsignedShortType) cur.get()).get() == label) {
+			if ("UnsignedShortType".equals(pixelType)) {
+				checklabel = (int) ((UnsignedShortType) cur.get()).get();
+			} else if ("FloatType".equals(pixelType)) {
+				checklabel = (int) ((FloatType) cur.get()).get();
+			} else {
+			    throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
+			}
+			
+			if (checklabel == label) {
 
 				long[] point = new long[center.length];
 				for (int d = 0; d < center.length; d++) {
@@ -966,7 +985,21 @@ public class TrackCorrectorRunner {
 					}
 
 					ranac.setPosition(frame, ndim);
-					int label = (int) ( (UnsignedShortType) ranac.get()).get();
+					
+					int label = 0;
+					
+					String pixelType = ranac.get().getClass().getSimpleName();
+
+					if ("UnsignedShortType".equals(pixelType)) {
+					    label = (int) ((UnsignedShortType) ranac.get()).get();
+					} else if ("FloatType".equals(pixelType)) {
+					    label = (int) ((FloatType) ranac.get()).get();
+					} else {
+					    throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
+					}
+					
+			      
+					
 
 					uniquelabelID.put(new ValuePair<Integer, Integer>(label, frame),
 							new ValuePair<Spot, Integer>(spot, trackID));
@@ -1015,7 +1048,20 @@ public class TrackCorrectorRunner {
 					}
 					ranac.setPosition(frame, ndim);
 					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
-					int labelID = (int) ( (UnsignedShortType) ranac.get()).get();
+					int labelID = 0;
+					
+					String pixelType = ranac.get().getClass().getSimpleName();
+
+					if ("UnsignedShortType".equals(pixelType)) {
+						labelID = (int) ((UnsignedShortType) ranac.get()).get();
+					} else if ("FloatType".equals(pixelType)) {
+						labelID = (int) ((FloatType) ranac.get()).get();
+					} else {
+					    throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
+					}
+					
+			        
+			         
 					if (labelID != 0)
 						Alllabels.add(labelID);
 				
@@ -1089,7 +1135,20 @@ public class TrackCorrectorRunner {
 					ranac.setPosition(frame, ndim);
 
 					ArrayList<Integer> Alllabels = new ArrayList<Integer>();
-					int labelID = (int) ( (UnsignedShortType) ranac.get()).get();
+					int labelID = 0;
+					
+					String pixelType = ranac.get().getClass().getSimpleName();
+
+					if ("UnsignedShortType".equals(pixelType)) {
+						labelID = (int) ((UnsignedShortType) ranac.get()).get();
+					} else if ("FloatType".equals(pixelType)) {
+						labelID = (int) ((FloatType) ranac.get()).get();
+					} else {
+					    throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
+					}
+					
+					
+					
 					if (labelID != 0)
 						Alllabels.add(labelID);
 		
@@ -1186,7 +1245,18 @@ public class TrackCorrectorRunner {
 					}
 					ranac.setPosition(frame, ndim);
 					// Get the label ID of the current interesting spot
-					int labelID = (int) ( (UnsignedShortType) ranac.get()).get();
+					int labelID = 0;
+					String pixelType = ranac.get().getClass().getSimpleName();
+
+					if ("UnsignedShortType".equals(pixelType)) {
+						labelID = (int) ((UnsignedShortType) ranac.get()).get();
+					} else if ("FloatType".equals(pixelType)) {
+						labelID = (int) ((FloatType) ranac.get()).get();
+					} else {
+					    throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
+					}
+					
+			      
 
 					if (uniquelabelID.containsKey(new ValuePair<Integer, Integer>(labelID, frame))) {
 						Pair<Spot, Integer> spotandtrackID = uniquelabelID
