@@ -22,7 +22,7 @@
 package fiji.plugin.trackmate.action.oneat.gui;
 
 import javax.swing.ImageIcon;
-
+import java.awt.Image;
 
 public class Icons {
 	
@@ -46,4 +46,4 @@ public class Icons {
         return new ImageIcon(scaledImage);
     }
 }
-}
+
