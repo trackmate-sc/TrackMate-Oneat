@@ -27,7 +27,23 @@ import javax.swing.ImageIcon;
 public class Icons {
 	
 
-		public static final ImageIcon ONEAT_ICON = new ImageIcon( Icons.class.getResource( "images/trackmate-oneat-logo.png" ) );
-		public static final ImageIcon ONEAT_BIG_ICON = new ImageIcon( Icons.class.getResource( "images/trackmate-oneat-big-logo.png" ) );
-		public static final ImageIcon KAPOORLABS_ICON = new ImageIcon( Icons.class.getResource( "images/kapoorlogo.png" ) );
+		public static final ImageIcon ONEAT_ICON = createScaledIcon("images/mtrack.png", 150, 150);
+		public static final ImageIcon ONEAT_BIG_ICON = createScaledIcon("images/mtrack.png", 300, 300);
+		public static final ImageIcon KAPOORLABS_ICON =  createScaledIcon("images/kapoorlogo.png", 150, 150);
+
+
+		public static ImageIcon createScaledIcon(String path, int width, int height) {
+        // Load the original ImageIcon
+        ImageIcon originalIcon = new ImageIcon(Icons.class.getResource(path));
+        
+        // Get the Image from the ImageIcon
+        Image originalImage = originalIcon.getImage();
+        
+        // Scale the Image to the desired size
+        Image scaledImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        
+        // Create a new ImageIcon from the scaled Image
+        return new ImageIcon(scaledImage);
+    }
+}
 }
