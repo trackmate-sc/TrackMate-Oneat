@@ -27,9 +27,9 @@ import java.awt.Image;
 public class Icons {
 	
 
-		public static final ImageIcon ONEAT_ICON = createScaledIcon("images/mtrack.png", 150, 150);
-		public static final ImageIcon ONEAT_BIG_ICON = createScaledIcon("images/mtrack.png", 300, 300);
-		public static final ImageIcon KAPOORLABS_ICON =  createScaledIcon("images/kapoorlogo.png", 150, 150);
+		public static final ImageIcon ONEAT_ICON = createScaledIcon("images/mtrack.png", 20, 20);
+		public static final ImageIcon ONEAT_BIG_ICON = createScaledIcon("images/mtrack.png", 100, 100);
+		public static final ImageIcon KAPOORLABS_ICON =  new ImageIcon( Icons.class.getResource( "images/kapoorlogo.png" ) );
 
 
 		public static ImageIcon createScaledIcon(String path, int width, int height) {
