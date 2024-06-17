@@ -676,10 +676,12 @@ public class TrackCorrectorRunner {
 		                    graph.addVertex(addsourcetarget.getB());
 
 		                    if (graph.degreeOf(addsourcetarget.getB()) < 2) {
-		                        final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(),
-		                                addsourcetarget.getB());
-
-		                        graph.setEdgeWeight(edge, cost);
+		                        final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(), addsourcetarget.getB());
+		                        if (edge != null && graph.containsEdge(edge)) {
+		                            graph.setEdgeWeight(edge, cost);
+		                        } else {
+		                            System.out.println("Failed to add edge or edge no longer exists between " + addsourcetarget.getA() + " and " + addsourcetarget.getB());
+		                        }
 		                    }
 		                }
 		            } catch (Exception e) {
