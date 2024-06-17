@@ -653,44 +653,42 @@ public class TrackCorrectorRunner {
 		count = 0;
 
 		if (createlinks) {
-			if (Mitosisspots != null) {
+		    if (Mitosisspots != null) {
 
-				List<Future<Graphobject>> graphlistresult = LinkCreator(model, trackmate, uniquelabelID,
-						DividingStartspots, Mitosisspots, settings, ndim, logger, img, framespots, numThreads,
-						calibration, addDisplay);
-				for (Future<Graphobject> graphresult : graphlistresult) {
+		        List<Future<Graphobject>> graphlistresult = LinkCreator(model, trackmate, uniquelabelID,
+		                DividingStartspots, Mitosisspots, settings, ndim, logger, img, framespots, numThreads,
+		                calibration, addDisplay);
+		        for (Future<Graphobject> graphresult : graphlistresult) {
+		            try {
+		                Graphobject object = graphresult.get();
+		                ArrayList<Pair<Spot, Spot>> removeedges = object.removeedges;
+		                ArrayList<Pair<Spot, Spot>> addedges = object.addedges;
+		                ArrayList<Double> costlist = object.costlist;
 
-					Graphobject object = graphresult.get();
-					ArrayList<Pair<Spot, Spot>> removeedges = object.removeedges;
-					ArrayList<Pair<Spot, Spot>> addedges = object.addedges;
-					ArrayList<Double> costlist = object.costlist;
+		                for (int i = 0; i < costlist.size(); ++i) {
+		                    Pair<Spot, Spot> removesourcetarget = removeedges.get(i);
+		                    graph.removeEdge(removesourcetarget.getA(), removesourcetarget.getB());
+		                }
+		                for (int i = 0; i < costlist.size(); ++i) {
+		                    Pair<Spot, Spot> addsourcetarget = addedges.get(i);
+		                    double cost = costlist.get(i);
+		                    graph.addVertex(addsourcetarget.getA());
+		                    graph.addVertex(addsourcetarget.getB());
 
-					for (int i = 0; i < costlist.size(); ++i) {
+		                    if (graph.degreeOf(addsourcetarget.getB()) < 2) {
+		                        final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(),
+		                                addsourcetarget.getB());
 
-						Pair<Spot, Spot> removesourcetarget = removeedges.get(i);
-						graph.removeEdge(removesourcetarget.getA(), removesourcetarget.getB());
+		                        graph.setEdgeWeight(edge, cost);
+		                    }
+		                }
+		            } catch (Exception e) {
+		                // Log the exception or handle it as needed
+		                e.printStackTrace();
+		            }
+		        }
 
-					}
-					for (int i = 0; i < costlist.size(); ++i) {
-
-						Pair<Spot, Spot> addsourcetarget = addedges.get(i);
-						double cost = costlist.get(i);
-						graph.addVertex(addsourcetarget.getA());
-						graph.addVertex(addsourcetarget.getB());
-
-						if (graph.degreeOf(addsourcetarget.getB()) < 2) {
-							final DefaultWeightedEdge edge = graph.addEdge(addsourcetarget.getA(),
-									addsourcetarget.getB());
-
-							graph.setEdgeWeight(edge, cost);
-
-						}
-
-					}
-
-				}
-
-			}
+		    }
 		}
 
 		
